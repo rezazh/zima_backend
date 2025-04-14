@@ -1,0 +1,75 @@
+# Python runtime files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+*/venv/
+*/env/
+.venv
+
+# Django stuff
+*.log
+db.sqlite3
+local_settings.py
+media/
+static_collected/ # یا هر نام دیگری برای static files جمع‌آوری شده
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Dependency management
+*.egg-info/
+.eggs/
+dist/
+build/
+wheels/
+pip-wheel-metadata/
+*.manifest
+*.spec
+pip-selfcheck.json
+
+# Environment variables
+.env*
+*.env
+
+# IDE / Editor folders
+.vscode/
+.idea/        # OS generated files
+.DS_Store
+Thumbs.db
+```    *   **مثال برای Node.js (Express و ...):**
+```gitignore
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Optional Editor folders
+.vscode/
+.idea/
+
+# Optional Mac files
+.DS_Store
+
+# Optional Windows files
+Thumbs.db
