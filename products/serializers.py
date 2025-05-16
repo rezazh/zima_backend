@@ -1,187 +1,208 @@
+# serializers.py
 from rest_framework import serializers
+# serializers.pyfrom rest_framework import serializers
 from .models import Product, Review, Category, ProductImage
 
-# ReviewSerializer و CategorySerializer بدون تغییر باقی می‌مانند
+# ==========================================
+#  Supporting Serializers
+# ==========================================
+
 class ReviewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Review
-        fields = ['id', 'user', 'product', 'rating', 'comment', 'created_at']
-        read_only_fields = ['user', 'created_at']
+    """Serializer for product reviews."""
+    # اضافه کردن نام کاربر (اگر مدل User شما فیلد مناسبی دارد)
+    # user_name = serializers.CharField(source='user.get_full_name', read_only=True) # مثال    class Meta:
+    model = Review
+    fields = [
+        'id', 'user', #'user_name',
+        'product', 'rating', 'comment', 'created_at'
+    ]
+    read_only_fields = ['user', 'created_at', 'product'] # معمولا product هم read_only است
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Serializer for product categories."""
     class Meta:
         model = Category
         fields = ['id', 'name', 'description', 'slug', 'created_at']
-        extra_kwargs = {            'slug': {'required': False}
+        # Slug معمولا خودکار ساخته می‌شود یا اختیاری است
+        extra_kwargs = {
+            'slug': {'required': False, 'read_only': True} # اگر خودکار ساخته می‌شود
         }
-
-# ProductSerializer اصلاح شده
-class ProductSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
-    # --- تغییر 1: نام SerializerMethodField ها را به colors و sizes تغییر می‌دهیم ---
-    colors = serializers.SerializerMethodField(method_name='get_colors_list')
-    sizes = serializers.SerializerMethodField(method_name='get_sizes_list')
-    discount_price = serializers.SerializerMethodField(read_only=True)
-    in_stock = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = Product
-        # --- تغییر 2: فقط نام‌های جدید (colors, sizes) را در فیلدها قرار می‌دهیم ---
-        fields = [
-            'id', 'name', 'price', 'discount_price',
-            'colors',  # حالا این فیلد حاوی لیست رنگ‌ها خواهد بود
-            'sizes',   # حالا این فیلد حاوی لیست سایزها خواهد بود
-            'image', 'in_stock', 'category',            'category_name', 'created_at', 'is_featured', 'stock', 'brand'
-        ]
-        # فیلدهای اضافی که ممکن است بخواهید اضافه کنید (اختیاری):
-        # 'description', 'discount', 'gallery', 'attributes', 'updated_at'
-
-    # --- تغییر 3: نام توابع get را مطابق method_name بالا نگه می‌داریم ---
-    def get_colors_list(self, obj):
-        if obj.colors:
-            # اضافه کردن strip() برای حذف فضای خالی احتمالی دور کاما
-            return [color.strip() for color in obj.colors.split(',') if color.strip()]
-        return []
-
-    def get_sizes_list(self, obj):
-        if obj.sizes:
-            # اضافه کردن strip() برای حذف فضای خالی احتمالی دور کاما
-            return [size.strip() for size in obj.sizes.split(',') if size.strip()]
-        return []
-
-    def get_discount_price(self, obj):
-        # محاسبه قیمت با تخفیف - مطمئن شوید فیلد discount در مدل Product وجود دارد
-        if obj.discount is not None and obj.discount > 0:
-             # تبدیل به float برای محاسبه صحیح (اگر DecimalField هستند مشکلی نیست)
-            return float(obj.price) - float(obj.discount)        # اگر تخفیف وجود ندارد یا صفر است، همان قیمت اصلی را برگردان
-        # یا اگر می‌خواهید در این حالت null برگردد: return None
-        return float(obj.price)
-
-
-    def get_in_stock(self, obj):
-        return obj.stock > 0
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        request = self.context.get('request')
-
-        # اطمینان از کامل بودن URL تصویر
-        if request and representation.get('image') and not representation['image'].startswith(('http', '/media')):
-             # اگر از /media/ شروع نشود، کاملش کن
-            if not representation['image'].startswith('/'):
-                 representation['image'] = '/' + representation['image']
-            representation['image'] = request.build_absolute_uri(representation['image'])
-        elif not representation.get('image'):
-             # اگر تصویری وجود ندارد، یک مقدار پیش‌فرض یا خالی بگذارید
-            representation['image'] = None # یا '/static/images/placeholder.png'
-
-        # اطمینان از اینکه قیمت‌ها به صورت عدد ارسال می‌شوند (نه رشته)
-        if representation.get('price'):
-             representation['price'] = float(representation['price'])
-        if representation.get('discount_price'):
-             representation['discount_price'] = float(representation['discount_price'])
-
-        return representation
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductImage
-        fields = ['id', 'image', 'is_primary']
+        fields = ['id', 'image_url', 'is_primary', 'image'] # image اصلی را هم نگه می‌داریم (برای مدیریت شاید)
+        read_only_fields = ['id', 'image_url']
 
-    # اضافه کردن to_representation برای کامل کردن URL تصویر گالری
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
+    def get_image_url(self, obj):
+        """Builds the absolute URL for the gallery image."""
         request = self.context.get('request')
-        if request and representation.get('image') and not representation['image'].startswith(('http', '/media')):
-            if not representation['image'].startswith('/'):
-                 representation['image'] = '/' + representation['image']
-            representation['image'] = request.build_absolute_uri(representation['image'])
-        elif not representation.get('image'):
-            representation['image'] = None
-        return representation
+        if obj.image and hasattr(obj.image, 'url') and request:
+            # استفاده از obj.image.url برای دریافت مسیر نسبی
+            # و سپس ساخت URL کامل
+            return request.build_absolute_uri(obj.image.url)
+        # اگر تصویری نیست یا درخواستی وجود ندارد، null برگردان
+        return None
 
+# ==========================================
+#  Main Product Serializers
+# ==========================================
 
-# ProductDetailSerializer اصلاح شده (برای هماهنگی)
-class ProductDetailSerializer(serializers.ModelSerializer):
-    images = ProductImageSerializer(many=True, read_only=True) # استفاده از سریالایزر تصویر
-    # --- تغییر 1: نام SerializerMethodField ها را به colors و sizes تغییر می‌دهیم ---
+class BaseProductSerializer(serializers.ModelSerializer):
+    """
+    Base serializer containing common methods for handling
+    colors, sizes, stock, discount price, and image URLs.
+    """
+    # --- Serializer Method Fields for calculated/formatted data ---
     colors = serializers.SerializerMethodField(method_name='get_colors_list')
     sizes = serializers.SerializerMethodField(method_name='get_sizes_list')
     discount_price = serializers.SerializerMethodField(read_only=True)
     in_stock = serializers.SerializerMethodField(read_only=True)
-    category_name = serializers.CharField(source='category.name', read_only=True)
-    # اضافه کردن سریالایزر برای نظرات
-    reviews = ReviewSerializer(many=True, read_only=True)
+    image_url = serializers.SerializerMethodField(method_name='get_main_image_url') # برای URL تصویر اصلی
 
+    # --- Helper Methods (used by SerializerMethodFields) ---
+    def get_colors_list(self, obj):
+        """Converts comma-separated string 'colors' field to a list of strings."""
+        if obj.colors and isinstance(obj.colors, str):
+            # حذف فضای خالی و موارد خالی بعد از split
+            return [color.strip() for color in obj.colors.split(',') if color.strip()]
+            return [] # Return empty list if no colors or not a string
+
+    def get_sizes_list(self, obj):
+        """Converts comma-separated string 'sizes' field to a list of strings."""
+        if obj.sizes and isinstance(obj.sizes, str):
+            return [size.strip() for size in obj.sizes.split(',') if size.strip()]
+        return []
+
+    def get_discount_price(self, obj):
+        """        Calculates the final price after applying the discount.
+        Returns the original price if no valid discount exists.
+        Ensures the output is always a float.
+        """
+        try:
+            # اطمینان از اینکه قیمت‌ها عددی هستند قبل از محاسبه
+            original_price = float(obj.price) if obj.price is not None else 0.0
+            # فرض: obj.discount مقدار تخفیف است (نه درصد)
+            discount_amount = float(obj.discount) if obj.discount is not None else 0.0
+
+            # اعمال تخفیف فقط اگر معتبر باشد
+            if 0 < discount_amount < original_price:
+                return original_price - discount_amount
+            # در غیر این صورت، قیمت اصلی را برگردان
+            return original_price
+        except (ValueError, TypeError):
+            # اگر تبدیل نوع یا محاسبه با خطا مواجه شد، قیمت اصلی را برگردان
+            return float(obj.price) if obj.price is not None else 0.0
+
+    def get_in_stock(self, obj):
+        """Checks if the product stock is greater than 0."""
+        return obj.stock is not None and obj.stock > 0
+
+    def get_main_image_url(self, obj):
+        """Builds the absolute URL for the main product image."""
+        request = self.context.get('request')
+        # بررسی وجود تصویر و داشتن attribute 'url' (برای FileField/ImageField)
+        if obj.image and hasattr(obj.image, 'url') and request:
+            return request.build_absolute_uri(obj.image.url)
+        return None # یا URL تصویر پیش‌فرض: return request.build_absolute_uri('/static/placeholder.png')
+
+    # --- Representation Override for final type checks ---
+    def to_representation(self, instance):
+        """Ensures price fields are floats in the final output."""
+        representation = super().to_representation(instance)
+
+        # اطمینان از اینکه قیمت اصلی به float تبدیل شده
+        if representation.get('price') is not None:
+            try:
+                representation['price'] = float(representation['price'])
+            except (ValueError, TypeError):
+                 # اگر قیمت اصلی نامعتبر است، آن را 0 یا None قرار بده
+                representation['price'] = 0.0
+        else:
+             representation['price'] = 0.0 # یا None
+
+        # discount_price قبلاً در get_discount_price به float تبدیل شده،
+        # اما برای اطمینان اگر None بود، برابر قیمت اصلی قرار می‌دهیم
+        if representation.get('discount_price') is None:             representation['discount_price'] = representation['price']
+
+        # اگر فیلد 'discount' (مقدار تخفیف) را هم ارسال می‌کنید:
+        if 'discount' in representation and representation.get('discount') is not None:
+             try:
+                 representation['discount'] = float(representation['discount'])
+             except (ValueError, TypeError):
+                 representation['discount'] = 0.0
+        elif 'discount' in representation:
+             representation['discount'] = 0.0 # یا None
+
+        return representation
+
+
+class ProductSerializer(BaseProductSerializer):
+     """
+     Serializer for the Product LIST view.
+     Sends only the fields needed by ProductCard.js.
+     Inherits common methods from BaseProductSerializer.
+     """
+     # فیلد مستقیم از مدل (فقط خواندنی برای لیست)
+     category_name = serializers.CharField(source='category.name', read_only=True) # تعریف فیلد
+
+     class Meta:
+         model = Product
+         # لیست دقیق فیلدهایی که ProductCard.js نیاز دارد:
+         fields = [
+         'id', # Number (برای لینک و key)
+         'name', # String
+         'brand', # String (اختیاری)
+         'image_url', # String (URL کامل تصویر اصلی)
+         'price', # Number (قیمت اصلی)
+         'discount_price', # Number (قیمت نهایی با تخفیف)
+         'colors', # Array of Strings (لیست نام رنگ‌ها)
+         'sizes', # Array of Strings (لیست نام سایزها)
+         'in_stock', # Boolean
+         'category_name', # <<<--- اضافه شد / از کامنت خارج شد
+         ]
+         # read_only_fields = fields # این خط اختیاری است، چون همه فیلدها در fields هستند
+
+class ProductDetailSerializer(BaseProductSerializer):
+    """
+    Serializer for the Product DETAIL view.
+    Includes more fields like description, gallery, reviews, etc.
+    Inherits common methods from BaseProductSerializer.
+    """    # فیلدهای مرتبط با استفاده از سریالایزرهای دیگر
+    # برای گالری، از source استفاده می‌کنیم که به related_name یا نام فیلد در مدل اشاره دارد
+    # فرض می‌کنیم related_name در ProductImage ForeignKey به Product، برابر 'gallery_images' است
+    gallery = ProductImageSerializer(many=True, read_only=True, source='gallery_images') # <<< نام source را با مدل خود تطبیق دهید
+    reviews = ReviewSerializer(many=True, read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
 
     class Meta:
         model = Product
-        # --- تغییر 2: فیلدها را به صورت صریح لیست می‌کنیم تا مطمئن شویم فیلدهای رشته‌ای اصلی colors/sizes نمی‌آیند ---
+        # لیست فیلدها برای صفحه جزئیات محصول
         fields = [
-            'id', 'category', 'category_name', 'name', 'description',
-            'price', 'discount', 'discount_price', # discount هم اضافه شد اگر لازم است نمایش داده شود
-            'stock', 'in_stock', 'brand', 'image',
-            'gallery', # فیلد گالری مدل
-            'images', # فیلد تصاویر مرتبط از ProductImageSerializer
-            'attributes', 'is_featured',
-            'created_at', 'updated_at',
-            'colors',  # لیست رنگ‌ها
-            'sizes',   # لیست سایزها
-            'reviews' # اضافه کردن نظرات
-        ]    # --- تغییر 3: توابع get را مانند ProductSerializer نگه می‌داریم ---
-    def get_colors_list(self, obj):
-        if obj.colors:
-            return [color.strip() for color in obj.colors.split(',') if color.strip()]
-        return []
+            'id',
+            'category', # ID دسته بندی اصلی
+            'category_name',
+            'name',
+            'description',      # توضیحات کامل محصول
+            'price',            # قیمت اصلی (Number)
+            'discount',         # مقدار تخفیف (Number - اختیاری، اگر می‌خواهید نمایش دهید)
+            'discount_price',   # قیمت نهایی (Number)
+            'stock',            # تعداد موجودی (Number)
+            'in_stock',         # وضعیت موجودی (Boolean)
+            'brand',
+            'image_url',        # URL تصویر اصلی
+            'gallery',          # لیست تصاویر گالری (از ProductImageSerializer)
+            'attributes',       # اگر فیلد JSON یا مشابه دارید
+            'is_featured',            'created_at',
+            'updated_at',
+            'colors',           # لیست رنگ‌ها (Array of Strings)
+            'sizes',            # لیست سایزها (Array of Strings)
+            'reviews'           # لیست نظرات
+        ]        # read_only_fields = [...] # در صورت نیاز فیلدهای فقط خواندنی را مشخص کنید
 
-    def get_sizes_list(self, obj):
-        if obj.sizes:
-            return [size.strip() for size in obj.sizes.split(',') if size.strip()]
-        return []
-    def get_discount_price(self, obj):
-        if obj.discount is not None and obj.discount > 0:
-            return float(obj.price) - float(obj.discount)
-        return float(obj.price)
-
-
-    def get_in_stock(self, obj):
-        return obj.stock > 0
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        request = self.context.get('request')
-
-        # کامل کردن URL تصویر اصلی
-        if request and representation.get('image') and not representation['image'].startswith(('http', '/media')):
-            if not representation['image'].startswith('/'):
-                 representation['image'] = '/' + representation['image']
-            representation['image'] = request.build_absolute_uri(representation['image'])
-        elif not representation.get('image'):
-             representation['image'] = None
-
-         # اطمینان از اینکه قیمت‌ها به صورت عدد ارسال می‌شوند
-        if representation.get('price'):
-             representation['price'] = float(representation['price'])
-        if representation.get('discount_price'):
-             representation['discount_price'] = float(representation['discount_price'])
-        if representation.get('discount'): # اگر فیلد discount را هم نمایش می‌دهید
-             representation['discount'] = float(representation['discount'])
-
-
-        # پردازش گالری (اگر gallery یک JSON از URL هاست)
-        # این بخش بستگی به ساختار JSON شما در فیلد gallery دارد
-        # مثال: اگر gallery لیستی از رشته‌های مسیر تصویر است:
-        if isinstance(representation.get('gallery'), list):
-            full_urls = []
-            if request:
-                for img_path in representation['gallery']:
-                    if isinstance(img_path, str) and not img_path.startswith(('http', '/media')):
-                         if not img_path.startswith('/'):
-                             img_path = '/' + img_path
-                         full_urls.append(request.build_absolute_uri(img_path))
-                    else:
-                        full_urls.append(img_path) # یا مدیریت موارد دیگر
-                representation['gallery'] = full_urls
-        # اگر ساختار دیگری دارد، این بخش را متناسب با آن تنظیم کنید        return representation
+    # نیازی به بازنویسی to_representation نیست چون از BaseProductSerializer ارث‌بری می‌شود
+    # و متدهای get_... هم ارث‌بری می‌شوند.
