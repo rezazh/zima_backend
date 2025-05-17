@@ -1,12 +1,16 @@
 from django.urls import path
-from .views import SignupView, CustomTokenObtainPairView, UserProfileView, AddressListView, AddressDetailView
-from rest_framework_simplejwt.views import TokenRefreshView
+from . import views
+
+app_name = 'users'
 
 urlpatterns = [
-    path('signup/', SignupView.as_view(), name='signup'),
-    path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('profile/', UserProfileView.as_view(), name='user-profile'),
-    path('addresses/', AddressListView.as_view(), name='address-list'),
-    path('addresses/<int:address_id>/', AddressDetailView.as_view(), name='address-detail'),
+    path('signup/', views.signup, name='signup'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('profile/', views.profile, name='profile'),
+    path('change-password/', views.change_password, name='change_password'),
+    path('addresses/', views.addresses, name='addresses'),
+    path('addresses/add/', views.add_address, name='add_address'),
+    path('addresses/<int:address_id>/edit/', views.edit_address, name='edit_address'),
+    path('addresses/<int:address_id>/delete/', views.delete_address, name='delete_address'),
 ]

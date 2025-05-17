@@ -1,0 +1,312 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} | زیما{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+{% endblock %}
+
+{% block content %}
+    <!-- نان‌برد -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">خانه</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'products:category' product.category.slug %}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-5">
+        <!-- تصاویر محصول -->
+        <div class="col-md-6 mb-4">
+            <div class="product-images">
+                <!-- تصویر اصلی -->
+                <div class="main-image mb-3">
+                    <img src="{{ product.image_url }}" class="img-fluid rounded" id="main-product-image" alt="{{ product.name }}">
+                </div>
+
+                <!-- گالری تصاویر -->
+                {% if product.gallery %}
+                    <div class="swiper product-gallery">
+                        <div class="swiper-wrapper">
+                            <div class="swiper-slide" onclick="changeMainImage('{{ product.image_url }}')">
+                                <img src="{{ product.image_url }}" class="img-thumbnail" alt="{{ product.name }}">
+                            </div>
+                            {% for image in product.gallery %}
+                                <div class="swiper-slide" onclick="changeMainImage('{{ image.image_url }}')">
+                                    <img src="{{ image.image_url }}" class="img-thumbnail" alt="{{ product.name }}">
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="swiper-button-next"></div>
+                        <div class="swiper-button-prev"></div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- اطلاعات محصول -->
+        <div class="col-md-6">
+            <h1 class="mb-2">{{ product.name }}</h1>
+
+            {% if product.brand %}
+                <p class="text-muted mb-3">برند: {{ product.brand }}</p>
+            {% endif %}
+
+            <!-- قیمت -->
+            <div class="product-price mb-4">
+                {% if product.discount %}
+                    <span class="original-price text-muted text-decoration-line-through fs-5">{{ product.price|floatformat:0 }} تومان</span>
+                    <span class="discount-price fs-3 fw-bold text-danger">{{ product.discount_price|floatformat:0 }} تومان</span>
+                    <span class="discount-badge ms-2">{{ product.discount|floatformat:0 }}% تخفیف</span>
+                {% else %}
+                    <span class="price fs-3 fw-bold">{{ product.price|floatformat:0 }} تومان</span>
+                {% endif %}
+            </div>
+
+            <!-- وضعیت موجودی -->
+            <div class="stock-status mb-4">
+                {% if product.in_stock %}
+                    <span class="badge bg-success">موجود در انبار</span>
+                    <span class="text-muted small">{{ product.stock }} عدد موجود است</span>
+                {% else %}
+                    <span class="badge bg-danger">ناموجود</span>
+                {% endif %}
+            </div>
+
+            <!-- فرم انتخاب سایز و رنگ و افزودن به سبد خرید -->
+            <form method="post" action="{% url 'cart:add' product.id %}" class="mb-4">
+                {% csrf_token %}
+
+                <!-- انتخاب سایز -->
+                <div class="mb-3">
+                    <label for="size" class="form-label">سایز:</label>
+                    <select name="size" id="size" class="form-select" required>
+                        <option value="">انتخاب سایز</option>
+                        {% for size in product.sizes_list %}
+                            <option value="{{ size }}">{{ size }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- انتخاب رنگ -->
+                <div class="mb-3">
+                    <label class="form-label">رنگ:</label>
+                    <div class="color-options">
+                        {% for color in product.colors_list %}
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="color" id="color-{{ forloop.counter }}" value="{{ color }}" required>
+                                <label class="form-check-label" for="color-{{ forloop.counter }}">
+                                    <span class="color-dot" style="background-color: {{ color }};"></span>
+                                    {{ color }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- انتخاب تعداد -->
+                <div class="mb-3">
+                    <label for="quantity" class="form-label">تعداد:</label>
+                    <div class="input-group" style="max-width: 150px;">
+                        <button type="button" class="btn btn-outline-secondary" onclick="decrementQuantity()">-</button>
+                        <input type="number" name="quantity" id="quantity" class="form-control text-center" value="1" min="1" max="{{ product.stock }}">
+                        <button type="button" class="btn btn-outline-secondary" onclick="incrementQuantity()">+</button>
+                    </div>
+                </div>
+
+                <!-- دکمه افزودن به سبد خرید -->
+                <button type="submit" class="btn btn-primary btn-lg w-100 mb-2" {% if not product.in_stock %}disabled{% endif %}>
+                    <i class="fas fa-shopping-cart me-2"></i>
+                    افزودن به سبد خرید
+                </button>
+            </form>
+
+            <!-- ویژگی‌های محصول -->
+            <div class="product-features">
+                <div class="feature">
+                    <i class="fas fa-truck text-primary"></i>
+                    <span>ارسال سریع</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-undo text-primary"></i>
+                    <span>۷ روز ضمانت بازگشت</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-shield-alt text-primary"></i>
+                    <span>ضمانت اصالت کالا</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- توضیحات و نظرات -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">توضیحات</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="attributes-tab" data-bs-toggle="tab" data-bs-target="#attributes" type="button" role="tab">مشخصات</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">نظرات ({{ product.reviews.count }})</button>
+                </li>
+            </ul>
+
+            <div class="tab-content p-4 border border-top-0 rounded-bottom" id="productTabsContent">
+                <!-- توضیحات محصول -->
+                <div class="tab-pane fade show active" id="description" role="tabpanel">
+                    {{ product.description|linebreaks }}
+                </div>
+
+                <!-- مشخصات محصول -->
+                <div class="tab-pane fade" id="attributes" role="tabpanel">
+                    {% if product.attributes %}
+                        <table class="table">
+                            <tbody>
+                                {% for key, value in product.attributes.items %}
+                                    <tr>
+                                        <th style="width: 30%">{{ key }}</th>
+                                        <td>{{ value }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>اطلاعاتی برای نمایش وجود ندارد.</p>
+                    {% endif %}
+                </div>
+
+                <!-- نظرات کاربران -->
+                <div class="tab-pane fade" id="reviews" role="tabpanel">
+                    <!-- فرم ثبت نظر جدید -->
+                    {% if user.is_authenticated %}
+                        <div class="mb-4 p-3 border rounded">
+                            <h5>نظر خود را ثبت کنید</h5>
+                            <form method="post" action="{% url 'products:add_review' product.id %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">امتیاز:</label>
+                                    <div class="rating">
+                                        <input type="radio" id="star5" name="rating" value="5" required>
+                                        <label for="star5"><i class="fas fa-star"></i></label>
+                                        <input type="radio" id="star4" name="rating" value="4">
+                                        <label for="star4"><i class="fas fa-star"></i></label>
+                                        <input type="radio" id="star3" name="rating" value="3">
+                                        <label for="star3"><i class="fas fa-star"></i></label>
+                                        <input type="radio" id="star2" name="rating" value="2">
+                                        <label for="star2"><i class="fas fa-star"></i></label>
+                                        <input type="radio" id="star1" name="rating" value="1">
+                                        <label for="star1"><i class="fas fa-star"></i></label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="comment" class="form-label">نظر:</label>
+                                    <textarea name="comment" id="comment" rows="3" class="form-control"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">ثبت نظر</button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            برای ثبت نظر ابتدا <a href="{% url 'users:login' %}?next={{ request.path }}">وارد سایت</a> شوید.
+                        </div>
+                    {% endif %}
+
+                    <!-- لیست نظرات -->
+                    <div class="reviews-list">
+                        {% for review in product.reviews.all %}
+                            <div class="review p-3 border rounded mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6>{{ review.user.username }}</h6>
+                                        <div class="text-muted small">{{ review.created_at|date:"j F Y" }}</div>
+                                    </div>
+                                    <div class="rating-display">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    {{ review.comment|linebreaks }}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="alert alert-info">هنوز نظری برای این محصول ثبت نشده است.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- محصولات مشابه -->
+    <section class="mb-5">
+        <h2 class="section-title mb-4">محصولات مشابه</h2>
+        <div class="row">
+            {% for product in similar_products %}
+                <div class="col-6 col-md-3 mb-4">
+                    {% include 'products/partials/product_card.html' with product=product %}
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">محصول مشابهی یافت نشد.</div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <script>
+        // اسلایدر گالری تصاویر
+        const swiper = new Swiper('.product-gallery', {
+            slidesPerView: 4,
+            spaceBetween: 10,
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            breakpoints: {
+                320: {
+                    slidesPerView: 3,
+                },
+                768: {
+                    slidesPerView: 4,
+                }
+            }
+        });
+
+        // تغییر تصویر اصلی با کلیک روی تصاویر کوچک
+        function changeMainImage(imageUrl) {
+            document.getElementById('main-product-image').src = imageUrl;
+        }
+
+        // افزایش و کاهش تعداد محصول
+        function incrementQuantity() {
+            const input = document.getElementById('quantity');
+            const max = parseInt(input.getAttribute('max'));
+            const currentValue = parseInt(input.value);
+            if (currentValue < max) {
+                input.value = currentValue + 1;
+            }
+        }
+
+        function decrementQuantity() {
+            const input = document.getElementById('quantity');
+            const currentValue = parseInt(input.value);
+            if (currentValue > 1) {
+                input.value = currentValue - 1;
+            }
+        }
+    </script>
+{% endblock %}

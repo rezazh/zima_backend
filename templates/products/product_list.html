@@ -1,0 +1,149 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} | زیما{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <!-- فیلتر محصولات -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">فیلترها</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="">
+                        <!-- فیلتر قیمت -->
+                        <div class="mb-4">
+                            <h6>محدوده قیمت</h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="price_min" class="form-label">از</label>
+                                    <input type="number" name="price_min" id="price_min" class="form-control form-control-sm" value="{{ request.GET.price_min }}">
+                                </div>
+                                <div class="col-6">
+                                    <label for="price_max" class="form-label">تا</label>
+                                    <input type="number" name="price_max" id="price_max" class="form-control form-control-sm" value="{{ request.GET.price_max }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- فیلتر سایز -->
+                        <div class="mb-4">
+                            <h6>سایز</h6>
+                            <select name="size" class="form-select form-select-sm">
+                                <option value="">همه سایزها</option>
+                                {% for size in filter_options.sizes %}
+                                    <option value="{{ size }}" {% if request.GET.size == size %}selected{% endif %}>{{ size }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- فیلتر رنگ -->
+                        <div class="mb-4">
+                            <h6>رنگ</h6>
+                            <select name="color" class="form-select form-select-sm">
+                                <option value="">همه رنگ‌ها</option>
+                                {% for color in filter_options.colors %}
+                                    <option value="{{ color }}" {% if request.GET.color == color %}selected{% endif %}>{{ color }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- فیلتر برند -->
+                        <div class="mb-4">
+                            <h6>برند</h6>
+                            <select name="brand" class="form-select form-select-sm">
+                                <option value="">همه برندها</option>
+                                {% for brand in filter_options.brands %}
+                                    <option value="{{ brand }}" {% if request.GET.brand == brand %}selected{% endif %}>{{ brand }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">اعمال فیلتر</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- لیست محصولات -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">{{ page_title }}</h1>
+                
+                <!-- مرتب‌سازی -->
+                <div class="sort-container">
+                    <form method="get" class="d-flex align-items-center">
+                        <!-- حفظ پارامترهای فیلتر -->
+                        {% for key, value in request.GET.items %}
+                            {% if key != 'sort' %}
+                                <input type="hidden" name="{{ key }}" value="{{ value }}">
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <label for="sort" class="me-2">مرتب‌سازی:</label>
+                        <select name="sort" id="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>جدیدترین</option>
+                            <option value="price_low" {% if request.GET.sort == 'price_low' %}selected{% endif %}>ارزان‌ترین</option>
+                            <option value="price_high" {% if request.GET.sort == 'price_high' %}selected{% endif %}>گران‌ترین</option>
+                            <option value="popular" {% if request.GET.sort == 'popular' %}selected{% endif %}>محبوب‌ترین</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- نمایش محصولات -->
+            <div class="row">
+                {% for product in products %}
+                    <div class="col-6 col-md-4 mb-4">
+                        {% include 'products/partials/product_card.html' with product=product %}
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info">محصولی با این مشخصات یافت نشد.</div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- صفحه‌بندی -->
+            {% if products.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if products.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">قبلی</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">قبلی</span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for i in products.paginator.page_range %}
+                            {% if products.number == i %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ i }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if products.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">بعدی</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">بعدی</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

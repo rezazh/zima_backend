@@ -1,0 +1,136 @@
+/* استایل برای اسلایدر */
+.slider-container {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.slider {
+    width: 100%;
+    height: 400px; /* ارتفاع ثابت برای اسلایدر - این مقدار را می‌توانید تغییر دهید */
+    position: relative;
+}
+
+.slider-item {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+.slider-item.active {
+    opacity: 1;
+}
+
+.slider-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* این ویژگی باعث می‌شود تصویر کل فضا را پر کند و نسبت ابعاد حفظ شود */
+    object-position: center; /* موقعیت تصویر را تنظیم می‌کند */
+}
+
+.slider-caption {
+    position: absolute;
+    bottom: 20%;
+    left: 10%;
+    right: 10%;
+    text-align: center;
+    color: white;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.slider-caption h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.slider-caption p {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.slider-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: white;
+    color: #333;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.slider-button:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-3px);
+}
+
+.slider-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+}
+
+.slider-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin: 0 5px;
+    background-color: rgba(255,255,255,0.5);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.slider-dot.active {
+    background-color: white;
+}
+
+.slider-prev, .slider-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0,0,0,0.3);
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 40px;
+    cursor: pointer;
+    z-index: 10;
+    transition: background-color 0.3s ease;
+}
+
+.slider-prev:hover, .slider-next:hover {
+    background-color: rgba(0,0,0,0.6);
+}
+
+.slider-prev {
+    left: 20px;
+}
+
+.slider-next {
+    right: 20px;
+}
+
+/* برای نمایش بهتر در موبایل */
+@media (max-width: 768px) {
+    .slider {
+        height: 300px;
+    }
+
+    .slider-caption h2 {
+        font-size: 1.8rem;
+    }
+
+    .slider-caption p {
+        font-size: 1rem;
+    }
+}

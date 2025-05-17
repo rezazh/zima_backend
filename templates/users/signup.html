@@ -1,0 +1,110 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}ثبت‌نام | زیما{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="mb-0">ایجاد حساب کاربری</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="{% url 'users:signup' %}">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">نام کاربری</label>
+                            <input type="text" name="username" id="id_username" class="form-control {% if form.username.errors %}is-invalid{% endif %}" required>
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.username.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">حداقل 4 کاراکتر، فقط شامل حروف، اعداد و علامت‌های @ . + - _</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">ایمیل</label>
+                            <input type="email" name="email" id="id_email" class="form-control {% if form.email.errors %}is-invalid{% endif %}">
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_phone_number" class="form-label">شماره موبایل</label>
+                            <input type="text" name="phone_number" id="id_phone_number" class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}" required>
+                            {% if form.phone_number.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.phone_number.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">مثال: ۰۹۱۲۳۴۵۶۷۸۹</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">رمز عبور</label>
+                            <input type="password" name="password" id="id_password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" required>
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">حداقل 8 کاراکتر، ترکیبی از حروف و اعداد</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_password2" class="form-label">تکرار رمز عبور</label>
+                            <input type="password" name="password2" id="id_password2" class="form-control {% if form.password2.errors %}is-invalid{% endif %}" required>
+                            {% if form.password2.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.password2.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="terms" id="id_terms" class="form-check-input" required>
+                            <label for="id_terms" class="form-check-label">
+                                <a href="{% url 'pages:terms' %}" target="_blank">قوانین و مقررات</a> را مطالعه کرده و می‌پذیرم
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">ثبت‌نام</button>
+                        </div>
+                    </form>
+
+                    <hr>
+
+                    <div class="text-center">
+                        <p>قبلاً ثبت‌نام کرده‌اید؟</p>
+                        <a href="{% url 'users:login' %}" class="btn btn-outline-primary">ورود به حساب کاربری</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

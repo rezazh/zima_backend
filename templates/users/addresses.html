@@ -1,0 +1,159 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}آدرس‌های من | زیما{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <!-- منوی کناری -->
+        <div class="col-lg-3 mb-4">
+            <div class="list-group">
+                <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user me-2"></i> اطلاعات حساب کاربری
+                </a>
+                <a href="{% url 'users:addresses' %}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-map-marker-alt me-2"></i> آدرس‌ها
+                </a>
+                <a href="{% url 'orders:list' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-shopping-bag me-2"></i> سفارش‌ها
+                </a>
+                <a href="{% url 'users:change_password' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-key me-2"></i> تغییر رمز عبور
+                </a>
+                <a href="{% url 'users:logout' %}" class="list-group-item list-group-item-action text-danger">
+                    <i class="fas fa-sign-out-alt me-2"></i> خروج از حساب کاربری
+                </a>
+            </div>
+        </div>
+
+        <!-- محتوای اصلی -->
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">آدرس‌های من</h5>
+                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                        <i class="fas fa-plus me-1"></i> افزودن آدرس جدید
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row">
+                        {% for address in addresses %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">آدرس {{ forloop.counter }}</h6>
+                                        <p class="card-text">{{ address.full_address }}</p>
+                                        <p class="card-text">کد پستی: {{ address.postal_code }}</p>
+                                    </div>
+                                    <div class="card-footer bg-white d-flex justify-content-between">
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editAddressModal{{ address.id }}">
+                                            <i class="fas fa-edit"></i> ویرایش
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteAddressModal{{ address.id }}">
+                                            <i class="fas fa-trash-alt"></i> حذف
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- مودال ویرایش آدرس -->
+                            <div class="modal fade" id="editAddressModal{{ address.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">ویرایش آدرس</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form method="post" action="{% url 'users:edit_address' address.id %}">
+                                            {% csrf_token %}
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label for="full_address{{ address.id }}" class="form-label">آدرس کامل</label>
+                                                    <textarea name="full_address" id="full_address{{ address.id }}" rows="3" class="form-control" required>{{ address.full_address }}</textarea>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="postal_code{{ address.id }}" class="form-label">کد پستی</label>
+                                                    <input type="text" name="postal_code" id="postal_code{{ address.id }}" class="form-control" value="{{ address.postal_code }}" required>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                                                <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- مودال حذف آدرس -->
+                            <div class="modal fade" id="deleteAddressModal{{ address.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">حذف آدرس</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>آیا از حذف این آدرس اطمینان دارید؟</p>
+                                            <p class="text-muted">{{ address.full_address }}</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                                            <form method="post" action="{% url 'users:delete_address' address.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">حذف</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="col-12">
+                                <div class="alert alert-info">شما هنوز آدرسی ثبت نکرده‌اید.</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال افزودن آدرس جدید -->
+    <div class="modal fade" id="addAddressModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">افزودن آدرس جدید</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" action="{% url 'users:add_address' %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="full_address_new" class="form-label">آدرس کامل</label>
+                            <textarea name="full_address" id="full_address_new" rows="3" class="form-control" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="postal_code_new" class="form-label">کد پستی</label>
+                            <input type="text" name="postal_code" id="postal_code_new" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                        <button type="submit" class="btn btn-primary">افزودن آدرس</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

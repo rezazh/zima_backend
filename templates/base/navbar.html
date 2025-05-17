@@ -1,0 +1,58 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}">خانه</a>
+                </li>
+
+                <!-- دسته‌بندی محصولات مردانه -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        مردانه
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'products:men' %}">همه محصولات مردانه</a></li>
+                        <li><a class="dropdown-item" href="{% url 'products:men-underwear' %}">لباس زیر مردانه</a></li>
+                        <li><a class="dropdown-item" href="{% url 'products:category' slug='mens-tshirts' %}">تی‌شرت</a></li>
+                    </ul>
+                </li>
+
+                <!-- دسته‌بندی محصولات زنانه -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        زنانه
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'products:women' %}">همه محصولات زنانه</a></li>
+                        <li><a class="dropdown-item" href="{% url 'products:women-underwear' %}">لباس زیر زنانه</a></li>
+                    </ul>
+                </li>
+
+                <!-- برندها -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'products:brands' %}">برندها</a>
+                </li>
+
+                <!-- فروش ویژه -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'products:sale' %}">فروش ویژه</a>
+                </li>
+
+                <!-- تماس با ما -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pages:contact' %}">تماس با ما</a>
+                </li>
+
+                <!-- درباره ما -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pages:about' %}">درباره ما</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,250 @@
+/* فونت‌ها */
+@font-face {
+    font-family: 'Vazir';
+    src: url('../fonts/Vazir.eot');
+    src: url('../fonts/Vazir.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/Vazir.woff2') format('woff2'),
+         url('../fonts/Vazir.woff') format('woff'),
+         url('../fonts/Vazir.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Vazir';
+    src: url('../fonts/Vazir-Bold.eot');
+    src: url('../fonts/Vazir-Bold.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/Vazir-Bold.woff2') format('woff2'),
+         url('../fonts/Vazir-Bold.woff') format('woff'),
+         url('../fonts/Vazir-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* تنظیمات کلی */
+body {
+    font-family: 'Vazir', tahoma, Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    direction: rtl;
+    text-align: right;
+}
+
+/* هدر */
+.site-header {
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand img {
+    max-height: 40px;
+}
+
+.navbar .nav-link {
+    color: #333;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.navbar .nav-link:hover {
+    color: #007bff;
+}
+
+/* کارت محصول */
+.product-card {
+    position: relative;
+    transition: transform 0.3s, box-shadow 0.3s;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.product-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.product-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+.discount-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #dc3545;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    z-index: 1;
+}
+
+.original-price {
+    font-size: 0.9rem;
+    display: block;
+}
+
+.discount-price {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.price {
+    font-weight: bold;
+}
+
+.color-dot {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    margin-right: 5px;
+    border: 1px solid #ddd;
+}
+
+/* صفحه جزئیات محصول */
+.product-images .main-image img {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+}
+
+.product-gallery .swiper-slide {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+.product-gallery .swiper-slide:hover,
+.product-gallery .swiper-slide-active {
+    opacity: 1;
+}
+
+.rating {
+    direction: ltr;
+    display: inline-block;
+}
+
+.rating input {
+    display: none;
+}
+
+.rating label {
+    cursor: pointer;
+    width: 25px;
+    height: 25px;
+    margin: 0;
+    padding: 0;
+    font-size: 25px;
+    line-height: 25px;
+    color: #ddd;
+    float: right;
+}
+
+.rating input:checked ~ label,
+.rating:not(:checked) label:hover,
+.rating:not(:checked) label:hover ~ label {
+    color: #ffc107;
+}
+
+.rating-display i {
+    font-size: 0.9rem;
+}
+
+.product-features {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.product-features .feature {
+    text-align: center;
+}
+
+.product-features .feature i {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+/* دسته‌بندی‌ها */
+.category-card {
+    height: 200px;
+    overflow: hidden;
+    position: relative;
+}
+
+.category-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.category-card:hover img {
+    transform: scale(1.1);
+}
+
+.category-card .card-img-overlay {
+    background: rgba(0, 0, 0, 0.3);
+    transition: background 0.3s;
+}
+
+.category-card:hover .card-img-overlay {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* سبد خرید */
+.quantity-control {
+    display: flex;
+    align-items: center;
+}
+
+/* فوتر */
+.site-footer {
+    background-color: #343a40;
+    color: #f8f9fa;
+    padding: 40px 0 20px;
+}
+
+.site-footer h5 {
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.site-footer a {
+    color: #ccc;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.site-footer a:hover {
+    color: white;
+}
+
+.footer-bottom {
+    background-color: #212529;
+    padding: 15px 0;
+    margin-top: 30px;
+}
+
+/* پاسخگویی */
+@media (max-width: 767.98px) {
+    .product-card .card-img-top {
+        height: 150px;
+    }
+
+    .category-card {
+        height: 150px;
+    }
+}

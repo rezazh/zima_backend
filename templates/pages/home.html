@@ -1,0 +1,208 @@
+{% extends "base/base.html" %}
+
+{% block title %}صفحه اصلی - فروشگاه زیما{% endblock %}
+{% block extra_css %}
+    <script>
+    // فعال کردن اسلایدر با تنظیمات سفارشی
+    document.addEventListener('DOMContentLoaded', function() {
+        // فعال کردن اسلایدر با تنظیمات سفارشی
+        var mainSlider = new bootstrap.Carousel(document.getElementById('mainSlider'), {
+            interval: 1000,  // زمان تغییر اسلاید (5 ثانیه)
+            wrap: true,      // چرخش مجدد پس از آخرین اسلاید
+            keyboard: true   // پشتیبانی از کلیدهای جهت‌دار
+        });
+
+        // اطمینان از شروع اسلایدر
+        setTimeout(function() {
+            mainSlider.cycle();
+        }, 1000);
+    });
+</script>
+<style>
+    .carousel-item {
+        height: 500px; /* ارتفاع ثابت برای اسلایدر */
+    }
+
+    .carousel-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* تنظیم تصویر برای پوشاندن کل فضا با حفظ نسبت ابعاد */
+    }
+
+    /* تنظیمات برای نمایش بهتر در موبایل */
+    @media (max-width: 768px) {
+        .carousel-item {
+            height: 300px;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div id="mainSlider" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+            <div class="carousel-indicators">
+                {% for slider in sliders %}
+                <button type="button" data-bs-target="#mainSlider" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter }}"></button>
+                {% endfor %}
+            </div>
+            <div class="carousel-inner">
+                {% for slider in sliders %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <img src="{{ slider.image.url }}" class="d-block" alt="{{ slider.title }}">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h2>{{ slider.title }}</h2>
+                        <p>{{ slider.subtitle }}</p>
+                        {% if slider.link %}
+                        <a href="{{ slider.link }}" class="btn btn-light">مشاهده</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="carousel-item active">
+                    <div class="bg-secondary text-white p-5 text-center" style="height: 500px;">
+                        <h2>اسلاید نمونه</h2>
+                        <p>هنوز اسلایدی تعریف نشده است</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#mainSlider" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">قبلی</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#mainSlider" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">بعدی</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+{% if top_banners %}
+<div class="row mt-4">
+    {% for banner in top_banners %}
+    <div class="col-md-{% if top_banners.count == 1 %}12{% elif top_banners.count == 2 %}6{% elif top_banners.count == 3 %}4{% else %}3{% endif %} mb-3">
+        <a href="{{ banner.url }}" class="d-block">
+            <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="img-fluid rounded">
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<h2 class="my-4">محصولات ویژه</h2>
+<div class="row">
+    {% for product in featured_products %}
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            {% with image=product.get_main_image %}
+            {% if image %}
+            <img src="{{ image.image.url }}" class="card-img-top" alt="{{ image.alt_text }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="bg-secondary text-white p-4 text-center">بدون تصویر</div>
+            {% endif %}
+            {% endwith %}
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="card-text flex-grow-1">{{ product.short_description|default:product.description|truncatechars:80 }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    {% if product.has_discount %}
+                    <div>
+                        <span class="text-muted text-decoration-line-through">{{ product.price|floatformat:0 }}</span>
+                        <span class="text-danger fw-bold">{{ product.get_discount_price|floatformat:0 }} تومان</span>
+                    </div>
+                    {% else %}
+                    <span class="text-danger fw-bold">{{ product.price|floatformat:0 }} تومان</span>
+                    {% endif %}
+                    <a href="{{ product.get_absolute_url }}" class="btn btn-primary btn-sm">مشاهده محصول</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            هنوز محصول ویژه‌ای ثبت نشده است.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if middle_banners %}
+<div class="row my-4">
+    {% for banner in middle_banners %}
+    <div class="col-md-{% if middle_banners.count == 1 %}12{% elif middle_banners.count == 2 %}6{% elif middle_banners.count == 3 %}4{% else %}3{% endif %} mb-3">
+        <a href="{{ banner.url }}" class="d-block">
+            <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="img-fluid rounded">
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<h2 class="my-4">جدیدترین محصولات</h2>
+<div class="row">
+    {% for product in new_products %}
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            {% with image=product.get_main_image %}
+            {% if image %}
+            <img src="{{ image.image.url }}" class="card-img-top" alt="{{ image.alt_text }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="bg-secondary text-white p-4 text-center">بدون تصویر</div>
+            {% endif %}
+            {% endwith %}
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="card-text flex-grow-1">{{ product.short_description|default:product.description|truncatechars:80 }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    {% if product.has_discount %}
+                    <div>
+                        <span class="text-muted text-decoration-line-through">{{ product.price|floatformat:0 }}</span>
+                        <span class="text-danger fw-bold">{{ product.get_discount_price|floatformat:0 }} تومان</span>
+                    </div>
+                    {% else %}
+                    <span class="text-danger fw-bold">{{ product.price|floatformat:0 }} تومان</span>
+                    {% endif %}
+                    <a href="{{ product.get_absolute_url }}" class="btn btn-primary btn-sm">مشاهده محصول</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            هنوز محصولی ثبت نشده است.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if bottom_banners %}
+<div class="row mt-4">
+    {% for banner in bottom_banners %}
+    <div class="col-md-{% if bottom_banners.count == 1 %}12{% elif bottom_banners.count == 2 %}6{% elif bottom_banners.count == 3 %}4{% else %}3{% endif %} mb-3">
+        <a href="{{ banner.url }}" class="d-block">
+            <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="img-fluid rounded">
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // فعال کردن اسلایدر با تنظیمات سفارشی
+    document.addEventListener('DOMContentLoaded', function() {
+        var myCarousel = document.getElementById('mainSlider');
+        var carousel = new bootstrap.Carousel(myCarousel, {
+            interval: 5000,  // زمان تغییر اسلاید (5 ثانیه)
+            wrap: true,      // چرخش مجدد پس از آخرین اسلاید
+            touch: true,     // پشتیبانی از لمس برای موبایل
+            keyboard: true   // پشتیبانی از کلیدهای جهت‌دار
+        });
+    });
+</script>
+{% endblock %}

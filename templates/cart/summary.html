@@ -1,0 +1,174 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}سبد خرید | زیما{% endblock %}
+
+{% block content %}
+    <h1 class="h2 mb-4">سبد خرید</h1>
+    
+    {% if cart_items %}
+        <div class="row">
+            <!-- محصولات سبد خرید -->
+            <div class="col-lg-8 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">محصولات انتخاب شده</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>محصول</th>
+                                        <th>قیمت واحد</th>
+                                        <th>تعداد</th>
+                                        <th>قیمت کل</th>
+                                        <th>عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cart_items %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ item.image_url }}" alt="{{ item.name }}" class="img-thumbnail me-2" style="width: 60px;">
+                                                    <div>
+                                                        <a href="{% url 'products:detail' item.product_id %}" class="text-decoration-none">{{ item.name }}</a>
+                                                        <div class="text-muted small">
+                                                            <span>سایز: {{ item.size }}</span> |
+                                                            <span>رنگ: {{ item.color }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if item.discount_price %}
+                                                    <span class="text-muted text-decoration-line-through">{{ item.price|floatformat:0 }}</span>
+                                                    <span class="text-danger">{{ item.discount_price|floatformat:0 }}</span>
+                                                {% else %}
+                                                    {{ item.price|floatformat:0 }}
+                                                {% endif %}
+                                                <span class="small">تومان</span>
+                                            </td>
+                                            <td>
+                                                <div class="quantity-control" style="width: 120px;">
+                                                    <form method="post" action="{% url 'cart:update' item.id %}" class="d-flex">
+                                                        {% csrf_token %}
+                                                        <button type="submit" name="action" value="decrease" class="btn btn-sm btn-outline-secondary">-</button>
+                                                        <input type="text" name="quantity" value="{{ item.quantity }}" class="form-control form-control-sm text-center mx-1" readonly>
+                                                        <button type="submit" name="action" value="increase" class="btn btn-sm btn-outline-secondary">+</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {{ item.total_price|floatformat:0 }}
+                                                <span class="small">تومان</span>
+                                            </td>
+                                            <td>
+                                                <form method="post" action="{% url 'cart:remove' item.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white d-flex justify-content-between">
+                        <a href="{% url 'products:list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-right me-1"></i> ادامه خرید
+                        </a>
+                        <form method="post" action="{% url 'cart:clear' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="fas fa-trash-alt me-1"></i> خالی کردن سبد خرید
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- خلاصه سفارش -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">خلاصه سفارش</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>تعداد محصولات:</span>
+                            <span>{{ cart_total.total_items }} عدد</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>مجموع قیمت:</span>
+                            <span>{{ cart_total.subtotal|floatformat:0 }} تومان</span>
+                        </div>
+                        {% if cart_total.discount %}
+                            <div class="d-flex justify-content-between mb-2 text-danger">
+                                <span>تخفیف:</span>
+                                <span>{{ cart_total.discount|floatformat:0 }} تومان</span>
+                            </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>هزینه ارسال:</span>
+                            {% if cart_total.shipping_cost > 0 %}
+                                <span>{{ cart_total.shipping_cost|floatformat:0 }} تومان</span>
+                            {% else %}
+                                <span class="text-success">رایگان</span>
+                            {% endif %}
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>مبلغ قابل پرداخت:</span>
+                            <span>{{ cart_total.total|floatformat:0 }} تومان</span>
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="{% url 'orders:checkout' %}" class="btn btn-success w-100">
+                                <i class="fas fa-credit-card me-1"></i> ادامه فرآیند خرید
+                            </a>
+                        </div>
+
+                        <div class="mt-3">
+                            <div class="card bg-light">
+                                <div class="card-body p-2">
+                                    <p class="small mb-0">
+                                        <i class="fas fa-info-circle text-primary me-1"></i>
+                                        برای سفارش‌های بالای ۳۰۰ هزار تومان، ارسال رایگان است.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- کد تخفیف -->
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6 class="card-title">کد تخفیف دارید؟</h6>
+                        <form method="post" action="{% url 'cart:apply_coupon' %}" class="d-flex">
+                            {% csrf_token %}
+                            <input type="text" name="code" class="form-control" placeholder="کد تخفیف">
+                            <button type="submit" class="btn btn-primary ms-2">اعمال</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="card text-center p-5">
+            <div class="mb-3">
+                <i class="fas fa-shopping-cart fa-4x text-muted"></i>
+            </div>
+            <h3>سبد خرید شما خالی است</h3>
+            <p class="text-muted">محصولات مورد نظر خود را به سبد خرید اضافه کنید.</p>
+            <div class="mt-3">
+                <a href="{% url 'products:list' %}" class="btn btn-primary">مشاهده محصولات</a>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

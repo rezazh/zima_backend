@@ -1,0 +1,42 @@
+<div class="card product-card h-100">
+    {% if product.discount %}
+        <div class="discount-badge">{{ product.discount|floatformat:0 }}%</div>
+    {% endif %}
+
+    <a href="{% url 'products:detail' product.id %}">
+        <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+    </a>
+
+    <div class="card-body">
+        <h5 class="card-title">
+            <a href="{% url 'products:detail' product.id %}" class="text-decoration-none text-dark">{{ product.name }}</a>
+        </h5>
+
+        {% if product.brand %}
+            <p class="card-text text-muted small">{{ product.brand }}</p>
+        {% endif %}
+
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <div class="price-container">
+                {% if product.discount %}
+                    <span class="original-price text-muted text-decoration-line-through">{{ product.price|floatformat:0 }} تومان</span>
+                    <span class="discount-price">{{ product.discount_price|floatformat:0 }} تومان</span>
+                {% else %}
+                    <span class="price">{{ product.price|floatformat:0 }} تومان</span>
+                {% endif %}
+            </div>
+
+            <a href="{% url 'cart:add' product.id %}" class="btn btn-sm btn-outline-primary add-to-cart">
+                <i class="fas fa-shopping-cart"></i>
+            </a>
+        </div>
+
+        {% if product.colors %}
+            <div class="colors mt-2">
+                {% for color in product.colors %}
+                    <span class="color-dot" style="background-color: {{ color }};" title="{{ color }}"></span>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>

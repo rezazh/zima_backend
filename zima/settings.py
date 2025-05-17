@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'users',
     'products',
     'orders',
+    'cart',
+    'pages',
 ]
 
 MIDDLEWARE = [
@@ -65,7 +67,7 @@ ROOT_URLCONF = 'zima.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -73,11 +75,37 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'cart.context_processors.cart_count',
+
             ],
         },
     },
 ]
 
+# تنظیمات رسانه‌ها
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# تنظیمات فایل‌های استاتیک
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+# تنظیمات ورود و خروج کاربر
+LOGIN_URL = 'users:login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+
+# تنظیمات پیام‌های فلش
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.DEBUG: 'alert-info',
+    messages.INFO: 'alert-info',
+    messages.SUCCESS: 'alert-success',
+    messages.WARNING: 'alert-warning',
+    messages.ERROR: 'alert-danger',
+}
 WSGI_APPLICATION = 'zima.wsgi.application'
 
 
@@ -131,7 +159,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -145,13 +172,11 @@ REST_FRAMEWORK = {
     ),
 }
 BASE_DIR = Path(__file__).resolve().parent.parent
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 FILE_UPLOAD_PERMISSIONS = 0o644
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 PILLOW_FILE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'users.CustomUser'
 ALLOWED_IMAGE_TYPES = [
     'image/jpeg',
     'image/png',

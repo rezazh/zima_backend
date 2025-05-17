@@ -1,149 +1,148 @@
-from django.db import transaction
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view
-
-from .models import Order, CartItem, OrderStatusHistory
-from .serializers import OrderSerializer, CartItemSerializer
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from .serializers import OrderSerializer
-
-from zarinpal import ZarinPal
-from .models import Payment
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
+from cart.models import CartItem
+from users.models import Address
+from .models import Order, OrderItem
 
 
+@login_required
+def checkout(request):
+    """صفحه تکمیل سفارش"""
+    cart_items = CartItem.objects.filter(user=request.user)
+    addresses = Address.objects.filter(user=request.user)
+
+    # بررسی خالی نبودن سبد خرید
+    if not cart_items.exists():
+        messages.error(request, 'سبد خرید شما خالی است.')
+        return redirect('cart:summary')
+
+    # محاسبه مجموع قیمت‌ها
+    subtotal = sum(item.get_total_price() for item in cart_items)
+    discount = sum(item.get_discount_amount() for item in cart_items)
+
+    # محاسبه هزینه ارسال
+    shipping_cost = 30000 if subtotal < 300000 else 0
+
+    # محاسبه مبلغ نهایی
+    total = subtotal - discount + shipping_cost
+
+    cart_total = {
+        'total_items': sum(item.quantity for item in cart_items),
+        'subtotal': subtotal,
+        'discount': discount,
+        'shipping_cost': shipping_cost,
+        'total': total
+    }
+
+    if request.method == 'POST':
+        # دریافت اطلاعات سفارش
+        address_id = request.POST.get('address_id')
+        shipping_method = request.POST.get('shipping_method')
+        payment_method = request.POST.get('payment_method')
+        description = request.POST.get('description', '')
+
+        # بررسی انتخاب آدرس
+        if not address_id:
+            messages.error(request, 'لطفاً یک آدرس انتخاب کنید.')
+            return redirect('orders:checkout')
+
+        address = get_object_or_404(Address, id=address_id, user=request.user)
+
+        # محاسبه هزینه ارسال بر اساس روش ارسال
+        if shipping_method == 'express':
+            shipping_cost = 50000
+        else:  # standard
+            shipping_cost = 30000 if subtotal < 300000 else 0
+
+        # ایجاد سفارش جدید
+        order = Order.objects.create(
+            user=request.user,
+            address=address,
+            shipping_method=shipping_method,
+            payment_method=payment_method,
+            description=description,
+            subtotal=subtotal,
+            discount=discount,
+            shipping_cost=shipping_cost,
+            total_price=subtotal - discount + shipping_cost
+        )
+
+        # ایجاد آیتم‌های سفارش
+        for cart_item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product=cart_item.product,
+                size=cart_item.size,
+                color=cart_item.color,
+                quantity=cart_item.quantity,
+                price=cart_item.product.price,
+                discount=cart_item.discount
+            )
+
+        # خالی کردن سبد خرید
+        cart_items.delete()
+
+        # هدایت به صفحه پرداخت یا تأیید سفارش
+        if payment_method == 'online':
+            return redirect('orders:payment', order_id=order.id)
+        else:  # cash
+            order.status = 'confirmed'
+            order.save()
+            messages.success(request, 'سفارش شما با موفقیت ثبت شد.')
+            return redirect('orders:confirmation', order_id=order.id)
+
+    context = {
+        'cart_items': cart_items,
+        'cart_total': cart_total,
+        'addresses': addresses,
+    }
+
+    return render(request, 'orders/checkout.html', context)
 
 
-class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
+@login_required
+def payment(request, order_id):
+    """صفحه پرداخت"""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    # اگر سفارش قبلاً پرداخت شده باشد
+    if order.status != 'pending':
+        messages.warning(request, 'این سفارش قبلاً پرداخت شده است.')
+        return redirect('orders:list')
+
+    # در اینجا اتصال به درگاه پرداخت انجام می‌شود
+    # ...
+
+    # برای نمونه، فرض می‌کنیم پرداخت موفق بوده است
+    if request.method == 'POST':
+        order.status = 'paid'
+        order.payment_date = timezone.now()
+        order.save()
+
+        messages.success(request, 'پرداخت با موفقیت انجام شد.')
+        return redirect('orders:confirmation', order_id=order.id)
+
+    return render(request, 'orders/payment.html', {'order': order})
 
 
-class CartView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        cart_items = CartItem.objects.filter(user=request.user)
-        serializer = CartItemSerializer(cart_items, many=True)
-        return Response(serializer.data)
-
-class CartItemViewSet(viewsets.ModelViewSet):
-    queryset = CartItem.objects.all()
-    serializer_class = CartItemSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return CartItem.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.delete()
-        return Response({"message": "Item removed from cart."}, status=status.HTTP_204_NO_CONTENT)
+@login_required
+def order_confirmation(request, order_id):
+    """صفحه تأیید سفارش"""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    return render(request, 'orders/confirmation.html', {'order': order})
 
 
-class CheckoutView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        user = request.user
-        cart_items = CartItem.objects.filter(user=user)
-
-        if not cart_items.exists():
-            return Response({"error": "Your cart is empty!"}, status=400)
-
-        with transaction.atomic():
-            orders = []
-            for item in cart_items:
-                if item.product.stock < item.quantity:
-                    return Response({"error": f"Not enough stock for {item.product.name}"}, status=400)
-
-                order = Order.objects.create(
-                    user=user,
-                    product=item.product,
-                    quantity=item.quantity,
-                    total_price=item.total_price,
-                    status='PENDING'
-                )
-                orders.append(order)
-
-                item.product.stock -= item.quantity
-                item.product.save()
-
-            cart_items.delete()
-
-        return Response({"message": "Order placed successfully!", "orders": [order.id for order in orders]})
+@login_required
+def order_list(request):
+    """لیست سفارشات کاربر"""
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'orders/list.html', {'orders': orders})
 
 
-
-class OrderHistoryView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        orders = Order.objects.filter(user=request.user).order_by('-created_at')
-        serializer = OrderSerializer(orders, many=True)
-        return Response(serializer.data)
-
-
-
-class PaymentView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, order_id):
-        order = Order.objects.get(id=order_id, user=request.user)
-        if order.status != 'PENDING':
-            return Response({"error": "Order is not pending"}, status=400)
-
-        zarinpal = ZarinPal(merchant_id='YOUR_MERCHANT_ID')
-        amount = order.total_price
-        callback_url = 'http://127.0.0.1:8000/api/orders/payment/callback/'
-        description = f"Payment for Order {order.id}"
-
-        result = zarinpal.request_payment(amount, callback_url, description)
-        if result['status'] == 100:
-            Payment.objects.create(order=order, amount=amount, transaction_id=result['authority'])
-            return Response({"url": result['url']})
-        return Response({"error": "Payment request failed"}, status=400)
-
-
-@api_view(['PATCH'])
-def update_order_status(request, order_id):
-    order = Order.objects.get(id=order_id, user=request.user)
-    new_status = request.data.get('status')
-
-    if new_status not in dict(Order.STATUS_CHOICES):
-        return Response({"error": "Invalid status"}, status=400)
-
-    order.status = new_status
-    order.save()
-    return Response({"message": f"Order status updated to {new_status}"})
-
-
-@api_view(['PATCH'])
-def update_order_status(request, order_id):
-    order = Order.objects.get(id=order_id, user=request.user)
-    new_status = request.data.get('status')
-
-    if new_status not in dict(Order.STATUS_CHOICES):
-        return Response({"error": "Invalid status"}, status=400)
-
-    old_status = order.status
-    order.status = new_status
-    order.save()
-
-    OrderStatusHistory.objects.create(order=order, old_status=old_status, new_status=new_status)
-
-    # send_order_status_email(order)
-
-    return Response({"message": f"Order status updated to {new_status}"})
+@login_required
+def order_detail(request, order_id):
+    """جزئیات سفارش"""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    return render(request, 'orders/detail.html', {'order': order})

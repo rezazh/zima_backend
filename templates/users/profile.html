@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}پروفایل کاربری | زیما{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <!-- منوی کناری -->
+        <div class="col-lg-3 mb-4">
+            <div class="list-group">
+                <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-user me-2"></i> اطلاعات حساب کاربری
+                </a>
+                <a href="{% url 'users:addresses' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-map-marker-alt me-2"></i> آدرس‌ها
+                </a>
+                <a href="{% url 'orders:list' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-shopping-bag me-2"></i> سفارش‌ها
+                </a>
+                <a href="{% url 'users:change_password' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-key me-2"></i> تغییر رمز عبور
+                </a>
+                <a href="{% url 'users:logout' %}" class="list-group-item list-group-item-action text-danger">
+                    <i class="fas fa-sign-out-alt me-2"></i> خروج از حساب کاربری
+                </a>
+            </div>
+        </div>
+        
+        <!-- محتوای اصلی -->
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">اطلاعات حساب کاربری</h5>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post" action="{% url 'users:profile' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">نام کاربری</label>
+                            <input type="text" id="id_username" class="form-control" value="{{ user.username }}" readonly>
+                            <div class="form-text">نام کاربری قابل تغییر نیست.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">ایمیل</label>
+                            <input type="email" name="email" id="id_email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" value="{{ user.email|default:'' }}">
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_phone_number" class="form-label">شماره موبایل</label>
+                            <input type="text" name="phone_number" id="id_phone_number" class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}" value="{{ user.phone_number|default:'' }}">
+                            {% if form.phone_number.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.phone_number.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
