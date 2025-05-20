@@ -6,8 +6,9 @@ class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
     readonly_fields = (
-    'product', 'quantity', 'price', 'discount', 'size', 'color', 'get_total_price', 'get_discount_amount',
-    'get_final_price')
+        'product', 'quantity', 'price', 'discount', 'size', 'color', 'get_total_price', 'get_discount_amount',
+        'get_final_price'
+    )
     can_delete = False
 
     def has_add_permission(self, request, obj=None):
@@ -17,13 +18,21 @@ class OrderItemInline(admin.TabularInline):
 class PaymentInline(admin.TabularInline):
     model = Payment
     extra = 0
-    readonly_fields = ('created_at',)
+    readonly_fields = ('amount', 'status', 'gateway', 'transaction_id', 'reference_id', 'created_at')
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class ShipmentInline(admin.TabularInline):
     model = Shipment
     extra = 0
-    readonly_fields = ('created_at',)
+    readonly_fields = ('status', 'carrier', 'tracking_code', 'shipping_date', 'delivery_date', 'created_at')
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Order)
@@ -40,7 +49,8 @@ class OrderAdmin(admin.ModelAdmin):
         }),
         ('اطلاعات مالی', {
             'fields': (
-            'subtotal', 'discount', 'shipping_cost', 'total_price', 'payment_method', 'transaction_id', 'payment_date')
+                'subtotal', 'discount', 'shipping_cost', 'total_price', 'payment_method', 'transaction_id', 'payment_date'
+            )
         }),
         ('اطلاعات ارسال', {
             'fields': ('shipping_method', 'shipping_date', 'delivery_date')

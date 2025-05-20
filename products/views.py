@@ -1,9 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Avg
+from django.db.models import Q, Avg, Min, Max
 from django.contrib import messages
-from .models import Product, Category, Review
+from .models import Product, Category, Review, ProductInventory
 
 
 def product_list(request):
@@ -70,17 +70,30 @@ def product_list(request):
 
 
 def product_detail(request, product_id):
-    """نمایش جزئیات محصول"""
-    product = get_object_or_404(Product, id=product_id)
+    product = get_object_or_404(Product, id=product_id, is_active=True)
 
-    # محصولات مشابه
-    similar_products = Product.objects.filter(category=product.category).exclude(id=product.id)[:4]
+    # دریافت رنگ‌ها و سایزهای موجود برای این محصول
+    available_inventories = ProductInventory.objects.filter(product=product, quantity__gt=0)
+
+    # استخراج رنگ‌های منحصر به فرد
+    available_colors = []
+    for inventory in available_inventories:
+        if inventory.color not in available_colors:
+            available_colors.append(inventory.color)
+
+    # استخراج سایزهای منحصر به فرد
+    available_sizes = []
+    for inventory in available_inventories:
+        if inventory.size not in available_sizes:
+            available_sizes.append(inventory.size)
+    inventories_data = [inventory.to_dict() for inventory in available_inventories]
 
     context = {
         'product': product,
-        'similar_products': similar_products,
+        'available_colors': available_colors,
+        'available_sizes': available_sizes,
+        'inventories': inventories_data,
     }
-
     return render(request, 'products/product_detail.html', context)
 
 
@@ -212,3 +225,185 @@ def add_review(request, product_id):
             messages.success(request, 'نظر شما با موفقیت ثبت شد.')
 
     return redirect('products:detail', product_id=product_id)
+
+
+def category_detail(request, category_slug):  # یا category_slug بسته به تعریف URL شما
+    category = get_object_or_404(Category, slug=category_slug, is_active=True)
+
+    # دریافت زیردسته‌های این دسته‌بندی
+    subcategories = Category.objects.filter(parent=category, is_active=True)
+
+    # دریافت محصولات این دسته‌بندی و زیردسته‌های آن
+    products = Product.objects.filter(is_active=True)
+
+    if subcategories.exists():
+        # اگر زیردسته دارد، محصولات خود دسته و زیردسته‌ها را نمایش بده
+        category_ids = [category.id] + list(subcategories.values_list('id', flat=True))
+        products = products.filter(category_id__in=category_ids)
+    else:
+        # اگر زیردسته ندارد، فقط محصولات خود دسته را نمایش بده
+        products = products.filter(category=category)
+
+    # دریافت تمام برندهای موجود در محصولات این دسته
+    all_brands = Product.objects.filter(
+        category__in=[category] + list(subcategories),
+        is_active=True
+    ).values_list('brand', flat=True).distinct()
+
+    # دریافت تمام سایزهای موجود در محصولات این دسته
+    all_sizes = set()
+    for product in Product.objects.filter(
+            category__in=[category] + list(subcategories),
+            is_active=True
+    ):
+        if hasattr(product, 'sizes') and product.sizes:
+            all_sizes.update(product.sizes)
+    all_sizes = sorted(list(all_sizes))
+
+    # دریافت تمام رنگ‌های موجود در محصولات این دسته
+    all_colors = set()
+    all_color_codes = {}
+    for product in Product.objects.filter(
+            category__in=[category] + list(subcategories),
+            is_active=True
+    ):
+        if hasattr(product, 'colors') and product.colors:
+            for i, color in enumerate(product.colors):
+                all_colors.add(color)
+                if hasattr(product, 'color_codes') and product.color_codes and i < len(product.color_codes):
+                    all_color_codes[color] = product.color_codes[i]
+    all_colors = sorted(list(all_colors))
+
+    # دریافت محدوده قیمت محصولات
+    price_range = products.aggregate(min_price=Min('price'), max_price=Max('price'))
+
+    # دریافت پارامترهای فیلتر از URL
+    filters_applied = False
+    filter_params = {}
+
+    # فیلتر بر اساس برند
+    brand = request.GET.get('brand')
+    if brand and brand != 'none':
+        filter_params['brand'] = brand
+        filters_applied = True
+
+    # فیلتر بر اساس قیمت
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+
+    if min_price and min_price.strip():
+        try:
+            min_price = int(min_price)
+            filter_params['min_price'] = min_price
+            filters_applied = True
+        except (ValueError, TypeError):
+            min_price = None
+
+    if max_price and max_price.strip():
+        try:
+            max_price = int(max_price)
+            filter_params['max_price'] = max_price
+            filters_applied = True
+        except (ValueError, TypeError):
+            max_price = None
+
+    # فیلتر بر اساس سایز
+    size = request.GET.get('size')
+    if size and size != 'none':
+        filter_params['size'] = size
+        filters_applied = True
+
+    # فیلتر بر اساس رنگ
+    color = request.GET.get('color')
+    if color and color != 'none':
+        filter_params['color'] = color
+        filters_applied = True
+
+    # اعمال فیلترها - روش جدید
+    # ابتدا محصولات را بر اساس فیلترهای پایگاه داده فیلتر می‌کنیم
+    if 'brand' in filter_params:
+        products = products.filter(brand=filter_params['brand'])
+
+    if 'min_price' in filter_params:
+        products = products.filter(price__gte=filter_params['min_price'])
+
+    if 'max_price' in filter_params:
+        products = products.filter(price__lte=filter_params['max_price'])
+
+    # حالا محصولات را به لیست تبدیل می‌کنیم تا بتوانیم فیلترهای پیچیده‌تر را اعمال کنیم
+    filtered_products = list(products)
+    final_products = []
+
+    # اعمال فیلترهای سایز و رنگ
+    for product in filtered_products:
+        # بررسی فیلتر سایز
+        if 'size' in filter_params:
+            if not hasattr(product, 'sizes') or not product.sizes or filter_params['size'] not in product.sizes:
+                continue
+
+        # بررسی فیلتر رنگ
+        if 'color' in filter_params:
+            if not hasattr(product, 'colors') or not product.colors or filter_params['color'] not in product.colors:
+                continue
+
+        # اگر محصول از همه فیلترها عبور کرد، آن را به لیست نهایی اضافه می‌کنیم
+        final_products.append(product)
+
+    # مرتب‌سازی محصولات
+    sort_by = request.GET.get('sort', 'newest')
+    if sort_by == 'price_low':
+        final_products = sorted(final_products, key=lambda p: p.price)
+    elif sort_by == 'price_high':
+        final_products = sorted(final_products, key=lambda p: -p.price)
+    elif sort_by == 'popular':
+        final_products = sorted(final_products, key=lambda p: -p.total_sales if hasattr(p, 'total_sales') else 0)
+    else:  # newest
+        final_products = sorted(final_products, key=lambda p: p.created_at, reverse=True)
+
+    # محدود کردن تعداد محصولات به 6 تا
+    if sort_by in ['price_low', 'price_high', 'popular', 'newest']:
+        final_products = final_products[:6]
+
+    context = {
+        'category': category,
+        'subcategories': subcategories,
+        'products': final_products,
+        'all_brands': all_brands,
+        'all_sizes': all_sizes,
+        'all_colors': all_colors,
+        'all_color_codes': all_color_codes,
+        'price_range': price_range,
+        'current_filters': {
+            'brand': brand if brand and brand != 'none' else None,
+            'size': size if size and size != 'none' else None,
+            'color': color if color and color != 'none' else None,
+            'min_price': min_price,
+            'max_price': max_price,
+            'sort': sort_by
+        },
+        'filters_applied': filters_applied,
+        'filter_params': filter_params
+    }
+
+    return render(request, 'products/category_detail.html', context)
+
+
+def search_products(request):
+    query = request.GET.get('q', '')
+    if query:
+        # جستجو در نام، توضیحات و برند محصولات
+        products = Product.objects.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(brand__icontains=query),
+            is_active=True
+        ).distinct()
+    else:
+        products = Product.objects.none()
+
+    context = {
+        'products': products,
+        'query': query
+    }
+
+    return render(request, 'products/search_results.html', context)

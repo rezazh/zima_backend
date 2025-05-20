@@ -1,312 +1,498 @@
-{% extends 'base/base.html' %}
+{% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}{{ product.name }} | زیما{% endblock %}
+{% block title %}{{ product.name }} - فروشگاه زیما{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+<style>
+    /* استایل برای گالری تصاویر */
+    .product-gallery {
+        margin-bottom: 2rem;
+    }
+
+    .product-main-image {
+        width: 100%;
+        height: 400px;
+        object-fit: contain;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+    }
+
+    .product-thumbnails {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .product-thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        cursor: pointer;
+    }
+
+    .product-thumbnail.active {
+        border-color: #0d6efd;
+    }
+
+    /* استایل برای انتخاب رنگ */
+    .color-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .color-option {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 2px solid #dee2e6;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .color-option:hover {
+        transform: scale(1.1);
+    }
+
+    .color-option.active {
+        border-color: #0d6efd;
+        transform: scale(1.1);
+    }
+
+    /* استایل برای انتخاب سایز */
+    .size-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .size-option {
+        padding: 0.5rem 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .size-option:hover {
+        background-color: #f8f9fa;
+    }
+
+    .size-option.active {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+
+    .size-option.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* استایل برای بخش قیمت */
+    .product-price {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .product-original-price {
+        text-decoration: line-through;
+        color: #6c757d;
+        font-size: 1.2rem;
+    }
+
+    .product-discount-price {
+        color: #dc3545;
+    }
+
+    .product-discount-badge {
+        background-color: #dc3545;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        margin-right: 0.5rem;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-    <!-- نان‌برد -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'home' %}">خانه</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'products:category' product.category.slug %}">{{ product.category.name }}</a></li>
-            <li class="breadcrumb-item active">{{ product.name }}</li>
-        </ol>
-    </nav>
+<nav aria-label="breadcrumb" class="mt-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">صفحه اصلی</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'products:category' category_slug=product.category.slug %}">{{ product.category.name }}</a>
 
-    <div class="row mb-5">
-        <!-- تصاویر محصول -->
-        <div class="col-md-6 mb-4">
-            <div class="product-images">
-                <!-- تصویر اصلی -->
-                <div class="main-image mb-3">
-                    <img src="{{ product.image_url }}" class="img-fluid rounded" id="main-product-image" alt="{{ product.name }}">
-                </div>
+        <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+    </ol>
+</nav>
 
-                <!-- گالری تصاویر -->
-                {% if product.gallery %}
-                    <div class="swiper product-gallery">
-                        <div class="swiper-wrapper">
-                            <div class="swiper-slide" onclick="changeMainImage('{{ product.image_url }}')">
-                                <img src="{{ product.image_url }}" class="img-thumbnail" alt="{{ product.name }}">
-                            </div>
-                            {% for image in product.gallery %}
-                                <div class="swiper-slide" onclick="changeMainImage('{{ image.image_url }}')">
-                                    <img src="{{ image.image_url }}" class="img-thumbnail" alt="{{ product.name }}">
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <div class="swiper-button-next"></div>
-                        <div class="swiper-button-prev"></div>
-                    </div>
-                {% endif %}
+<div class="row mt-4">
+    <!-- گالری تصاویر محصول -->
+    <div class="col-md-6">
+        <div class="product-gallery">
+            {% with main_image=product.get_main_image %}
+            <img id="mainImage" src="{% if main_image %}{{ main_image.image.url }}{% else %}{% static 'img/no-image.png' %}{% endif %}" alt="{{ product.name }}" class="product-main-image">
+            {% endwith %}
+
+            <div class="product-thumbnails">
+                {% for image in product.images.all %}
+                <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}" class="product-thumbnail {% if image.is_main %}active{% endif %}" onclick="changeMainImage(this, '{{ image.image.url }}')">
+                {% empty %}
+                <div class="alert alert-warning">تصویری برای این محصول ثبت نشده است.</div>
+                {% endfor %}
             </div>
         </div>
+    </div>
 
-        <!-- اطلاعات محصول -->
-        <div class="col-md-6">
-            <h1 class="mb-2">{{ product.name }}</h1>
+    <!-- اطلاعات محصول -->
+    <div class="col-md-6">
+        <h1 class="mb-3">{{ product.name }}</h1>
+        <p class="text-muted">برند: {{ product.brand }}</p>
 
-            {% if product.brand %}
-                <p class="text-muted mb-3">برند: {{ product.brand }}</p>
+        <!-- قیمت محصول -->
+        <div class="product-price" id="productPrice">
+            {% if product.has_discount %}
+            <span class="product-discount-badge">{{ product.discount_percent }}٪ تخفیف</span>
+            <span class="product-original-price">{{ product.price|floatformat:0 }} تومان</span>
+            <span class="product-discount-price">{{ product.get_discount_price|floatformat:0 }} تومان</span>
+            {% else %}
+            <span>{{ product.price|floatformat:0 }} تومان</span>
             {% endif %}
-
-            <!-- قیمت -->
-            <div class="product-price mb-4">
-                {% if product.discount %}
-                    <span class="original-price text-muted text-decoration-line-through fs-5">{{ product.price|floatformat:0 }} تومان</span>
-                    <span class="discount-price fs-3 fw-bold text-danger">{{ product.discount_price|floatformat:0 }} تومان</span>
-                    <span class="discount-badge ms-2">{{ product.discount|floatformat:0 }}% تخفیف</span>
-                {% else %}
-                    <span class="price fs-3 fw-bold">{{ product.price|floatformat:0 }} تومان</span>
-                {% endif %}
-            </div>
-
-            <!-- وضعیت موجودی -->
-            <div class="stock-status mb-4">
-                {% if product.in_stock %}
-                    <span class="badge bg-success">موجود در انبار</span>
-                    <span class="text-muted small">{{ product.stock }} عدد موجود است</span>
-                {% else %}
-                    <span class="badge bg-danger">ناموجود</span>
-                {% endif %}
-            </div>
-
-            <!-- فرم انتخاب سایز و رنگ و افزودن به سبد خرید -->
-            <form method="post" action="{% url 'cart:add' product.id %}" class="mb-4">
-                {% csrf_token %}
-
-                <!-- انتخاب سایز -->
-                <div class="mb-3">
-                    <label for="size" class="form-label">سایز:</label>
-                    <select name="size" id="size" class="form-select" required>
-                        <option value="">انتخاب سایز</option>
-                        {% for size in product.sizes_list %}
-                            <option value="{{ size }}">{{ size }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- انتخاب رنگ -->
-                <div class="mb-3">
-                    <label class="form-label">رنگ:</label>
-                    <div class="color-options">
-                        {% for color in product.colors_list %}
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="color" id="color-{{ forloop.counter }}" value="{{ color }}" required>
-                                <label class="form-check-label" for="color-{{ forloop.counter }}">
-                                    <span class="color-dot" style="background-color: {{ color }};"></span>
-                                    {{ color }}
-                                </label>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- انتخاب تعداد -->
-                <div class="mb-3">
-                    <label for="quantity" class="form-label">تعداد:</label>
-                    <div class="input-group" style="max-width: 150px;">
-                        <button type="button" class="btn btn-outline-secondary" onclick="decrementQuantity()">-</button>
-                        <input type="number" name="quantity" id="quantity" class="form-control text-center" value="1" min="1" max="{{ product.stock }}">
-                        <button type="button" class="btn btn-outline-secondary" onclick="incrementQuantity()">+</button>
-                    </div>
-                </div>
-
-                <!-- دکمه افزودن به سبد خرید -->
-                <button type="submit" class="btn btn-primary btn-lg w-100 mb-2" {% if not product.in_stock %}disabled{% endif %}>
-                    <i class="fas fa-shopping-cart me-2"></i>
-                    افزودن به سبد خرید
-                </button>
-            </form>
-
-            <!-- ویژگی‌های محصول -->
-            <div class="product-features">
-                <div class="feature">
-                    <i class="fas fa-truck text-primary"></i>
-                    <span>ارسال سریع</span>
-                </div>
-                <div class="feature">
-                    <i class="fas fa-undo text-primary"></i>
-                    <span>۷ روز ضمانت بازگشت</span>
-                </div>
-                <div class="feature">
-                    <i class="fas fa-shield-alt text-primary"></i>
-                    <span>ضمانت اصالت کالا</span>
-                </div>
-            </div>
         </div>
-    </div>
 
-    <!-- توضیحات و نظرات -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <ul class="nav nav-tabs" id="productTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">توضیحات</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="attributes-tab" data-bs-toggle="tab" data-bs-target="#attributes" type="button" role="tab">مشخصات</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">نظرات ({{ product.reviews.count }})</button>
-                </li>
+        <!-- توضیحات کوتاه -->
+        {% if product.short_description %}
+        <div class="mb-3">
+            <p>{{ product.short_description }}</p>
+        </div>
+        {% endif %}
+
+        <!-- انتخاب رنگ -->
+        {% if product.colors %}
+        <div class="mb-3">
+            <h5>انتخاب رنگ:</h5>
+            <div class="color-options">
+                {% for color_info in product.get_color_info %}
+                <div class="color-option" style="background-color: {{ color_info.code }};" data-color="{{ color_info.name }}" data-color-code="{{ color_info.code }}" onclick="selectColor(this)"></div>
+                {% endfor %}
+            </div>
+            <p id="selectedColorName" class="mt-2 small text-muted">رنگ انتخابی: <span>انتخاب نشده</span></p>
+        </div>
+        {% endif %}
+
+        <!-- انتخاب سایز -->
+        {% if product.sizes %}
+        <div class="mb-3">
+            <h5>انتخاب سایز:</h5>
+            <div class="size-options">
+                {% for size in product.sizes %}
+                <div class="size-option" data-size="{{ size }}" onclick="selectSize(this)">{{ size }}</div>
+                {% endfor %}
+            </div>
+            <p id="selectedSizeName" class="mt-2 small text-muted">سایز انتخابی: <span>انتخاب نشده</span></p>
+        </div>
+        {% endif %}
+
+        <!-- تعداد و دکمه افزودن به سبد خرید -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center">
+                <div class="input-group me-3" style="width: 130px;">
+                    <button class="btn btn-outline-secondary" type="button" onclick="decreaseQuantity()">-</button>
+                    <input type="number" class="form-control text-center" id="quantityInput" value="1" min="1" max="{{ product.stock }}">
+                    <button class="btn btn-outline-secondary" type="button" onclick="increaseQuantity()">+</button>
+                </div>
+                <button class="btn btn-primary" onclick="addToCart()">افزودن به سبد خرید</button>
+            </div>
+            <p id="stockInfo" class="small text-muted mt-2">موجودی: {{ product.stock }} عدد</p>
+        </div>
+
+        <!-- سایر مشخصات محصول -->
+        <div class="mb-4">
+            <h5>مشخصات محصول:</h5>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-tag me-2"></i> دسته‌بندی: {{ product.category.name }}</li>
+                <li><i class="fas fa-venus-mars me-2"></i> جنسیت: {{ product.get_gender_display }}</li>
+                {% if product.weight > 0 %}
+                <li><i class="fas fa-weight me-2"></i> وزن: {{ product.weight }} گرم</li>
+                {% endif %}
+                {% if product.dimensions %}
+                <li><i class="fas fa-ruler-combined me-2"></i> ابعاد: {{ product.dimensions }}</li>
+                {% endif %}
             </ul>
+        </div>
+    </div>
+</div>
 
-            <div class="tab-content p-4 border border-top-0 rounded-bottom" id="productTabsContent">
-                <!-- توضیحات محصول -->
-                <div class="tab-pane fade show active" id="description" role="tabpanel">
-                    {{ product.description|linebreaks }}
-                </div>
+<!-- توضیحات کامل محصول -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h3>توضیحات محصول</h3>
+        <hr>
+        <div class="product-description">
+            {{ product.description|linebreaks }}
+        </div>
+    </div>
+</div>
 
-                <!-- مشخصات محصول -->
-                <div class="tab-pane fade" id="attributes" role="tabpanel">
-                    {% if product.attributes %}
-                        <table class="table">
-                            <tbody>
-                                {% for key, value in product.attributes.items %}
-                                    <tr>
-                                        <th style="width: 30%">{{ key }}</th>
-                                        <td>{{ value }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p>اطلاعاتی برای نمایش وجود ندارد.</p>
-                    {% endif %}
-                </div>
+<!-- محصولات مرتبط -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h3>محصولات مرتبط</h3>
+        <hr>
+    </div>
 
-                <!-- نظرات کاربران -->
-                <div class="tab-pane fade" id="reviews" role="tabpanel">
-                    <!-- فرم ثبت نظر جدید -->
-                    {% if user.is_authenticated %}
-                        <div class="mb-4 p-3 border rounded">
-                            <h5>نظر خود را ثبت کنید</h5>
-                            <form method="post" action="{% url 'products:add_review' product.id %}">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label class="form-label">امتیاز:</label>
-                                    <div class="rating">
-                                        <input type="radio" id="star5" name="rating" value="5" required>
-                                        <label for="star5"><i class="fas fa-star"></i></label>
-                                        <input type="radio" id="star4" name="rating" value="4">
-                                        <label for="star4"><i class="fas fa-star"></i></label>
-                                        <input type="radio" id="star3" name="rating" value="3">
-                                        <label for="star3"><i class="fas fa-star"></i></label>
-                                        <input type="radio" id="star2" name="rating" value="2">
-                                        <label for="star2"><i class="fas fa-star"></i></label>
-                                        <input type="radio" id="star1" name="rating" value="1">
-                                        <label for="star1"><i class="fas fa-star"></i></label>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="comment" class="form-label">نظر:</label>
-                                    <textarea name="comment" id="comment" rows="3" class="form-control"></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary">ثبت نظر</button>
-                            </form>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-info">
-                            برای ثبت نظر ابتدا <a href="{% url 'users:login' %}?next={{ request.path }}">وارد سایت</a> شوید.
-                        </div>
-                    {% endif %}
-
-                    <!-- لیست نظرات -->
-                    <div class="reviews-list">
-                        {% for review in product.reviews.all %}
-                            <div class="review p-3 border rounded mb-3">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h6>{{ review.user.username }}</h6>
-                                        <div class="text-muted small">{{ review.created_at|date:"j F Y" }}</div>
-                                    </div>
-                                    <div class="rating-display">
-                                        {% for i in "12345" %}
-                                            {% if forloop.counter <= review.rating %}
-                                                <i class="fas fa-star text-warning"></i>
-                                            {% else %}
-                                                <i class="far fa-star text-warning"></i>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    {{ review.comment|linebreaks }}
-                                </div>
-                            </div>
-                        {% empty %}
-                            <div class="alert alert-info">هنوز نظری برای این محصول ثبت نشده است.</div>
-                        {% endfor %}
+    {% for related in related_products %}
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            {% with image=related.get_main_image %}
+            {% if image %}
+            <img src="{{ image.image.url }}" class="card-img-top" alt="{{ related.name }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="bg-secondary text-white p-4 text-center" style="height: 200px;">بدون تصویر</div>
+            {% endif %}
+            {% endwith %}
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ related.name }}</h5>
+                <p class="card-text flex-grow-1">{{ related.short_description|default:related.description|truncatechars:80 }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    {% if related.has_discount %}
+                    <div>
+                        <span class="text-muted text-decoration-line-through">{{ related.price|floatformat:0 }}</span>
+                        <span class="text-danger fw-bold">{{ related.get_discount_price|floatformat:0 }} تومان</span>
                     </div>
+                    {% else %}
+                    <span class="text-danger fw-bold">{{ related.price|floatformat:0 }} تومان</span>
+                    {% endif %}
+                    <a href="{{ related.get_absolute_url }}" class="btn btn-primary btn-sm">مشاهده محصول</a>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- محصولات مشابه -->
-    <section class="mb-5">
-        <h2 class="section-title mb-4">محصولات مشابه</h2>
-        <div class="row">
-            {% for product in similar_products %}
-                <div class="col-6 col-md-3 mb-4">
-                    {% include 'products/partials/product_card.html' with product=product %}
-                </div>
-            {% empty %}
-                <div class="col-12">
-                    <div class="alert alert-info">محصول مشابهی یافت نشد.</div>
-                </div>
-            {% endfor %}
-        </div>
-    </section>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">محصول مرتبطی یافت نشد.</div>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}
 
 {% block extra_js %}
-    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-    <script>
-        // اسلایدر گالری تصاویر
-        const swiper = new Swiper('.product-gallery', {
-            slidesPerView: 4,
-            spaceBetween: 10,
-            navigation: {
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
-            },
-            breakpoints: {
-                320: {
-                    slidesPerView: 3,
-                },
-                768: {
-                    slidesPerView: 4,
-                }
-            }
+<script>
+    // اطلاعات محصول
+    const productData = {
+        id: {{ product.id }},
+        basePrice: {{ product.get_discount_price }},
+        originalPrice: {{ product.price }},
+        stock: {{ product.stock }},
+        hasDiscount: {{ product.has_discount|yesno:"true,false" }},
+        discountPercent: {{ product.discount_percent }},
+        inventory: {% if product.inventory %}{{ product.inventory|safe }}{% else %}{}{% endif %},
+        priceAdjustments: {% if product.price_adjustments %}{{ product.price_adjustments|safe }}{% else %}{}{% endif %}
+    };
+
+    let selectedColor = null;
+    let selectedSize = null;
+
+    // تغییر تصویر اصلی با کلیک روی تصاویر بندانگشتی
+    function changeMainImage(thumbnail, imageUrl) {
+        // حذف کلاس active از همه تصاویر بندانگشتی
+        document.querySelectorAll('.product-thumbnail').forEach(function(thumb) {
+            thumb.classList.remove('active');
         });
 
-        // تغییر تصویر اصلی با کلیک روی تصاویر کوچک
-        function changeMainImage(imageUrl) {
-            document.getElementById('main-product-image').src = imageUrl;
+        // اضافه کردن کلاس active به تصویر انتخاب شده
+        thumbnail.classList.add('active');
+
+        // تغییر تصویر اصلی
+        document.getElementById('mainImage').src = imageUrl;
+    }
+
+    // انتخاب رنگ
+    function selectColor(colorElement) {
+        // حذف کلاس active از همه رنگ‌ها
+        document.querySelectorAll('.color-option').forEach(function(color) {
+            color.classList.remove('active');
+        });
+
+        // اضافه کردن کلاس active به رنگ انتخاب شده
+        colorElement.classList.add('active');
+
+        // ذخیره رنگ انتخاب شده
+        selectedColor = colorElement.getAttribute('data-color');
+
+        // نمایش نام رنگ انتخاب شده
+        document.querySelector('#selectedColorName span').textContent = selectedColor;
+
+        // به‌روزرسانی موجودی و قیمت
+        updateStockInfo();
+        updatePrice();
+    }
+
+    // انتخاب سایز
+    function selectSize(sizeElement) {
+        // حذف کلاس active از همه سایزها
+        document.querySelectorAll('.size-option').forEach(function(size) {
+            size.classList.remove('active');
+        });
+
+        // اضافه کردن کلاس active به سایز انتخاب شده
+        sizeElement.classList.add('active');
+
+        // ذخیره سایز انتخاب شده
+        selectedSize = sizeElement.getAttribute('data-size');
+
+        // نمایش نام سایز انتخاب شده
+        document.querySelector('#selectedSizeName span').textContent = selectedSize;
+
+        // به‌روزرسانی موجودی و قیمت
+        updateStockInfo();
+        updatePrice();
+    }
+
+    // به‌روزرسانی اطلاعات موجودی
+    function updateStockInfo() {
+        if (selectedSize && selectedColor) {
+            const key = `${selectedSize}-${selectedColor}`;
+            const variantStock = productData.inventory[key] || 0;
+
+            document.getElementById('stockInfo').textContent = `موجودی: ${variantStock} عدد`;
+            document.getElementById('quantityInput').setAttribute('max', variantStock);
+
+            // اگر موجودی صفر است، دکمه افزودن به سبد خرید را غیرفعال کن
+            if (variantStock <= 0) {
+                document.querySelector('.btn-primary').disabled = true;
+                document.querySelector('.btn-primary').textContent = 'ناموجود';
+            } else {
+                document.querySelector('.btn-primary').disabled = false;
+                document.querySelector('.btn-primary').textContent = 'افزودن به سبد خرید';
+            }
+        } else {
+            document.getElementById('stockInfo').textContent = `موجودی: ${productData.stock} عدد`;
+        }
+    }
+
+    // به‌روزرسانی قیمت بر اساس سایز انتخاب شده
+    function updatePrice() {
+        let finalPrice = productData.basePrice;
+
+        // اعمال تغییرات قیمت بر اساس سایز
+        if (selectedSize && productData.priceAdjustments[selectedSize]) {
+            finalPrice += parseInt(productData.priceAdjustments[selectedSize]);
         }
 
-        // افزایش و کاهش تعداد محصول
-        function incrementQuantity() {
-            const input = document.getElementById('quantity');
-            const max = parseInt(input.getAttribute('max'));
-            const currentValue = parseInt(input.value);
-            if (currentValue < max) {
-                input.value = currentValue + 1;
-            }
+        // نمایش قیمت نهایی
+        const priceElement = document.getElementById('productPrice');
+
+        if (productData.hasDiscount) {
+            const originalPrice = productData.originalPrice + (selectedSize ? (productData.priceAdjustments[selectedSize] || 0) : 0);
+            priceElement.innerHTML = `
+                <span class="product-discount-badge">${productData.discountPercent}٪ تخفیف</span>
+                <span class="product-original-price">${originalPrice.toLocaleString()} تومان</span>
+                <span class="product-discount-price">${finalPrice.toLocaleString()} تومان</span>
+            `;
+        } else {
+            priceElement.innerHTML = `<span>${finalPrice.toLocaleString()} تومان</span>`;
+        }
+    }
+
+    // افزایش تعداد
+    function increaseQuantity() {
+        const input = document.getElementById('quantityInput');
+        const max = parseInt(input.getAttribute('max'));
+        let value = parseInt(input.value);
+
+        if (value < max) {
+            input.value = value + 1;
+        }
+    }
+
+    // کاهش تعداد
+    function decreaseQuantity() {
+        const input = document.getElementById('quantityInput');
+        let value = parseInt(input.value);
+
+        if (value > 1) {
+            input.value = value - 1;
+        }
+    }
+
+    // افزودن به سبد خرید
+    function addToCart() {
+        // بررسی انتخاب رنگ و سایز
+        if ({% if product.colors %}!selectedColor{% else %}false{% endif %}) {
+            alert('لطفاً یک رنگ انتخاب کنید.');
+            return;
         }
 
-        function decrementQuantity() {
-            const input = document.getElementById('quantity');
-            const currentValue = parseInt(input.value);
-            if (currentValue > 1) {
-                input.value = currentValue - 1;
-            }
+        if ({% if product.sizes %}!selectedSize{% else %}false{% endif %}) {
+            alert('لطفاً یک سایز انتخاب کنید.');
+            return;
         }
-    </script>
+
+        const quantity = parseInt(document.getElementById('quantityInput').value);
+
+        // بررسی موجودی
+        if (selectedSize && selectedColor) {
+            const key = `${selectedSize}-${selectedColor}`;
+            const variantStock = productData.inventory[key] || 0;
+
+            if (quantity > variantStock) {
+                alert(`موجودی این محصول با مشخصات انتخاب شده ${variantStock} عدد است.`);
+                return;
+            }
+        } else if (quantity > productData.stock) {
+            alert(`موجودی این محصول ${productData.stock} عدد است.`);
+            return;
+        }
+
+        // ارسال درخواست افزودن به سبد خرید
+        fetch('/cart/add/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                product_id: productData.id,
+                quantity: quantity,
+                color: selectedColor,
+                size: selectedSize
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('محصول با موفقیت به سبد خرید اضافه شد.');
+                // به‌روزرسانی تعداد آیتم‌های سبد خرید در هدر (اگر نیاز است)
+            } else {
+                alert(data.error || 'خطا در افزودن محصول به سبد خرید.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('خطا در ارتباط با سرور.');
+        });
+    }
+
+    // اجرای کدها پس از بارگذاری صفحه
+    document.addEventListener('DOMContentLoaded', function() {
+        // انتخاب اولین رنگ و سایز به صورت پیش‌فرض (اگر موجود باشند)
+        const firstColor = document.querySelector('.color-option');
+        if (firstColor) {
+            selectColor(firstColor);
+        }
+
+        const firstSize = document.querySelector('.size-option');
+        if (firstSize) {
+            selectSize(firstSize);
+        }
+    });
+</script>
 {% endblock %}

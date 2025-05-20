@@ -72,6 +72,7 @@ class Category(models.Model):
         return self.products.filter(is_active=True).count()
 
 
+
 class Product(models.Model):
     """مدل محصولات"""
     GENDER_CHOICES = [
@@ -97,12 +98,21 @@ class Product(models.Model):
     is_active = models.BooleanField(default=True, verbose_name='فعال')
     is_featured = models.BooleanField(default=False, verbose_name='محصول ویژه')
 
+    # JSONField برای سایزها و رنگ‌ها (موجود)
     sizes = models.JSONField(default=list, verbose_name='سایزها',
                              help_text='به صورت آرایه‌ای از سایزها مانند ["S", "M", "L"]')
     colors = models.JSONField(default=list, verbose_name='رنگ‌ها',
                               help_text='به صورت آرایه‌ای از رنگ‌ها مانند ["سفید", "مشکی", "آبی"]')
     color_codes = models.JSONField(default=list, verbose_name='کد رنگ‌ها',
                                    help_text='به صورت آرایه‌ای از کدهای رنگ مانند ["#FFFFFF", "#000000", "#0000FF"]')
+
+    # فیلد جدید برای نگهداری موجودی هر ترکیب رنگ و سایز
+    inventory = models.JSONField(default=dict, verbose_name='موجودی بر اساس رنگ و سایز',
+                                 help_text='دیکشنری از موجودی هر ترکیب رنگ و سایز مانند {"S-سفید": 10, "M-سفید": 5}')
+
+    # فیلد جدید برای تغییر قیمت بر اساس سایز یا رنگ (اختیاری)
+    price_adjustments = models.JSONField(default=dict, verbose_name='تغییرات قیمت',
+                                         help_text='دیکشنری از تغییرات قیمت مانند {"S": 0, "M": 10000, "L": 20000}')
 
     weight = models.PositiveIntegerField(default=0, verbose_name='وزن (گرم)')
     dimensions = models.CharField(max_length=100, blank=True, verbose_name='ابعاد',
@@ -156,6 +166,28 @@ class Product(models.Model):
     def in_stock(self):
         """آیا محصول موجود است"""
         return self.stock > 0
+
+    def get_stock_for_variant(self, size, color):
+        """موجودی برای یک ترکیب خاص از سایز و رنگ"""
+        key = f"{size}-{color}"
+        return self.inventory.get(key, 0)
+
+    def get_price_for_size(self, size):
+        """قیمت با در نظر گرفتن تغییرات قیمت برای سایز"""
+        base_price = self.get_discount_price()
+        adjustment = self.price_adjustments.get(size, 0)
+        return base_price + adjustment
+
+    def get_color_info(self):
+        """دریافت اطلاعات رنگ‌ها به صورت دیکشنری"""
+        result = []
+        for i, color in enumerate(self.colors):
+            code = self.color_codes[i] if i < len(self.color_codes) else "#000000"
+            result.append({
+                'name': color,
+                'code': code
+            })
+        return result
 
     def get_main_image(self):
         """دریافت تصویر اصلی محصول"""
@@ -317,3 +349,57 @@ class Banner(models.Model):
             return False
 
         return True
+
+
+class Color(models.Model):
+    name = models.CharField(max_length=50, verbose_name='نام رنگ')
+
+    # حذف فیلد code چون گفتید ممکن است نیازی به آن نباشد
+
+    class Meta:
+        verbose_name = 'رنگ'
+        verbose_name_plural = 'رنگ‌ها'
+
+    def __str__(self):
+        return self.name
+
+
+class Size(models.Model):
+    name = models.CharField(max_length=20, verbose_name='نام سایز')
+
+    class Meta:
+        verbose_name = 'سایز'
+        verbose_name_plural = 'سایزها'
+
+    def __str__(self):
+        return self.name
+
+
+class ProductInventory(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='inventories', verbose_name='محصول')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, verbose_name='رنگ')
+    size = models.ForeignKey(Size, on_delete=models.CASCADE, verbose_name='سایز')
+    quantity = models.PositiveIntegerField(default=0, verbose_name='موجودی')
+
+    # حذف price_adjustment
+
+    class Meta:
+        verbose_name = 'موجودی محصول'
+        verbose_name_plural = 'موجودی محصولات'
+        # اضافه کردن unique_together برای جلوگیری از تکرار رنگ و سایز برای یک محصول
+        unique_together = ('product', 'color', 'size')
+
+    def __str__(self):
+        return f" {self.color.name} - {self.size.name}"
+
+    def to_dict(self):
+        """تبدیل موجودی به دیکشنری برای استفاده در JavaScript"""
+        return {
+            'id': self.id,
+            'product_id': self.product_id,
+            'color_id': self.color_id,
+            'color_name': self.color.name,
+            'size_id': self.size_id,
+            'size_name': self.size.name,
+            'quantity': self.quantity
+        }

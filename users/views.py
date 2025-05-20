@@ -2,10 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.views.decorators.csrf import ensure_csrf_cookie
+
 from .forms import SignUpForm, LoginForm, UserProfileForm
 from .models import Address
 
 
+@ensure_csrf_cookie
 def signup(request):
     """ثبت‌نام کاربر جدید"""
     if request.user.is_authenticated:
@@ -13,16 +16,27 @@ def signup(request):
 
     if request.method == 'POST':
         form = SignUpForm(request.POST)
+        print("Form data:", request.POST)
+
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, 'ثبت‌نام با موفقیت انجام شد.')
-            return redirect('home')
+            print("Form is valid")
+            try:
+                user = form.save()
+                login(request, user)
+                messages.success(request, 'ثبت‌نام با موفقیت انجام شد.')
+                return redirect('home')
+            except Exception as e:
+                print(f"Error saving form: {e}")
+                messages.error(request, f'خطا در ثبت نام: {e}')
+        else:
+            print("Form errors:", form.errors)
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = SignUpForm()
 
     return render(request, 'users/signup.html', {'form': form})
-
 
 def login_view(request):
     """ورود کاربر"""
@@ -73,6 +87,9 @@ def profile(request):
     return render(request, 'users/profile.html', {'form': form})
 
 
+from django.contrib.auth import update_session_auth_hash
+
+
 @login_required
 def change_password(request):
     """تغییر رمز عبور"""
@@ -91,19 +108,22 @@ def change_password(request):
             messages.error(request, 'رمز عبور جدید و تکرار آن یکسان نیستند.')
             return redirect('users:change_password')
 
+        # بررسی طول رمز عبور
+        if len(new_password) < 8:
+            messages.error(request, 'رمز عبور باید حداقل ۸ کاراکتر باشد.')
+            return redirect('users:change_password')
+
         # تغییر رمز عبور
         request.user.set_password(new_password)
         request.user.save()
 
-        # ورود مجدد با رمز جدید
-        user = authenticate(username=request.user.username, password=new_password)
-        login(request, user)
+        # به روزرسانی نشست برای جلوگیری از خروج کاربر
+        update_session_auth_hash(request, request.user)
 
         messages.success(request, 'رمز عبور با موفقیت تغییر یافت.')
         return redirect('users:profile')
 
     return render(request, 'users/change_password.html')
-
 
 @login_required
 def addresses(request):

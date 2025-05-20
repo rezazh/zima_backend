@@ -18,10 +18,22 @@ class SignUpForm(UserCreationForm):
         help_text='مثال: 09123456789'
     )
 
+    terms = forms.BooleanField(
+        required=True,
+        error_messages={'required': 'پذیرش قوانین و مقررات الزامی است.'}
+    )
+
     class Meta:
         model = CustomUser
         fields = ('username', 'email', 'phone_number', 'password1', 'password2')
 
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.phone_number = self.cleaned_data.get('phone_number')
+
+        if commit:
+            user.save()
+        return user
 
 class LoginForm(forms.Form):
     """فرم ورود کاربر"""

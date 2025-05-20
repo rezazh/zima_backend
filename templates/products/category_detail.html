@@ -1,0 +1,263 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load product_filters %}
+
+{% block title %}{{ category.name }} - فروشگاه زیما{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* استایل برای فیلترها */
+    .filter-section {
+        margin-bottom: 20px;
+    }
+    
+    .filter-section h5 {
+        margin-bottom: 10px;
+    }
+    
+    .filter-select {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .color-swatch {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        margin-right: 5px;
+        vertical-align: middle;
+    }
+
+    /* استایل برای کارت محصول */
+    .product-card {
+        transition: transform 0.3s;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .filter-badge {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+
+    .active-filters {
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mt-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">صفحه اصلی</a></li>
+        {% if category.parent %}
+        <li class="breadcrumb-item">
+            <a href="{% url 'products:category' category.parent.slug %}">{{ category.parent.name }}</a>
+        </li>
+        {% endif %}
+        <li class="breadcrumb-item active" aria-current="page">{{ category.name }}</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <!-- فیلترها -->
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">فیلترها</h5>
+            </div>
+            <div class="card-body">
+                <form id="filterForm" method="get">
+                    <!-- فیلترهای فعال -->
+                    {% if filters_applied %}
+                    <div class="active-filters">
+                        <h6>فیلترهای فعال:</h6>
+                        <div>
+                            {% if current_filters.brand %}
+                            <span class="badge bg-primary filter-badge">
+                                برند: {{ current_filters.brand }}
+                                <a href="#" onclick="removeFilter('brand')" class="text-white ms-1">&times;</a>
+                            </span>
+                            {% endif %}
+
+                            {% if current_filters.size %}
+                            <span class="badge bg-primary filter-badge">
+                                سایز: {{ current_filters.size }}
+                                <a href="#" onclick="removeFilter('size')" class="text-white ms-1">&times;</a>
+                            </span>
+                            {% endif %}
+
+                            {% if current_filters.color %}
+                            <span class="badge bg-primary filter-badge">
+                                رنگ: {{ current_filters.color }}
+                                <a href="#" onclick="removeFilter('color')" class="text-white ms-1">&times;</a>
+                            </span>
+                            {% endif %}
+
+                            {% if current_filters.min_price or current_filters.max_price %}
+                            <span class="badge bg-primary filter-badge">
+                                قیمت:
+                                {% if current_filters.min_price %}از {{ current_filters.min_price|floatformat:0 }}{% endif %}
+                                {% if current_filters.max_price %}تا {{ current_filters.max_price|floatformat:0 }}{% endif %}
+                                <a href="#" onclick="removeFilter('price')" class="text-white ms-1">&times;</a>
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- فیلتر برند -->
+                    {% if all_brands %}
+                    <div class="filter-section">
+                        <h5>برند</h5>
+                        <select name="brand" class="form-select filter-select">
+                            <option value="none">انتخاب برند</option>
+                            {% for brand in all_brands %}
+                            <option value="{{ brand }}" {% if current_filters.brand == brand %}selected{% endif %}>{{ brand }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <!-- فیلتر قیمت -->
+                    <div class="filter-section">
+                        <h5>قیمت (تومان)</h5>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="number" class="form-control" name="min_price" placeholder="از" value="{{ current_filters.min_price }}">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" class="form-control" name="max_price" placeholder="تا" value="{{ current_filters.max_price }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- فیلتر سایز -->
+                    {% if all_sizes %}
+                    <div class="filter-section">
+                        <h5>سایز</h5>
+                        <select name="size" class="form-select filter-select">
+                            <option value="none">انتخاب سایز</option>
+                            {% for size in all_sizes %}
+                            <option value="{{ size }}" {% if current_filters.size == size %}selected{% endif %}>{{ size }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <!-- فیلتر رنگ -->
+                    {% if all_colors %}
+                    <div class="filter-section">
+                        <h5>رنگ</h5>
+                        <select name="color" class="form-select filter-select">
+                            <option value="none">انتخاب رنگ</option>
+                            {% for color in all_colors %}
+                            <option value="{{ color }}" {% if current_filters.color == color %}selected{% endif %}>
+                                {{ color }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <!-- مرتب‌سازی -->
+                    <div class="filter-section">
+                        <h5>مرتب‌سازی</h5>
+                        <select name="sort" class="form-select filter-select">
+                            <option value="newest" {% if current_filters.sort == 'newest' %}selected{% endif %}>جدیدترین</option>
+                            <option value="price_low" {% if current_filters.sort == 'price_low' %}selected{% endif %}>ارزان‌ترین</option>
+                            <option value="price_high" {% if current_filters.sort == 'price_high' %}selected{% endif %}>گران‌ترین</option>
+                            <option value="popular" {% if current_filters.sort == 'popular' %}selected{% endif %}>پرفروش‌ترین</option>
+                        </select>
+                    </div>
+
+                    <!-- دکمه‌های اعمال و حذف فیلترها -->
+                    <div class="mt-3">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">اعمال فیلترها</button>
+                            <a href="{% url 'products:category' category.slug %}" class="btn btn-outline-danger">حذف فیلترها</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- محصولات -->
+    <div class="col-md-9">
+        <h1 class="mb-4">{{ category.name }}</h1>
+
+        {% if subcategories %}
+        <div class="mb-4">
+            <h5>دسته‌بندی‌های {{ category.name }}</h5>
+            <div class="row">
+                {% for subcat in subcategories %}
+                <div class="col-md-3 mb-3">
+                    <a href="{% url 'products:category' subcat.slug %}" class="btn btn-outline-primary w-100">{{ subcat.name }}</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            {% for product in products %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 product-card">
+                    {% with image=product.get_main_image %}
+                    {% if image %}
+                    <img src="{{ image.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-secondary text-white p-4 text-center" style="height: 200px;">بدون تصویر</div>
+                    {% endif %}
+                    {% endwith %}
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-muted small">{{ product.brand }}</p>
+                        <p class="card-text flex-grow-1">{{ product.short_description|default:product.description|truncatechars:80 }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            {% if product.has_discount %}
+                            <div>
+                                <span class="text-muted text-decoration-line-through">{{ product.price|floatformat:0 }}</span>
+                                <span class="text-danger fw-bold">{{ product.get_discount_price|floatformat:0 }} تومان</span>
+                            </div>
+                            {% else %}
+                            <span class="text-danger fw-bold">{{ product.price|floatformat:0 }} تومان</span>
+                            {% endif %}
+                            <a href="{{ product.get_absolute_url }}" class="btn btn-primary btn-sm">مشاهده محصول</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    محصولی با فیلترهای انتخاب شده یافت نشد.
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // حذف فیلتر
+    function removeFilter(filterName) {
+        // حذف فیلتر مورد نظر و ارسال مجدد فرم
+        if (filterName === 'price') {
+            document.querySelector('input[name="min_price"]').value = '';
+            document.querySelector('input[name="max_price"]').value = '';
+        } else {
+            document.querySelector(`select[name="${filterName}"]`).value = 'none';
+        }
+
+        document.getElementById('filterForm').submit();
+    }
+</script>
+{% endblock %}

@@ -198,3 +198,12 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,  # اگر True باشد، توکن رفرش قدیمی پس از استفاده بلاک می‌شود
     'UPDATE_LAST_LOGIN': False,  # اگر True باشد، فیلد آخرین ورود کاربر هنگام استفاده از توکن رفرش به‌روزرسانی می‌شود
 }
+
+# تنظیمات ایمیل
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # یا سرور SMTP دیگر
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@gmail.com'  # ایمیل خود را وارد کنید
+EMAIL_HOST_PASSWORD = 'your-app-password'  # رمز عبور یا App Password خود را وارد کنید
+DEFAULT_FROM_EMAIL = 'Zima Shop <your-email@gmail.com>'

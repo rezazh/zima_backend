@@ -16,15 +16,33 @@
                     <h1 class="h4 mb-0"><a href="/" class="text-white text-decoration-none">فروشگاه زیما</a></h1>
                 </div>
                 <div class="col-md-6">
-                    <form class="d-flex">
-                        <input class="form-control me-2" type="search" placeholder="جستجو..." aria-label="Search">
-                        <button class="btn btn-outline-light" type="submit">جستجو</button>
+                    <form class="d-flex" action="{% url 'products:search' %}" method="GET">
+                    <input class="form-control me-2" type="search" name="q" placeholder="جستجو..." aria-label="Search" value="{{ request.GET.q|default:'' }}">
+                    <button class="btn btn-outline-light" type="submit">جستجو</button>
                     </form>
                 </div>
-                <div class="col-md-3 text-end">
-                    <a href="#" class="btn btn-outline-light me-2">ورود</a>
-                    <a href="#" class="btn btn-light">ثبت‌نام</a>
-                </div>
+                <!-- جستجو کنید و این بخش را پیدا کنید -->
+<div class="col-md-3 text-end">
+    {% if user.is_authenticated %}
+        <div class="dropdown">
+            <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ user.username }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="{% url 'users:profile' %}">پروفایل</a></li>
+                <li><a class="dropdown-item" href="#">سفارشات من</a></li>
+                {% if user.is_staff %}
+                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">پنل مدیریت</a></li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'users:logout' %}">خروج</a></li>
+            </ul>
+        </div>
+    {% else %}
+        <a href="{% url 'users:login' %}" class="btn btn-outline-light me-2">ورود</a>
+        <a href="{% url 'users:signup' %}" class="btn btn-light">ثبت‌نام</a>
+    {% endif %}
+</div>
             </div>
         </div>
     </header>

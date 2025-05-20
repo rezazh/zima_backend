@@ -1,0 +1,49 @@
+<!-- products/templates/products/search_results.html -->
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}نتایج جستجو برای: {{ query }} | زیما{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4">نتایج جستجو برای: "{{ query }}"</h1>
+
+    {% if products %}
+        <div class="row">
+            {% for product in products %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 product-card">
+                        {% with image=product.get_main_image %}
+                        {% if image %}
+                        <img src="{{ image.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-secondary text-white p-4 text-center" style="height: 200px;">بدون تصویر</div>
+                        {% endif %}
+                        {% endwith %}
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text text-muted small">{{ product.brand }}</p>
+                            <p class="card-text flex-grow-1">{{ product.short_description|default:product.description|truncatechars:80 }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                {% if product.has_discount %}
+                                <div>
+                                    <span class="text-muted text-decoration-line-through">{{ product.price|floatformat:0 }}</span>
+                                    <span class="text-danger fw-bold">{{ product.get_discount_price|floatformat:0 }} تومان</span>
+                                </div>
+                                {% else %}
+                                <span class="text-danger fw-bold">{{ product.price|floatformat:0 }} تومان</span>
+                                {% endif %}
+                                <a href="{{ product.get_absolute_url }}" class="btn btn-primary btn-sm">مشاهده محصول</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            محصولی با عبارت "{{ query }}" یافت نشد.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

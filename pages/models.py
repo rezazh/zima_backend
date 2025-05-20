@@ -29,28 +29,29 @@ class Slider(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        # بعد از ذخیره، تصویر را ریسایز کن
         if self.image:
             img_path = self.image.path
             img = Image.open(img_path)
 
-            # اگر تصویر بزرگتر از سایز مورد نظر است، آن را ریسایز کن
-            max_width = 1920
-            max_height = 800
+            # تبدیل تصویر به نسبت ابعاد 16:9 با افزودن حاشیه
+            width, height = img.size
+            target_ratio = 16 / 9
+            current_ratio = width / height
 
-            if img.width > max_width or img.height > max_height:
-                # حفظ نسبت ابعاد
-                if img.width / img.height > max_width / max_height:
-                    # تصویر عریض‌تر است
-                    new_width = max_width
-                    new_height = int(img.height * (max_width / img.width))
-                else:
-                    # تصویر بلندتر است
-                    new_height = max_height
-                    new_width = int(img.width * (max_height / img.height))
+            if current_ratio > target_ratio:  # تصویر عریض‌تر از نسبت هدف
+                new_height = height
+                new_width = int(height * target_ratio)
+                new_img = Image.new('RGB', (new_width, new_height), (0, 0, 0))
+                paste_x = (new_width - width) // 2
+                new_img.paste(img, (paste_x, 0))
+            elif current_ratio < target_ratio:  # تصویر بلندتر از نسبت هدف
+                new_width = width
+                new_height = int(width / target_ratio)
+                new_img = Image.new('RGB', (new_width, new_height), (0, 0, 0))
+                paste_y = (new_height - height) // 2
+                new_img.paste(img, (0, paste_y))
+            else:
+                new_img = img
 
-                # ریسایز تصویر
-                img = img.resize((new_width, new_height), Image.LANCZOS)
-
-                # ذخیره مجدد تصویر
-                img.save(img_path, quality=85)
+            # ذخیره تصویر با کیفیت بالا
+            new_img.save(img_path, quality=95, optimize=True)

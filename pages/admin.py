@@ -10,52 +10,40 @@ from .models import Slider
 
 @admin.register(Slider)
 class SliderAdmin(admin.ModelAdmin):
-    list_display = ('title', 'display_image', 'order', 'is_active', 'created_at')
-    list_filter = ('is_active', 'created_at')
+    list_display = ('title', 'thumbnail', 'is_active', 'order')
+    list_filter = ('is_active',)
     search_fields = ('title', 'subtitle')
-    list_editable = ('order', 'is_active')
-    readonly_fields = ('display_image', 'created_at', 'updated_at')
+    readonly_fields = ('preview_image',)
 
     fieldsets = (
         ('اطلاعات اصلی', {
             'fields': ('title', 'subtitle', 'link')
         }),
         ('تصویر', {
-            'fields': ('image', 'display_image')
+            'fields': ('image', 'preview_image'),
+            'description': 'برای بهترین نتیجه، تصویری با نسبت 16:9 (مثلاً 1920×1080) و کیفیت بالا آپلود کنید.'
         }),
         ('تنظیمات نمایش', {
             'fields': ('order', 'is_active')
         }),
-        ('اطلاعات سیستمی', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
     )
 
-    def display_image(self, obj):
-        if obj and obj.image:
-            return format_html('<img src="{}" width="200" height="100" style="object-fit: cover;" />', obj.image.url)
+    def thumbnail(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" width="100" style="max-height: 60px; width: auto;" />', obj.image.url)
         return "بدون تصویر"
 
-    display_image.short_description = "پیش‌نمایش تصویر"
+    thumbnail.short_description = "تصویر"
 
-    def make_active(self, request, queryset):
-        queryset.update(is_active=True)
-        self.message_user(request, f"{queryset.count()} اسلایدر فعال شدند.")
+    def preview_image(self, obj):
+        if obj.image:
+            # نمایش تصویر با اندازه واقعی و مقیاس مناسب (بدون برش)
+            return format_html('''
+                <div style="margin-top: 10px; margin-bottom: 10px;">
+                    <img src="{}" style="max-width: 100%; max-height: 400px; width: auto; height: auto;" />
+                    <p style="margin-top: 5px; color: #666;">ابعاد تصویر: {}x{} پیکسل</p>
+                </div>
+            ''', obj.image.url, obj.image.width, obj.image.height)
+        return "تصویری انتخاب نشده است."
 
-    make_active.short_description = "فعال کردن اسلایدرهای انتخاب شده"
-
-    def make_inactive(self, request, queryset):
-        queryset.update(is_active=False)
-        self.message_user(request, f"{queryset.count()} اسلایدر غیرفعال شدند.")
-
-    make_inactive.short_description = "غیرفعال کردن اسلایدرهای انتخاب شده"
-
-    def delete_selected(self, request, queryset):
-        count = queryset.count()
-        queryset.delete()
-        self.message_user(request, f"{count} اسلایدر با موفقیت حذف شدند.")
-
-    delete_selected.short_description = "حذف اسلایدرهای انتخاب شده"
-
-    actions = ['make_active', 'make_inactive', 'delete_selected']
+    preview_image.short_description = "پیش‌نمایش تصویر (اندازه واقعی)"

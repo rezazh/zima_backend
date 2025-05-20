@@ -1,38 +1,161 @@
 {% extends "base/base.html" %}
+{% load static %}
 
 {% block title %}صفحه اصلی - فروشگاه زیما{% endblock %}
 {% block extra_css %}
-    <script>
-    // فعال کردن اسلایدر با تنظیمات سفارشی
-    document.addEventListener('DOMContentLoaded', function() {
-        // فعال کردن اسلایدر با تنظیمات سفارشی
-        var mainSlider = new bootstrap.Carousel(document.getElementById('mainSlider'), {
-            interval: 1000,  // زمان تغییر اسلاید (5 ثانیه)
-            wrap: true,      // چرخش مجدد پس از آخرین اسلاید
-            keyboard: true   // پشتیبانی از کلیدهای جهت‌دار
-        });
-
-        // اطمینان از شروع اسلایدر
-        setTimeout(function() {
-            mainSlider.cycle();
-        }, 1000);
-    });
-</script>
 <style>
-    .carousel-item {
-        height: 500px; /* ارتفاع ثابت برای اسلایدر */
+    /* تنظیمات اصلی اسلایدر */
+    #mainSlider .carousel-item {
+        height: 500px;
+        position: relative;
+        overflow: hidden;
     }
 
-    .carousel-item img {
+    /* پس‌زمینه تار */
+    .carousel-background {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
-        object-fit: cover; /* تنظیم تصویر برای پوشاندن کل فضا با حفظ نسبت ابعاد */
+        background-size: cover;
+        background-position: center;
+        filter: blur(15px) brightness(0.6);
+        transform: scale(1.1); /* برای جلوگیری از لبه‌های سفید در هنگام تار کردن */
+        z-index: 1;
+    }
+
+    /* تصویر اصلی */
+    #mainSlider .carousel-item img {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        z-index: 2;
+    }
+
+    /* متن اسلایدر */
+    #mainSlider .carousel-caption {
+        position: absolute;
+        bottom: 20%;
+        left: 10%;
+        right: 10%;
+        z-index: 3;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    /* کنترل‌های اسلایدر */
+    #mainSlider .carousel-control-prev,
+    #mainSlider .carousel-control-next,
+    #mainSlider .carousel-indicators {
+        z-index: 4;
     }
 
     /* تنظیمات برای نمایش بهتر در موبایل */
     @media (max-width: 768px) {
-        .carousel-item {
+        #mainSlider .carousel-item {
             height: 300px;
+        }
+    }
+
+    /* استایل برای بخش دسته‌بندی‌ها */
+    .category-section {
+        margin: 30px 0;
+    }
+
+    .category-card-link {
+        display: block;
+        text-decoration: none;
+        color: #333;
+        transition: all 0.3s ease;
+    }
+
+    .category-card {
+        background-color: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        height: 100%;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: visible;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        border-color: rgba(0, 0, 0, 0.12);
+    }
+
+    .category-icon {
+        margin: -40px auto 15px;
+        width: 100px;
+        height: 100px;
+        position: relative;
+    }
+
+    .category-icon img {
+        width: 120%;
+        height: 120%;
+        object-fit: contain;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .category-info {
+        margin-top: 10px;
+    }
+
+    .category-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #333;
+    }
+
+    .category-subtitle {
+        font-size: 0.9rem;
+        color: #777;
+        margin-bottom: 0;
+    }
+
+    /* تنظیمات رنگ برای هر دسته‌بندی */
+    .category-section .col-md-3:nth-child(1) .category-icon img {
+        color: #1E88E5;
+    }
+
+    .category-section .col-md-3:nth-child(2) .category-icon img {
+        color: #E91E63;
+    }
+
+    .category-section .col-md-3:nth-child(3) .category-icon img {
+        color: #4CAF50;
+    }
+
+    .category-section .col-md-3:nth-child(4) .category-icon img {
+        color: #FF9800;
+    }
+
+    /* تنظیمات برای نمایش در موبایل */
+    @media (max-width: 767px) {
+        .category-icon {
+            width: 80px;
+            height: 80px;
+            margin-top: -30px;
+        }
+
+        .category-title {
+            font-size: 1.2rem;
+        }
+
+        .category-subtitle {
+            font-size: 0.8rem;
         }
     }
 </style>
@@ -49,14 +172,26 @@
             <div class="carousel-inner">
                 {% for slider in sliders %}
                 <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <!-- پس‌زمینه تار -->
+                    <div class="carousel-background" style="background-image: url('{{ slider.image.url }}');"></div>
+                    {% if slider.link %}
+                    <a href="{{ slider.link }}">
+                        <!-- تصویر اصلی -->
+                        <img src="{{ slider.image.url }}" class="d-block" alt="{{ slider.title }}">
+                        <div class="carousel-caption d-none d-md-block">
+                            <h2>{{ slider.title }}</h2>
+                            <p>{{ slider.subtitle }}</p>
+                            <span class="btn btn-light">مشاهده</span>
+                        </div>
+                    </a>
+                    {% else %}
+                    <!-- تصویر اصلی -->
                     <img src="{{ slider.image.url }}" class="d-block" alt="{{ slider.title }}">
                     <div class="carousel-caption d-none d-md-block">
                         <h2>{{ slider.title }}</h2>
                         <p>{{ slider.subtitle }}</p>
-                        {% if slider.link %}
-                        <a href="{{ slider.link }}" class="btn btn-light">مشاهده</a>
-                        {% endif %}
                     </div>
+                    {% endif %}
                 </div>
                 {% empty %}
                 <div class="carousel-item active">
@@ -75,6 +210,64 @@
                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
                 <span class="visually-hidden">بعدی</span>
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- چهار دسته‌بندی اصلی -->
+<div class="container my-5">
+    <div class="row category-section">
+        <div class="col-md-3 col-6 mb-4">
+            <a href="{% url 'products:category' 'mens-clothing' %}" class="category-card-link">
+                <div class="category-card">
+                    <div class="category-icon">
+                        <img src="{% static 'images/categories/men.svg' %}" alt="مردانه">
+                    </div>
+                    <div class="category-info">
+                        <h3 class="category-title">مردانه</h3>
+                        <p class="category-subtitle">Men's Fashion</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-6 mb-4">
+            <a href="{% url 'products:category' 'womens-clothing' %}" class="category-card-link">
+                <div class="category-card">
+                    <div class="category-icon">
+                        <img src="{% static 'images/categories/women.svg' %}" alt="زنانه">
+                    </div>
+                    <div class="category-info">
+                        <h3 class="category-title">زنانه</h3>
+                        <p class="category-subtitle">Women's Fashion</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-6 mb-4">
+            <a href="{% url 'products:category' 'boys-clothing' %}" class="category-card-link">
+                <div class="category-card">
+                    <div class="category-icon">
+                        <img src="{% static 'images/categories/boy.svg' %}" alt="پسرانه">
+                    </div>
+                    <div class="category-info">
+                        <h3 class="category-title">پسرانه</h3>
+                        <p class="category-subtitle">Boys' Fashion</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-6 mb-4">
+            <a href="{% url 'products:category' 'girls-clothing' %}" class="category-card-link">
+                <div class="category-card">
+                    <div class="category-icon">
+                        <img src="{% static 'images/categories/girl.svg' %}" alt="دخترانه">
+                    </div>
+                    <div class="category-info">
+                        <h3 class="category-title">دخترانه</h3>
+                        <p class="category-subtitle">Girls' Fashion</p>
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
 </div>

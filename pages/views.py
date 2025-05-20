@@ -1,12 +1,19 @@
 from django.shortcuts import render
 from django.shortcuts import render
 from .models import Slider
-from products.models import Product, Banner
+from products.models import Product, Banner, Category
+
 
 def home(request):
     # دریافت اسلایدرهای فعال
     sliders = Slider.objects.filter(is_active=True).order_by('order')
 
+    main_categories = {
+        'mens': Category.objects.filter(slug='mens-clothing').first(),
+        'womens': Category.objects.filter(slug='womens-clothing').first(),
+        'boys': Category.objects.filter(slug='boys-clothing').first(),
+        'girls': Category.objects.filter(slug='girls-clothing').first(),
+    }
     # دریافت محصولات ویژه
     featured_products = Product.objects.filter(is_active=True, is_featured=True).order_by('-created_at')[:8]
 
@@ -25,6 +32,7 @@ def home(request):
         'top_banners': top_banners,
         'middle_banners': middle_banners,
         'bottom_banners': bottom_banners,
+        'main_categories': main_categories,
     }
     return render(request, 'pages/home.html', context)
 
