@@ -155,6 +155,29 @@ class Product(models.Model):
             return int(self.price - discount_amount)
         return self.price
 
+    def get_available_colors(self):
+        """دریافت رنگ‌های موجود برای این محصول"""
+        from django.db.models import Q
+        return Color.objects.filter(
+            Q(productinventory__product=self) &
+            Q(productinventory__quantity__gt=0)
+        ).distinct()
+
+    def get_available_sizes(self):
+        """دریافت سایزهای موجود برای این محصول"""
+        from django.db.models import Q
+        return Size.objects.filter(
+            Q(productinventory__product=self) &
+            Q(productinventory__quantity__gt=0)
+        ).distinct()
+
+    def get_inventory_for_color_size(self, color_id, size_id):
+        """دریافت موجودی برای رنگ و سایز مشخص"""
+        try:
+            return self.inventories.get(color_id=color_id, size_id=size_id)
+        except ProductInventory.DoesNotExist:
+            return None
+
     def get_price(self):
         """قیمت نهایی محصول"""
         return self.get_discount_price()
@@ -380,7 +403,8 @@ class ProductInventory(models.Model):
     color = models.ForeignKey(Color, on_delete=models.CASCADE, verbose_name='رنگ')
     size = models.ForeignKey(Size, on_delete=models.CASCADE, verbose_name='سایز')
     quantity = models.PositiveIntegerField(default=0, verbose_name='موجودی')
-
+    weight = models.PositiveIntegerField(default=0, help_text="وزن به گرم")
+    dimensions = models.CharField(max_length=100, blank=True, help_text="ابعاد (مثال: 30x40x10)")
     # حذف price_adjustment
 
     class Meta:
@@ -390,7 +414,7 @@ class ProductInventory(models.Model):
         unique_together = ('product', 'color', 'size')
 
     def __str__(self):
-        return f" {self.color.name} - {self.size.name}"
+        return f"{self.product.name} - {self.color.name} - {self.size.name} ({self.quantity})"
 
     def to_dict(self):
         """تبدیل موجودی به دیکشنری برای استفاده در JavaScript"""

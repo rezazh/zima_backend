@@ -75,7 +75,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'cart.context_processors.cart_count',
+                'cart.context_processors.cart_items_count',
 
             ],
         },
@@ -201,9 +201,11 @@ SIMPLE_JWT = {
 
 # تنظیمات ایمیل
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # یا سرور SMTP دیگر
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your-email@gmail.com'  # ایمیل خود را وارد کنید
-EMAIL_HOST_PASSWORD = 'your-app-password'  # رمز عبور یا App Password خود را وارد کنید
-DEFAULT_FROM_EMAIL = 'Zima Shop <your-email@gmail.com>'
+EMAIL_HOST_USER = 'alieroyaei84562@gmail.com'
+EMAIL_HOST_PASSWORD = 'slec cnex yrsu spfn'
+DEFAULT_FROM_EMAIL = 'Zima Shop alieroyaei84562@gmail.com'
+
+

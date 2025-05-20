@@ -136,10 +136,20 @@ class SizeAdmin(admin.ModelAdmin):
 
 @admin.register(ProductInventory)
 class ProductInventoryAdmin(admin.ModelAdmin):
-    list_display = ('product', 'color', 'size', 'quantity')
+    list_display = ('product', 'color', 'size', 'quantity', 'weight', 'dimensions')
     list_filter = ('product', 'color', 'size')
-    search_fields = ('product__name',)
+    search_fields = ('product__name', 'color__name', 'size__name')
 
+    fieldsets = (
+        ('اطلاعات اصلی', {
+            'fields': ('product', 'color', 'size', 'quantity')
+        }),
+        ('مشخصات فیزیکی', {
+            'fields': ('weight', 'dimensions'),
+            'classes': ('collapse',),
+            'description': 'مشخصات فیزیکی مختص این سایز و رنگ را وارد کنید.'
+        }),
+    )
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):

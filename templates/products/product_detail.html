@@ -120,6 +120,14 @@
         font-size: 0.875rem;
         margin-right: 0.5rem;
     }
+
+    /* استایل برای نمایش بهتر عدد انتخابی */
+    #quantityInput {
+        font-size: 1rem;
+        font-weight: bold;
+        background-color: #f8f9fa;
+    }
+
 </style>
 {% endblock %}
 
@@ -175,57 +183,56 @@
         {% endif %}
 
         <!-- انتخاب رنگ -->
-        {% if product.colors %}
         <div class="mb-3">
             <h5>انتخاب رنگ:</h5>
-            <div class="color-options">
-                {% for color_info in product.get_color_info %}
-                <div class="color-option" style="background-color: {{ color_info.code }};" data-color="{{ color_info.name }}" data-color-code="{{ color_info.code }}" onclick="selectColor(this)"></div>
-                {% endfor %}
+            <div class="color-options" id="colorOptions">
+                <!-- رنگ‌ها با جاوااسکریپت اضافه می‌شوند -->
             </div>
             <p id="selectedColorName" class="mt-2 small text-muted">رنگ انتخابی: <span>انتخاب نشده</span></p>
         </div>
-        {% endif %}
 
         <!-- انتخاب سایز -->
-        {% if product.sizes %}
         <div class="mb-3">
             <h5>انتخاب سایز:</h5>
-            <div class="size-options">
-                {% for size in product.sizes %}
-                <div class="size-option" data-size="{{ size }}" onclick="selectSize(this)">{{ size }}</div>
-                {% endfor %}
+            <div class="size-options" id="sizeOptions">
+                <!-- سایزها با جاوااسکریپت اضافه می‌شوند -->
             </div>
             <p id="selectedSizeName" class="mt-2 small text-muted">سایز انتخابی: <span>انتخاب نشده</span></p>
         </div>
-        {% endif %}
 
         <!-- تعداد و دکمه افزودن به سبد خرید -->
         <div class="mb-4">
-            <div class="d-flex align-items-center">
-                <div class="input-group me-3" style="width: 130px;">
-                    <button class="btn btn-outline-secondary" type="button" onclick="decreaseQuantity()">-</button>
-                    <input type="number" class="form-control text-center" id="quantityInput" value="1" min="1" max="{{ product.stock }}">
-                    <button class="btn btn-outline-secondary" type="button" onclick="increaseQuantity()">+</button>
-                </div>
-                <button class="btn btn-primary" onclick="addToCart()">افزودن به سبد خرید</button>
-            </div>
-            <p id="stockInfo" class="small text-muted mt-2">موجودی: {{ product.stock }} عدد</p>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="display: flex; align-items: center; border: 1px solid #dee2e6; border-radius: 5px; overflow: hidden;">
+            <button type="button" onclick="decreaseQuantity()"
+                style="width: 40px; height: 40px; background-color: #f8f9fa; border: none; cursor: pointer; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center;">-</button>
+
+            <input type="number" id="quantityInput" value="1" min="1" max="{{ product.stock }}"
+                style="width: 50px; height: 40px; border: none; text-align: center; font-size: 16px; font-weight: 500; background-color: white; -moz-appearance: textfield; margin: 0;">
+
+            <button type="button" onclick="increaseQuantity()"
+                style="width: 40px; height: 40px; background-color: #f8f9fa; border: none; cursor: pointer; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center;">+</button>
         </div>
+
+        <button class="btn btn-primary" onclick="addToCart()"
+            style="height: 40px; padding: 0 20px; display: flex; align-items: center; justify-content: center;">افزودن به سبد خرید</button>
+    </div>
+    <p id="stockInfo" class="small text-muted mt-2" style="margin-top: 8px; font-size: 14px; color: #6c757d;">موجودی: {{ product.stock }} عدد</p>
+</div>
 
         <!-- سایر مشخصات محصول -->
         <div class="mb-4">
-            <h5>مشخصات محصول:</h5>
-            <ul class="list-unstyled">
-                <li><i class="fas fa-tag me-2"></i> دسته‌بندی: {{ product.category.name }}</li>
-                <li><i class="fas fa-venus-mars me-2"></i> جنسیت: {{ product.get_gender_display }}</li>
-                {% if product.weight > 0 %}
-                <li><i class="fas fa-weight me-2"></i> وزن: {{ product.weight }} گرم</li>
-                {% endif %}
-                {% if product.dimensions %}
-                <li><i class="fas fa-ruler-combined me-2"></i> ابعاد: {{ product.dimensions }}</li>
-                {% endif %}
-            </ul>
+             <h5>مشخصات محصول:</h5>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-tag me-2"></i> دسته‌بندی: {{ product.category.name }}</li>
+                    <li><i class="fas fa-venus-mars me-2"></i> جنسیت: {{ product.get_gender_display }}</li>
+                    <li id="weightContainer" {% if not product.weight and not product.inventories.first.weight %}style="display: none;"{% endif %}>
+                        <i class="fas fa-weight me-2"></i> وزن: <span id="productWeight">{{ product.weight|default:"" }} گرم</span>
+                    </li>
+                    <li id="dimensionsContainer" {% if not product.dimensions and not product.inventories.first.dimensions %}style="display: none;"{% endif %}>
+                        <i class="fas fa-ruler-combined me-2"></i> ابعاد: <span id="productDimensions">{{ product.dimensions|default:"" }}</span>
+                    </li>
+                </ul>
         </div>
     </div>
 </div>
@@ -286,19 +293,40 @@
 {% block extra_js %}
 <script>
     // اطلاعات محصول
-    const productData = {
-        id: {{ product.id }},
-        basePrice: {{ product.get_discount_price }},
-        originalPrice: {{ product.price }},
-        stock: {{ product.stock }},
-        hasDiscount: {{ product.has_discount|yesno:"true,false" }},
-        discountPercent: {{ product.discount_percent }},
-        inventory: {% if product.inventory %}{{ product.inventory|safe }}{% else %}{}{% endif %},
-        priceAdjustments: {% if product.price_adjustments %}{{ product.price_adjustments|safe }}{% else %}{}{% endif %}
-    };
+   const productData = {
+    id: {{ product.id }},
+    basePrice: {{ product.get_discount_price }},
+    originalPrice: {{ product.price }},
+    stock: {{ product.stock }},
+    hasDiscount: {{ product.has_discount|yesno:"true,false" }},
+    discountPercent: {{ product.discount_percent }},
+    weight: {{ product.weight|default:"null" }},
+    dimensions: "{{ product.dimensions|default:'' }}"
+};
+
+    const productInventory = [
+    {% for inventory in product.inventories.all %}
+    {
+        id: {{ inventory.id }},
+        color: {
+            id: {{ inventory.color.id }},
+            name: "{{ inventory.color.name }}"
+        },
+        size: {
+            id: {{ inventory.size.id }},
+            name: "{{ inventory.size.name }}"
+        },
+        quantity: {{ inventory.quantity }},
+        weight: {{ inventory.weight|default:"null" }},
+        dimensions: "{{ inventory.dimensions|default:'' }}"
+    },
+    {% endfor %}
+];
+
 
     let selectedColor = null;
     let selectedSize = null;
+    let selectedInventory = null;
 
     // تغییر تصویر اصلی با کلیک روی تصاویر بندانگشتی
     function changeMainImage(thumbnail, imageUrl) {
@@ -314,6 +342,149 @@
         document.getElementById('mainImage').src = imageUrl;
     }
 
+    // استخراج رنگ‌های منحصر به فرد از موجودی محصول
+    function getUniqueColors() {
+        const colors = new Map();
+        productInventory.forEach(item => {
+            if (!colors.has(item.color.id)) {
+                colors.set(item.color.id, item.color);
+            }
+        });
+        return Array.from(colors.values());
+    }
+
+    // استخراج سایزهای منحصر به فرد از موجودی محصول
+    function getUniqueSizes() {
+        const sizes = new Map();
+        productInventory.forEach(item => {
+            if (!sizes.has(item.size.id)) {
+                sizes.set(item.size.id, item.size);
+            }
+        });
+        return Array.from(sizes.values());
+    }
+
+    // نمایش رنگ‌ها در صفحه
+    function renderColors() {
+        const colorContainer = document.getElementById('colorOptions');
+        colorContainer.innerHTML = '';
+
+        const uniqueColors = getUniqueColors();
+
+        if (uniqueColors.length === 0) {
+            colorContainer.innerHTML = '<div class="alert alert-warning">رنگی برای این محصول ثبت نشده است.</div>';
+            return;
+        }
+
+        uniqueColors.forEach(color => {
+            // برای هر رنگ یک دایره رنگی ایجاد می‌کنیم
+            const colorElement = document.createElement('div');
+            colorElement.className = 'color-option';
+            colorElement.setAttribute('data-color-id', color.id);
+            colorElement.setAttribute('data-color-name', color.name);
+
+            // تعیین رنگ پس‌زمینه بر اساس نام رنگ
+            colorElement.style.backgroundColor = getColorCode(color.name);
+
+            // اضافه کردن عنوان برای نمایش نام رنگ هنگام هاور
+            colorElement.setAttribute('title', color.name);
+
+            // اضافه کردن رویداد کلیک
+            colorElement.addEventListener('click', function() {
+                selectColor(this);
+            });
+
+            colorContainer.appendChild(colorElement);
+        });
+    }
+
+    // تبدیل نام رنگ فارسی به کد رنگ
+    function getColorCode(colorName) {
+    const colorMap = {
+        // رنگ‌های اصلی
+        'سفید': '#FFFFFF',
+        'مشکی': '#000000',
+        'خاکستری': '#808080',
+        'نقره‌ای': '#C0C0C0',
+
+        // طیف قرمز
+        'قرمز': '#FF0000',
+        'زرشکی': '#800000',
+        'صورتی': '#FFC0CB',
+        'گلبهی': '#FFB6C1',
+
+        // طیف نارنجی و زرد
+        'نارنجی': '#FFA500',
+        'هلویی': '#FFDAB9',
+        'طلایی': '#FFD700',
+        'زرد': '#FFFF00',
+        'لیمویی': '#BFFF00',
+
+        // طیف سبز
+        'سبز': '#00FF00',
+        'سبز لجنی': '#2F4F4F',
+        'سبز یشمی': '#00A86B',
+        'سبز زیتونی': '#808000',
+
+        // طیف آبی
+        'آبی': '#0000FF',
+        'آبی آسمانی': '#87CEEB',
+        'آبی نفتی': '#000080',
+        'فیروزه‌ای': '#40E0D0',
+
+        // طیف بنفش
+        'بنفش': '#800080',
+        'یاسی': '#DDA0DD',
+        'ارغوانی': '#9370DB',
+
+        // طیف قهوه‌ای
+        'قهوه‌ای': '#A52A2A',
+        'کرم': '#FFFDD0',
+        'بژ': '#F5F5DC',
+        'شکلاتی': '#5C4033',
+        'عنابی': '#722F37',
+
+        // سایر رنگ‌ها
+        'مسی': '#B87333',
+        'برنزی': '#CD7F32',
+        'سرمه‌ای': '#191970',
+        'کالباسی': '#E34234',
+        'نباتی': '#FAEBD7',
+        'آجری': '#B22222'
+    };
+
+    return colorMap[colorName] || '#CCCCCC'; // رنگ پیش‌فرض خاکستری روشن
+    }
+
+    // نمایش سایزها در صفحه
+    function renderSizes() {
+        const sizeContainer = document.getElementById('sizeOptions');
+        sizeContainer.innerHTML = '';
+
+        const uniqueSizes = getUniqueSizes();
+
+        if (uniqueSizes.length === 0) {
+            sizeContainer.innerHTML = '<div class="alert alert-warning">سایزی برای این محصول ثبت نشده است.</div>';
+            return;
+        }
+
+        uniqueSizes.forEach(size => {
+            // برای هر سایز یک المان ایجاد می‌کنیم
+            const sizeElement = document.createElement('div');
+            sizeElement.className = 'size-option';
+            sizeElement.setAttribute('data-size-id', size.id);
+            sizeElement.setAttribute('data-size-name', size.name);
+            sizeElement.textContent = size.name;
+
+            // اضافه کردن رویداد کلیک
+            sizeElement.addEventListener('click', function() {
+                selectSize(this);
+            });
+
+            sizeContainer.appendChild(sizeElement);
+        });
+    }
+
     // انتخاب رنگ
     function selectColor(colorElement) {
         // حذف کلاس active از همه رنگ‌ها
@@ -325,14 +496,19 @@
         colorElement.classList.add('active');
 
         // ذخیره رنگ انتخاب شده
-        selectedColor = colorElement.getAttribute('data-color');
+        selectedColor = {
+            id: colorElement.getAttribute('data-color-id'),
+            name: colorElement.getAttribute('data-color-name')
+        };
 
         // نمایش نام رنگ انتخاب شده
-        document.querySelector('#selectedColorName span').textContent = selectedColor;
+        document.querySelector('#selectedColorName span').textContent = selectedColor.name;
+
+        // فعال/غیرفعال کردن سایزها بر اساس موجودی
+        updateAvailableSizes();
 
         // به‌روزرسانی موجودی و قیمت
-        updateStockInfo();
-        updatePrice();
+        updateSelectedInventory();
     }
 
     // انتخاب سایز
@@ -346,27 +522,127 @@
         sizeElement.classList.add('active');
 
         // ذخیره سایز انتخاب شده
-        selectedSize = sizeElement.getAttribute('data-size');
+        selectedSize = {
+            id: sizeElement.getAttribute('data-size-id'),
+            name: sizeElement.getAttribute('data-size-name')
+        };
 
         // نمایش نام سایز انتخاب شده
-        document.querySelector('#selectedSizeName span').textContent = selectedSize;
+        document.querySelector('#selectedSizeName span').textContent = selectedSize.name;
+
+        // فعال/غیرفعال کردن رنگ‌ها بر اساس موجودی
+        updateAvailableColors();
 
         // به‌روزرسانی موجودی و قیمت
-        updateStockInfo();
-        updatePrice();
+        updateSelectedInventory();
     }
 
-    // به‌روزرسانی اطلاعات موجودی
-    function updateStockInfo() {
-        if (selectedSize && selectedColor) {
-            const key = `${selectedSize}-${selectedColor}`;
-            const variantStock = productData.inventory[key] || 0;
+    // به‌روزرسانی سایزهای موجود بر اساس رنگ انتخاب شده
+    function updateAvailableSizes() {
+        if (!selectedColor) return;
 
-            document.getElementById('stockInfo').textContent = `موجودی: ${variantStock} عدد`;
-            document.getElementById('quantityInput').setAttribute('max', variantStock);
+        const availableSizeIds = new Set();
 
-            // اگر موجودی صفر است، دکمه افزودن به سبد خرید را غیرفعال کن
-            if (variantStock <= 0) {
+        // پیدا کردن تمام سایزهایی که با رنگ انتخاب شده موجودی دارند
+        productInventory.forEach(item => {
+            if (item.color.id == selectedColor.id && item.quantity > 0) {
+                availableSizeIds.add(item.size.id);
+            }
+        });
+
+        // به‌روزرسانی وضعیت نمایش سایزها
+        document.querySelectorAll('.size-option').forEach(sizeElement => {
+            const sizeId = sizeElement.getAttribute('data-size-id');
+
+            if (availableSizeIds.has(parseInt(sizeId))) {
+                sizeElement.classList.remove('disabled');
+            } else {
+                sizeElement.classList.add('disabled');
+
+                // اگر سایز انتخاب شده غیرفعال شد، انتخاب را حذف کنیم
+                if (selectedSize && selectedSize.id == sizeId) {
+                    sizeElement.classList.remove('active');
+                    selectedSize = null;
+                    document.querySelector('#selectedSizeName span').textContent = 'انتخاب نشده';
+                }
+            }
+        });
+    }
+
+    // به‌روزرسانی رنگ‌های موجود بر اساس سایز انتخاب شده
+    function updateAvailableColors() {
+        if (!selectedSize) return;
+
+        const availableColorIds = new Set();
+
+        // پیدا کردن تمام رنگ‌هایی که با سایز انتخاب شده موجودی دارند
+        productInventory.forEach(item => {
+            if (item.size.id == selectedSize.id && item.quantity > 0) {
+                availableColorIds.add(item.color.id);
+            }
+        });
+
+        // به‌روزرسانی وضعیت نمایش رنگ‌ها
+        document.querySelectorAll('.color-option').forEach(colorElement => {
+            const colorId = colorElement.getAttribute('data-color-id');
+
+            if (availableColorIds.has(parseInt(colorId))) {
+                colorElement.classList.remove('disabled');
+            } else {
+                colorElement.classList.add('disabled');
+
+                // اگر رنگ انتخاب شده غیرفعال شد، انتخاب را حذف کنیم
+                if (selectedColor && selectedColor.id == colorId) {
+                    colorElement.classList.remove('active');
+                    selectedColor = null;
+                    document.querySelector('#selectedColorName span').textContent = 'انتخاب نشده';
+                }
+            }
+        });
+    }
+
+    // به‌روزرسانی موجودی انتخاب شده
+   function updateSelectedInventory() {
+    selectedInventory = null;
+
+    if (selectedColor && selectedSize) {
+        // پیدا کردن موجودی با رنگ و سایز انتخاب شده
+        selectedInventory = productInventory.find(item =>
+            item.color.id == selectedColor.id &&
+            item.size.id == selectedSize.id
+        );
+
+        if (selectedInventory) {
+            // به‌روزرسانی اطلاعات موجودی
+            document.getElementById('stockInfo').textContent = `موجودی: ${selectedInventory.quantity} عدد`;
+            document.getElementById('quantityInput').setAttribute('max', selectedInventory.quantity);
+
+            // به‌روزرسانی وزن و ابعاد بر اساس سایز انتخاب شده
+            const weightContainer = document.getElementById('weightContainer');
+            const dimensionsContainer = document.getElementById('dimensionsContainer');
+
+            if (selectedInventory.weight) {
+                document.getElementById('productWeight').textContent = `${selectedInventory.weight} گرم`;
+                weightContainer.style.display = 'list-item';
+            } else if (productData.weight) {
+                document.getElementById('productWeight').textContent = `${productData.weight} گرم`;
+                weightContainer.style.display = 'list-item';
+            } else {
+                weightContainer.style.display = 'none';
+            }
+
+            if (selectedInventory.dimensions && selectedInventory.dimensions !== '') {
+                document.getElementById('productDimensions').textContent = selectedInventory.dimensions;
+                dimensionsContainer.style.display = 'list-item';
+            } else if (productData.dimensions && productData.dimensions !== '') {
+                document.getElementById('productDimensions').textContent = productData.dimensions;
+                dimensionsContainer.style.display = 'list-item';
+            } else {
+                dimensionsContainer.style.display = 'none';
+            }
+
+            // فعال/غیرفعال کردن دکمه افزودن به سبد خرید
+            if (selectedInventory.quantity <= 0) {
                 document.querySelector('.btn-primary').disabled = true;
                 document.querySelector('.btn-primary').textContent = 'ناموجود';
             } else {
@@ -374,34 +650,51 @@
                 document.querySelector('.btn-primary').textContent = 'افزودن به سبد خرید';
             }
         } else {
-            document.getElementById('stockInfo').textContent = `موجودی: ${productData.stock} عدد`;
+            // اگر موجودی با این ترکیب پیدا نشد
+            document.getElementById('stockInfo').textContent = 'موجودی: 0 عدد';
+            document.getElementById('quantityInput').setAttribute('max', 0);
+
+            // نمایش وزن و ابعاد پیش‌فرض محصول
+            updateDefaultPhysicalAttributes();
+
+            document.querySelector('.btn-primary').disabled = true;
+            document.querySelector('.btn-primary').textContent = 'ناموجود';
         }
-    }
+    } else {
+        // اگر رنگ یا سایز انتخاب نشده باشد
+        document.getElementById('stockInfo').textContent = `موجودی: ${productData.stock} عدد`;
+        document.getElementById('quantityInput').setAttribute('max', productData.stock);
 
-    // به‌روزرسانی قیمت بر اساس سایز انتخاب شده
-    function updatePrice() {
-        let finalPrice = productData.basePrice;
+        // نمایش وزن و ابعاد پیش‌فرض محصول
+        updateDefaultPhysicalAttributes();
 
-        // اعمال تغییرات قیمت بر اساس سایز
-        if (selectedSize && productData.priceAdjustments[selectedSize]) {
-            finalPrice += parseInt(productData.priceAdjustments[selectedSize]);
-        }
-
-        // نمایش قیمت نهایی
-        const priceElement = document.getElementById('productPrice');
-
-        if (productData.hasDiscount) {
-            const originalPrice = productData.originalPrice + (selectedSize ? (productData.priceAdjustments[selectedSize] || 0) : 0);
-            priceElement.innerHTML = `
-                <span class="product-discount-badge">${productData.discountPercent}٪ تخفیف</span>
-                <span class="product-original-price">${originalPrice.toLocaleString()} تومان</span>
-                <span class="product-discount-price">${finalPrice.toLocaleString()} تومان</span>
-            `;
+        if (productData.stock <= 0) {
+            document.querySelector('.btn-primary').disabled = true;
+            document.querySelector('.btn-primary').textContent = 'ناموجود';
         } else {
-            priceElement.innerHTML = `<span>${finalPrice.toLocaleString()} تومان</span>`;
+            document.querySelector('.btn-primary').disabled = false;
+            document.querySelector('.btn-primary').textContent = 'افزودن به سبد خرید';
         }
     }
+}
+    function updateDefaultPhysicalAttributes() {
+    const weightContainer = document.getElementById('weightContainer');
+    const dimensionsContainer = document.getElementById('dimensionsContainer');
 
+    if (productData.weight) {
+        document.getElementById('productWeight').textContent = `${productData.weight} گرم`;
+        weightContainer.style.display = 'list-item';
+    } else {
+        weightContainer.style.display = 'none';
+    }
+
+    if (productData.dimensions && productData.dimensions !== '') {
+        document.getElementById('productDimensions').textContent = productData.dimensions;
+        dimensionsContainer.style.display = 'list-item';
+    } else {
+        dimensionsContainer.style.display = 'none';
+    }
+}
     // افزایش تعداد
     function increaseQuantity() {
         const input = document.getElementById('quantityInput');
@@ -426,12 +719,12 @@
     // افزودن به سبد خرید
     function addToCart() {
         // بررسی انتخاب رنگ و سایز
-        if ({% if product.colors %}!selectedColor{% else %}false{% endif %}) {
+        if (productInventory.length > 0 && !selectedColor) {
             alert('لطفاً یک رنگ انتخاب کنید.');
             return;
         }
 
-        if ({% if product.sizes %}!selectedSize{% else %}false{% endif %}) {
+        if (productInventory.length > 0 && !selectedSize) {
             alert('لطفاً یک سایز انتخاب کنید.');
             return;
         }
@@ -439,12 +732,9 @@
         const quantity = parseInt(document.getElementById('quantityInput').value);
 
         // بررسی موجودی
-        if (selectedSize && selectedColor) {
-            const key = `${selectedSize}-${selectedColor}`;
-            const variantStock = productData.inventory[key] || 0;
-
-            if (quantity > variantStock) {
-                alert(`موجودی این محصول با مشخصات انتخاب شده ${variantStock} عدد است.`);
+        if (selectedInventory) {
+            if (quantity > selectedInventory.quantity) {
+                alert(`موجودی این محصول با مشخصات انتخاب شده ${selectedInventory.quantity} عدد است.`);
                 return;
             }
         } else if (quantity > productData.stock) {
@@ -462,17 +752,38 @@
             body: JSON.stringify({
                 product_id: productData.id,
                 quantity: quantity,
-                color: selectedColor,
-                size: selectedSize
+                color_id: selectedColor ? selectedColor.id : null,
+                size_id: selectedSize ? selectedSize.id : null,
+                inventory_id: selectedInventory ? selectedInventory.id : null
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 alert('محصول با موفقیت به سبد خرید اضافه شد.');
-                // به‌روزرسانی تعداد آیتم‌های سبد خرید در هدر (اگر نیاز است)
+
+                // به‌روزرسانی تعداد آیتم‌های سبد خرید در هدر
+                const cartCountElement = document.getElementById('cart-items-count');
+                if (cartCountElement) {
+                    cartCountElement.textContent = data.cart_items_count;
+                }
+
+                // پرسیدن از کاربر برای رفتن به سبد خرید
+                if (confirm('محصول به سبد خرید اضافه شد. آیا می‌خواهید به صفحه سبد خرید بروید؟')) {
+                    window.location.href = '{% url "cart:summary" %}';
+                }
+
+                // اگر کاربر لاگین نکرده باشد و نیاز به ریدایرکت باشد
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
             } else {
                 alert(data.error || 'خطا در افزودن محصول به سبد خرید.');
+
+                // اگر کاربر لاگین نکرده باشد و نیاز به ریدایرکت باشد
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
             }
         })
         .catch(error => {
@@ -483,15 +794,21 @@
 
     // اجرای کدها پس از بارگذاری صفحه
     document.addEventListener('DOMContentLoaded', function() {
-        // انتخاب اولین رنگ و سایز به صورت پیش‌فرض (اگر موجود باشند)
-        const firstColor = document.querySelector('.color-option');
-        if (firstColor) {
-            selectColor(firstColor);
-        }
+        // نمایش رنگ‌ها و سایزها
+        renderColors();
+        renderSizes();
 
-        const firstSize = document.querySelector('.size-option');
-        if (firstSize) {
-            selectSize(firstSize);
+        // انتخاب اولین رنگ و سایز موجود به صورت پیش‌فرض
+        if (productInventory.length > 0) {
+            const firstColorElement = document.querySelector('.color-option:not(.disabled)');
+            if (firstColorElement) {
+                selectColor(firstColorElement);
+
+                const firstSizeElement = document.querySelector('.size-option:not(.disabled)');
+                if (firstSizeElement) {
+                    selectSize(firstSizeElement);
+                }
+            }
         }
     });
 </script>

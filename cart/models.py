@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-from products.models import Product
+from products.models import Product, ProductInventory
 
 
 class CartItem(models.Model):
@@ -14,6 +14,7 @@ class CartItem(models.Model):
     discount = models.PositiveIntegerField(default=0)  # درصد تخفیف
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    inventory = models.ForeignKey(ProductInventory, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']

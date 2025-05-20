@@ -3,7 +3,7 @@ from collections.abc import Sized
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from products.models import Product
+from products.models import Product, ProductInventory
 from .models import CartItem, Coupon
 from django.utils import timezone
 
@@ -55,30 +55,70 @@ def add_to_cart(request):
         quantity = int(data.get('quantity', 1))
         color_id = data.get('color_id')
         size_id = data.get('size_id')
+        inventory_id = data.get('inventory_id')
 
         # بررسی اعتبار داده‌ها
         product = Product.objects.get(id=product_id, is_active=True)
 
-        color = None
-        if color_id:
-            color = Color.objects.get(id=color_id, product=product, is_active=True)
+        # اگر کاربر لاگین نکرده باشد، به صفحه ورود هدایت شود
+        if not request.user.is_authenticated:
+            return JsonResponse(
+                {'success': False, 'error': 'لطفاً ابتدا وارد حساب کاربری خود شوید.', 'redirect': '/users/login/'})
 
-        size = None
-        if size_id:
-            size = Size.objects.get(id=size_id, product=product, is_active=True)
+        # دریافت رنگ و سایز
+        color_name = None
+        size_name = None
 
-        # بررسی موجودی
-        if quantity > product.stock:
-            return JsonResponse({'success': False, 'error': 'موجودی کافی نیست.'})
+        if inventory_id:
+            # اگر inventory_id ارسال شده باشد، از آن استفاده می‌کنیم
+            inventory = ProductInventory.objects.get(id=inventory_id)
+            color_name = inventory.color.name
+            size_name = inventory.size.name
 
-        # اضافه کردن به سبد خرید (پیاده‌سازی بر اساس مدل سبد خرید شما)
-        # ...
+            # بررسی موجودی
+            if quantity > inventory.quantity:
+                return JsonResponse({'success': False, 'error': 'موجودی کافی نیست.'})
+        else:
+            # در غیر این صورت، از color_id و size_id استفاده می‌کنیم
+            if color_id:
+                color = Color.objects.get(id=color_id)
+                color_name = color.name
 
-        return JsonResponse({'success': True})
+            if size_id:
+                size = Size.objects.get(id=size_id)
+                size_name = size.name
+
+            # بررسی موجودی کلی محصول
+            if quantity > product.stock:
+                return JsonResponse({'success': False, 'error': 'موجودی کافی نیست.'})
+
+        # اضافه کردن به سبد خرید
+        cart_item, created = CartItem.objects.get_or_create(
+            user=request.user,
+            product=product,
+            color=color_name,
+            size=size_name,
+            defaults={'quantity': quantity, 'inventory_id': inventory_id}
+        )
+
+        # اگر این آیتم قبلاً در سبد خرید بوده، تعداد آن را افزایش می‌دهیم
+        if not created:
+            cart_item.quantity += quantity
+            cart_item.save()
+
+        # تعداد کل آیتم‌های سبد خرید را برمی‌گردانیم
+        cart_items_count = CartItem.objects.filter(user=request.user).count()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'محصول با موفقیت به سبد خرید اضافه شد.',
+            'cart_items_count': cart_items_count
+        })
+
     except Product.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'محصول یافت نشد.'})
-    except (Color.DoesNotExist, Size.DoesNotExist):
-        return JsonResponse({'success': False, 'error': 'رنگ یا سایز انتخابی معتبر نیست.'})
+    except ProductInventory.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'موجودی با مشخصات انتخاب شده یافت نشد.'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 

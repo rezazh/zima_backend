@@ -48,12 +48,30 @@ def product_list(request):
 
     # مرتب‌سازی
     sort = request.GET.get('sort', 'newest')
-    if sort == 'priceیلتر':
-        filter_options = {
-            'sizes': ['S', 'M', 'L', 'XL', 'XXL'],
-            'colors': ['سفید', 'مشکی', 'آبی', 'قرمز', 'سبز'],
-            'brands': Product.objects.values_list('brand', flat=True).distinct(),
-        }
+    if sort == 'price_low':
+        products = products.order_by('price')
+    elif sort == 'price_high':
+        products = products.order_by('-price')
+    elif sort == 'popular':
+        products = products.order_by('-views')
+    else:  # newest (default)
+        products = products.order_by('-created_at')
+
+    # تعریف گزینه‌های فیلتر (خارج از شرط)
+    filter_options = {
+        'sizes': ['S', 'M', 'L', 'XL', 'XXL'],
+        'colors': [
+            'سفید', 'مشکی', 'خاکستری', 'نقره‌ای',
+            'قرمز', 'زرشکی', 'صورتی', 'گلبهی',
+            'نارنجی', 'هلویی', 'طلایی', 'زرد', 'لیمویی',
+            'سبز', 'سبز لجنی', 'سبز یشمی', 'سبز زیتونی',
+            'آبی', 'آبی آسمانی', 'آبی نفتی', 'فیروزه‌ای',
+            'بنفش', 'یاسی', 'ارغوانی',
+            'قهوه‌ای', 'کرم', 'بژ', 'شکلاتی', 'عنابی',
+            'مسی', 'برنزی', 'سرمه‌ای', 'کالباسی', 'نباتی', 'آجری'
+        ],
+        'brands': Product.objects.values_list('brand', flat=True).distinct(),
+    }
 
     # صفحه‌بندی
     paginator = Paginator(products, 12)  # 12 محصول در هر صفحه
@@ -87,12 +105,17 @@ def product_detail(request, product_id):
         if inventory.size not in available_sizes:
             available_sizes.append(inventory.size)
     inventories_data = [inventory.to_dict() for inventory in available_inventories]
-
+    related_products = Product.objects.filter(
+        category=product.category,
+        is_active=True
+    ).exclude(id=product.id)[:4]
     context = {
         'product': product,
         'available_colors': available_colors,
         'available_sizes': available_sizes,
         'inventories': inventories_data,
+        'related_products': related_products,
+
     }
     return render(request, 'products/product_detail.html', context)
 

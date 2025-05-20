@@ -1,8 +1,9 @@
-from .models import CartItem
-
-def cart_count(request):
-    """تعداد محصولات سبد خرید برای نمایش در هدر"""
+# cart/context_processors.py
+def cart_items_count(request):
+    """تعداد آیتم‌های سبد خرید را برمی‌گرداند"""
     if request.user.is_authenticated:
-        count = CartItem.objects.filter(user=request.user).count()
-        return {'cart_count': count}
-    return {'cart_count': 0}
+        count = request.user.cart_items.count()
+    else:
+        count = 0
+
+    return {'cart_items_count': count}
