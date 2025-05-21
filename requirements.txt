@@ -37,3 +37,4 @@ vine==5.1.0
 wcwidth==0.2.13
 whitenoise==6.9.0
 zarinpal==1.0.0
+django-csp==3.7

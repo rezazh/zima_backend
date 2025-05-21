@@ -1,63 +1,68 @@
 version: '3.8'
 
 services:
-  web:
-    build: .
-    restart: always
-    depends_on:
-      - postgres
-    env_file:
-      - .env
-    volumes:
-      - static_volume:/app/staticfiles
-      - media_volume:/app/media
-    networks:
-      - zima_network
-
   postgres:
-    image: postgres:14
-    restart: always
+    image: postgres:15-alpine
+    container_name: zima_postgres
+    environment:
+      - POSTGRES_DB=${DB_NAME:-zima}
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-rezazh79}
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - zima_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-zima}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: zima_redis
+    networks:
+      - zima_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  web:
+    build: .
+    container_name: zima_web
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - .env
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-    networks:
-      - zima_network
-
-  nginx:
-    image: nginx:1.25
-    restart: always
-    depends_on:
-      - web
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - DJANGO_ENV=production
+      - ALLOWED_HOSTS=zimabestshop.ir,www.zimabestshop.ir,localhost,127.0.0.1
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:80"  # برای HTTP
+      - "443:443"  # برای HTTPS (اگر SSL دارید)
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/ssl:/etc/nginx/ssl
-      - static_volume:/var/www/html/static
-      - media_volume:/var/www/html/media
-      - certbot_data:/var/www/certbot
+      - ./static:/app/staticfiles
+      - ./media:/app/media
+      - ./logs:/app/logs
+      - ./ssl:/etc/nginx/ssl  # فعال کردن این خط
+
     networks:
       - zima_network
-
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - certbot_data:/var/www/certbot
-      - ./nginx/ssl:/etc/letsencrypt
-    command: certonly --webroot --webroot-path=/var/www/certbot --email your-email@example.com --agree-tos --no-eff-email -d yourdomain.com -d www.yourdomain.com
+    restart: unless-stopped
 
 volumes:
   postgres_data:
-  static_volume:
-  media_volume:
-  certbot_data:
+    name: zima_postgres_data
 
 networks:
   zima_network:
-    driver: bridgemkdir -p nginx/conf.d
+    name: zima_network
