@@ -1,13 +1,12 @@
-version: '3.8'
-
 services:
+  # پایگاه داده PostgreSQL
   postgres:
     image: postgres:15-alpine
     container_name: zima_postgres
     environment:
-      - POSTGRES_DB=${DB_NAME:-zima}
-      - POSTGRES_USER=${DB_USER:-postgres}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-rezazh79}
+      POSTGRES_DB: ${DB_NAME:-zima}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-rezazh79}
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     networks:
@@ -19,6 +18,7 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # کش Redis
   redis:
     image: redis:7-alpine
     container_name: zima_redis
@@ -31,9 +31,40 @@ services:
       retries: 5
     restart: unless-stopped
 
-  web:
-    build: .
-    container_name: zima_web
+  # برنامه Django
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    container_name: zima_django
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - DJANGO_ENV=development
+    volumes:
+      - ./static:/app/static
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+      - ./logs:/app/logs
+    networks:
+      - zima_network
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+
+  # سرور Gunicorn
+  gunicorn:
+    build:
+      context: .
+      dockerfile: Dockerfile.gunicorn
+    container_name: zima_gunicorn
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,16 +76,30 @@ services:
       - DB_HOST=postgres
       - REDIS_HOST=redis
       - DJANGO_ENV=production
-      - ALLOWED_HOSTS=zimabestshop.ir,www.zimabestshop.ir,localhost,127.0.0.1
-    ports:
-      - "80:80"  # برای HTTP
-      - "443:443"  # برای HTTPS (اگر SSL دارید)
     volumes:
-      - ./static:/app/staticfiles
+      - ./staticfiles:/app/staticfiles
       - ./media:/app/media
       - ./logs:/app/logs
-      - ./ssl:/etc/nginx/ssl  # فعال کردن این خط
+    networks:
+      - zima_network
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
 
+  # وب سرور Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: zima_nginx
+    depends_on:
+      - gunicorn
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+      - ./ssl:/etc/nginx/ssl
     networks:
       - zima_network
     restart: unless-stopped

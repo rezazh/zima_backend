@@ -1,0 +1,40 @@
+FROM python:3.11-alpine
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    APP_HOME=/app
+
+WORKDIR $APP_HOME
+
+# نصب پکیج‌های سیستمی
+RUN apk update && apk add --no-cache \
+    postgresql-dev \
+    gcc \
+    python3-dev \
+    musl-dev \
+    jpeg-dev \
+    zlib-dev \
+    libffi-dev \
+    gettext \
+    bash \
+    netcat-openbsd
+
+# نصب وابستگی‌های Python
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    pip install gunicorn
+
+# کپی کد پروژه
+COPY . .
+
+# ایجاد دایرکتوری‌های مورد نیاز
+RUN mkdir -p /app/static /app/staticfiles /app/media /app/logs
+
+# کپی و اجرای entrypoint
+COPY ./config/gunicorn-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 8000
+
+ENTRYPOINT ["/entrypoint.sh"]
