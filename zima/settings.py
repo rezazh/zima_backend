@@ -62,10 +62,11 @@ MIDDLEWARE = [
 ]
 
 # تنظیمات CORS برای محیط تولید
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv())
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:8000', cast=Csv())
 
 ROOT_URLCONF = 'zima.urls'
 
+# تنظیمات ساده شده تمپلیت
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -128,7 +129,7 @@ DATABASES = {
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT'),
         'OPTIONS': {
-            'sslmode': 'require' if not DEBUG else 'disable',
+            'sslmode': 'disable',
             'connect_timeout': 10,
         },
         'CONN_MAX_AGE': 600,  # 10 minutes connection persistence
@@ -204,8 +205,8 @@ REST_FRAMEWORK = {
 }
 
 # تنظیمات آپلود فایل
-FILE_UPLOAD_PERMISSIONS = int(config('FILE_UPLOAD_PERMISSIONS', default='0o644'), 8)
-FILE_UPLOAD_MAX_MEMORY_SIZE = config('FILE_UPLOAD_MAX_MEMORY_SIZE', default=10485760, cast=int)  # 10MB
+FILE_UPLOAD_PERMISSIONS = 0o644
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 PILLOW_FILE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']
 
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -223,8 +224,8 @@ ALLOWED_IMAGE_TYPES = [
 
 # تنظیمات JWT
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=config('SIMPLE_JWT_ACCESS_TOKEN_LIFETIME', default=1, cast=int)),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=config('SIMPLE_JWT_REFRESH_TOKEN_LIFETIME', default=7, cast=int)),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=config('SIMPLE_JWT_ACCESS_TOKEN_LIFETIME', default=7, cast=int)),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=config('SIMPLE_JWT_REFRESH_TOKEN_LIFETIME', default=30, cast=int)),
     'ROTATE_REFRESH_TOKENS': config('SIMPLE_JWT_ROTATE_REFRESH_TOKENS', default=True, cast=bool),
     'BLACKLIST_AFTER_ROTATION': config('SIMPLE_JWT_BLACKLIST_AFTER_ROTATION', default=True, cast=bool),
     'UPDATE_LAST_LOGIN': config('SIMPLE_JWT_UPDATE_LAST_LOGIN', default=True, cast=bool),
@@ -247,9 +248,9 @@ EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='alieroyaei84562@gmail.com')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='slec cnex yrsu spfn')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Zima Shop <alieroyaei84562@gmail.com>')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=f'Zima Shop <{config("EMAIL_HOST_USER", default="")}>')
 
 # تنظیمات امنیتی برای محیط تولید
 if not DEBUG:
@@ -266,14 +267,6 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = config('SECURE_CONTENT_TYPE_NOSNIFF', default=True, cast=bool)
     SECURE_BROWSER_XSS_FILTER = config('SECURE_BROWSER_XSS_FILTER', default=True, cast=bool)
     X_FRAME_OPTIONS = config('X_FRAME_OPTIONS', default='DENY')
-
-    # کش کردن تمپلیت‌ها
-    TEMPLATES[0]['OPTIONS']['loaders'] = [
-        ('django.template.loaders.cached.Loader', [
-            'django.template.loaders.filesystem.Loader',
-            'django.template.loaders.app_directories.Loader',
-        ]),
-    ]
 
     # محدودیت نشست
     SESSION_COOKIE_HTTPONLY = True
@@ -293,7 +286,7 @@ if not DEBUG:
     # امنیت بیشتر
     SECURE_REFERRER_POLICY = 'same-origin'
 
-# تنظیمات لاگ
+# تنظیمات لاگ ساده شده
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -307,52 +300,22 @@ LOGGING = {
             'style': '{',
         },
     },
-    'filters': {
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        },
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        },
-    },
     'handlers': {
         'console': {
             'level': 'INFO',
-            'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler',
-        },
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/django.log'),
-            'formatter': 'verbose',
-        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'INFO',
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['mail_admins', 'file'],
-            'level': 'ERROR',
             'propagate': False,
-        },
-        'zima': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': True,
         },
     },
 }
-
-# اطمینان از وجود دایرکتوری لاگ
-if not DEBUG:
-    os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
