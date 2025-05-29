@@ -3,6 +3,7 @@ name: Deploy to Production
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -20,9 +21,20 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
           cd /var/www/zimabestshop/zima_backend
+          
+          # حل مشکل تغییرات محلی
+          git stash -u
+          
+          # دریافت تغییرات جدید
           git pull origin main
+          
+          # راه‌اندازی مجدد کانتینرها بدون حذف تصاویر
           docker-compose down
-          docker-compose build
-          docker-compose up -d
-          docker system prune -af
+          docker-compose up -d --build
+          
+          # پاکسازی تصاویر بدون استفاده (اختیاری)
+          # docker system prune -f
+          
+          # نمایش وضعیت کانتینرها
+          docker-compose ps
         EOF
