@@ -1,50 +1,37 @@
-# در فایل middleware.py
 import logging
 import time
 import json
+from django.utils.deprecation import MiddlewareMixin
 
-logger = logging.getLogger('zima')
+logger = logging.getLogger('zima.requests')
 
 
-class RequestLogMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
+class RequestLogMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        request.start_time = time.time()
+        return None
 
-    def __call__(self, request):
-        start_time = time.time()
+    def process_response(self, request, response):
+        if hasattr(request, 'start_time'):
+            duration = (time.time() - request.start_time) * 1000  # به میلی‌ثانیه
 
-        # لاگ کردن درخواست ورودی
-        if not request.path.startswith('/admin/') and not request.path.startswith('/static/'):
-            request_data = {
+            # اطلاعات درخواست و پاسخ
+            log_data = {
                 'method': request.method,
                 'path': request.path,
-                'user': str(request.user),
-                'GET': dict(request.GET),
-            }
-
-            # لاگ کردن داده‌های POST (با حذف اطلاعات حساس)
-            if request.method == 'POST' and hasattr(request, 'body'):
-                try:
-                    body = json.loads(request.body.decode('utf-8'))
-                    # حذف اطلاعات حساس
-                    if 'password' in body:
-                        body['password'] = '********'
-                    request_data['POST'] = body
-                except:
-                    request_data['POST'] = 'Unable to parse POST data'
-
-            logger.info(f"Request received: {json.dumps(request_data)}")
-
-        response = self.get_response(request)
-
-        # لاگ کردن پاسخ
-        if not request.path.startswith('/admin/') and not request.path.startswith('/static/'):
-            duration = time.time() - start_time
-            response_data = {
-                'path': request.path,
                 'status_code': response.status_code,
-                'duration': f"{duration:.2f}s",
+                'user': str(request.user),
+                'duration': duration
             }
-            logger.info(f"Response sent: {json.dumps(response_data)}")
+
+            # لاگ کردن با سطح مناسب بر اساس کد وضعیت
+            if 200 <= response.status_code < 300:
+                logger.info(f"REQUEST_SUCCESS: {json.dumps(log_data)}")
+            elif 300 <= response.status_code < 400:
+                logger.info(f"REQUEST_REDIRECT: {json.dumps(log_data)}")
+            elif 400 <= response.status_code < 500:
+                logger.warning(f"REQUEST_CLIENT_ERROR: {json.dumps(log_data)}")
+            else:
+                logger.error(f"REQUEST_SERVER_ERROR: {json.dumps(log_data)}")
 
         return response

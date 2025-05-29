@@ -289,45 +289,63 @@ if not DEBUG:
     SECURE_REFERRER_POLICY = 'same-origin'
 
 # تنظیمات لاگ ساده شده
+LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '[{levelname}] {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
         },
-        'request': {
-            'format': '{levelname} {asctime} {message} - {status_code} {request} {user}',
+        'simple': {
+            'format': '[{levelname}] {message}',
             'style': '{',
         },
-    },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
+        'request_formatter': {
+            'format': '[REQUEST] {asctime} "{method} {path}" {status_code} {user} {duration:.2f}ms',
+            'style': '{',
         },
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'django.log'),
+            'formatter': 'verbose',
+        },
         'request_handler': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'request',
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',  # به خروجی استاندارد می‌نویسد
+            'formatter': 'request_formatter',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['console'],
+            'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': True,
         },
         'django.request': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'zima': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'zima.requests': {  # لاگر اختصاصی برای درخواست‌ها
             'handlers': ['request_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': False,
         },
     },

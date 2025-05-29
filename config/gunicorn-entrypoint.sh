@@ -92,3 +92,11 @@ exec gunicorn zima.wsgi:application \
     --capture-output \
     --enable-stdio-inheritance \
     --forwarded-allow-ips="*"
+
+command: >
+gunicorn zima.wsgi:application
+--bind 0.0.0.0:8000
+--workers 3
+--log-level debug
+--access-logfile -  # نمایش لاگ‌های دسترسی در خروجی استاندارد
+--error-logfile -   # نمایش لاگ‌های خطا در خروجی استاندارد
