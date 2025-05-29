@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
 
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.7.0
@@ -19,22 +21,101 @@ jobs:
 
     - name: Deploy to server
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          cd /var/www/zimabestshop/zima_backend
+        ssh -T -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          echo "===== Starting deployment process ====="
           
-          # حل مشکل تغییرات محلی
-          git stash -u
+          # بررسی وجود دایرکتوری پروژه
+          if [ -d "/var/www/zimabestshop/zima_backend" ]; then
+            cd /var/www/zimabestshop/zima_backend
+            echo "Resetting any local changes..."
+            git reset --hard
+            git clean -fd
+          else
+            echo "Directory not found, creating..."
+            mkdir -p /var/www/zimabestshop
+            cd /var/www/zimabestshop
+            git clone https://github.com/rezazh/zima_backend.git
+            cd zima_backend
+          fi
           
-          # دریافت تغییرات جدید
-          git pull origin main
+          # دریافت آخرین تغییرات از گیت
+          echo "Pulling latest changes from git..."
+          git pull --ff-only origin main || (echo "Fast-forward pull failed, fetching and resetting..." && git fetch origin main && git reset --hard origin/main)
           
-          # راه‌اندازی مجدد کانتینرها بدون حذف تصاویر
-          docker-compose down
-          docker-compose up -d --build
+          # نمایش تغییرات دریافت شده
+          echo "Recent commits:"
+          git log -1 --pretty=format:"%h - %an, %ar : %s"
           
-          # پاکسازی تصاویر بدون استفاده (اختیاری)
-          # docker system prune -f
+          # توقف کانتینرهای موجود با حفظ داده‌ها
+          echo "Stopping containers..."
+          timeout 30 docker-compose down || echo "Docker-compose down timed out or failed"
           
-          # نمایش وضعیت کانتینرها
+          # شناسایی سرویس‌های تغییر یافته برای بیلد انتخابی
+          echo "Identifying changed services..."
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+          
+          # آرایه‌ای برای نگهداری سرویس‌های تغییر یافته
+          SERVICES_TO_BUILD=()
+          
+          # بررسی تغییرات در هر سرویس
+          if echo "$CHANGED_FILES" | grep -q "Dockerfile\|docker-compose.yml\|requirements.txt"; then
+            echo "Core docker files changed, rebuilding all services"
+            BUILD_CMD="docker-compose build --progress=plain"
+          else
+            # بررسی تغییرات در سرویس‌های مختلف
+            if echo "$CHANGED_FILES" | grep -q "nginx/"; then
+              SERVICES_TO_BUILD+=("nginx")
+            fi
+            if echo "$CHANGED_FILES" | grep -q "zima/\|apps/"; then
+              SERVICES_TO_BUILD+=("django" "gunicorn")
+            fi
+            
+            # ساخت دستور بیلد بر اساس سرویس‌های تغییر یافته
+            if [ ${#SERVICES_TO_BUILD[@]} -eq 0 ]; then
+              echo "No service-specific changes detected, using cached builds"
+              BUILD_CMD="docker-compose build --progress=plain"
+            else
+              echo "Building changed services: ${SERVICES_TO_BUILD[*]}"
+              BUILD_CMD="docker-compose build --progress=plain --no-cache ${SERVICES_TO_BUILD[*]}"
+            fi
+          fi
+          
+          # بیلد با استفاده از BuildKit برای سرعت بیشتر
+          echo "Building containers: $BUILD_CMD"
+          DOCKER_BUILDKIT=1 eval $BUILD_CMD
+          
+          # راه‌اندازی کانتینرها در پس‌زمینه و بررسی وضعیت
+          echo "Starting containers..."
+          docker-compose up -d
+          
+          # بررسی وضعیت کانتینرها تا 30 ثانیه
+          echo "Waiting for containers to be healthy..."
+          MAX_WAIT=30
+          WAIT_INTERVAL=2
+          ELAPSED=0
+          
+          while [ $ELAPSED -lt $MAX_WAIT ]; do
+            # بررسی وضعیت کانتینرها
+            CONTAINERS_UP=$(docker-compose ps --services --filter "status=running" | wc -l)
+            EXPECTED_CONTAINERS=$(docker-compose config --services | wc -l)
+            
+            if [ "$CONTAINERS_UP" -eq "$EXPECTED_CONTAINERS" ]; then
+              echo "All containers are up and running!"
+              break
+            fi
+            
+            echo "Waiting for containers... ($CONTAINERS_UP/$EXPECTED_CONTAINERS running, ${ELAPSED}s elapsed)"
+            sleep $WAIT_INTERVAL
+            ELAPSED=$((ELAPSED + WAIT_INTERVAL))
+          done
+          
+          # نمایش وضعیت نهایی کانتینرها
+          echo "Container status:"
           docker-compose ps
+          
+          # نمایش لاگ‌های خطا (اگر وجود داشته باشد)
+          echo "Checking for errors in logs..."
+          docker-compose logs --tail=10 | grep -i "error\|warn\|fail" || echo "No immediate errors found"
+          
+          echo "===== Deployment completed ====="
         EOF
