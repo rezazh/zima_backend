@@ -108,6 +108,8 @@ services:
       - ./media:/app/media:ro
     networks:
       - zima_network
+    environment:
+      - NGINX_SERVER_NAMES_HASH_BUCKET_SIZE=64
     restart: unless-stopped
 
 volumes:
