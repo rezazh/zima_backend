@@ -326,3 +326,35 @@ LOGGING = {
 }
 
 print(f"Settings loaded for {DJANGO_ENV} environment")
+# Override settings for Docker deployment
+import os
+
+# اجازه دادن به تمام میزبان‌ها
+ALLOWED_HOSTS = ['*']
+
+# تنظیم پایگاه داده برای Docker
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'zima'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'rezazh79'),
+        'HOST': os.environ.get('DB_HOST', 'postgres'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+        'OPTIONS': {
+            'sslmode': 'disable',
+            'connect_timeout': 10,
+        },
+        'CONN_MAX_AGE': 600,
+    }
+}
+
+# غیرفعال کردن تنظیمات HTTPS در محیط توسعه
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+
+print("Django settings overridden for Docker deployment")

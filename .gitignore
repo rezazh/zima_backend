@@ -131,7 +131,6 @@ media/
 staticfiles/
 static/
 logs/
-ssl/
 *.log
 
 # IDEs
