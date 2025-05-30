@@ -84,9 +84,25 @@ jobs:
           echo "Building containers: $BUILD_CMD"
           DOCKER_BUILDKIT=1 eval $BUILD_CMD
           
-          # راه‌اندازی کانتینرها در پس‌زمینه و بررسی وضعیت
+          # راه‌اندازی کانتینرها در پس‌زمینه
           echo "Starting containers..."
           docker-compose up -d
+          
+          # بررسی تغییرات مایگریشن
+          echo "===== Checking for migrations ====="
+          if echo "$CHANGED_FILES" | grep -q "migrations/\|models.py"; then
+            echo "Model changes detected, running migrations..."
+            
+            # اجرای مایگریشن‌ها
+            echo "Running migrations..."
+            docker-compose exec -T gunicorn python manage.py migrate
+            
+            # نمایش وضعیت مایگریشن‌ها
+            echo "Migration status:"
+            docker-compose exec -T gunicorn python manage.py showmigrations
+          else
+            echo "No model changes detected, skipping migrations"
+          fi
           
           # بررسی وضعیت کانتینرها تا 30 ثانیه
           echo "Waiting for containers to be healthy..."
