@@ -101,7 +101,6 @@ services:
       - "443:443"
     volumes:
       - ./config/nginx.conf:/etc/nginx/conf.d/zima.conf  # تغییر مسیر به فایل موجود
-      - ./config/nginx.custom.conf:/etc/nginx/conf.d/01-custom.conf  # تغییر مسیر به فایل موجود
       - ./ssl:/etc/nginx/ssl:ro  # مسیر فایل‌های SSL
       - ./staticfiles:/app/staticfiles:ro
       - ./media:/app/media:ro
