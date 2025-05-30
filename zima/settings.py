@@ -19,7 +19,8 @@ def is_production():
     if env_value:
         return env_value == 'production'
 
-    return is_running_in_docker()
+    hostname = socket.gethostname()
+    return is_running_in_docker() or hostname in ['gunicorn', 'postgres', 'nginx']
 
 DJANGO_ENV = 'production' if is_production() else 'development'
 print(f"Detected environment: {DJANGO_ENV}")
@@ -69,6 +70,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'middleware.middleware.RequestLogMiddleware',
 ]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # تنظیمات CORS
 CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:8000').split(',')
