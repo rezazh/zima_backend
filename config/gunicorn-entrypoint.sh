@@ -3,27 +3,11 @@ set -e
 
 echo "=== Gunicorn Production Server Entrypoint ==="
 
-# تنظیم دایرکتوری لاگ‌ها
-mkdir -p /app/logs
+# تنظیم دایرکتوری‌های مورد نیاز
+mkdir -p /app/static /app/staticfiles /app/media /app/logs
 
-# تغییر تنظیمات جنگو
-echo "Modifying Django settings..."
-SETTINGS_FILE="/app/zima/settings.py"
-
-if [ -f "$SETTINGS_FILE" ]; then
-    echo "Found settings file: $SETTINGS_FILE"
-
-    # بررسی اینکه آیا تنظیمات قبلاً تغییر داده شده‌اند
-    if grep -q "Django settings overridden for Docker deployment" "$SETTINGS_FILE"; then
-        echo "Settings already modified, skipping..."
-    else
-        echo "# Django settings overridden for Docker deployment" >> "$SETTINGS_FILE"
-        # تنظیمات اضافی را اینجا اضافه کنید
-    fi
-else
-    echo "Settings file not found!"
-    exit 1
-fi
+# تنظیم محیط تولید
+export DJANGO_ENV=production
 
 # انتظار برای دیتابیس
 echo "Waiting for database..."

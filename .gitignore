@@ -103,6 +103,10 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env.local
+.env.*.local
+.env
+
 
 # Spyder project settings
 .spyderproject
@@ -128,6 +132,7 @@ staticfiles/
 static/
 logs/
 ssl/
+*.log
 
 # IDEs
 .vscode/
