@@ -12,12 +12,14 @@ click-plugins==1.1.1
 click-repl==0.3.0
 Django==5.1.5
 django-cors-headers==4.6.0
+django-csp==4.0
 django-filter==24.3
 django-redis==5.4.0
 djangorestframework==3.15.2
 djangorestframework_simplejwt==5.4.0
 idna==3.4
 kombu==5.4.2
+packaging==25.0
 pillow==11.1.0
 prompt_toolkit==3.0.50
 psycopg2-binary==2.9.10
@@ -26,6 +28,7 @@ pydantic_core==2.14.1
 PyJWT==2.10.1
 python-dateutil==2.9.0.post0
 python-decouple==3.8
+python-dotenv==1.1.0
 redis==6.1.0
 requests==2.31.0
 six==1.17.0
@@ -37,4 +40,3 @@ vine==5.1.0
 wcwidth==0.2.13
 whitenoise==6.9.0
 zarinpal==1.0.0
-django-csp==3.7
