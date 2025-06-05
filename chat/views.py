@@ -671,3 +671,5 @@ def get_user_status(request, user_id):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+
+
