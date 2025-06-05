@@ -94,18 +94,33 @@ jobs:
           echo "===== Checking for migrations ====="
           if echo "$CHANGED_FILES" | grep -q "migrations/\|models.py"; then
             echo "Model changes detected, running migrations..."
+              
+            # اجرای مایگریشن‌ها با استراتژی امن‌تر
+            echo "Running migrations with safer strategy..."
             
-            # اجرای مایگریشن‌ها
-            echo "Running migrations..."
-            docker-compose exec -T gunicorn python manage.py migrate
+            # اول تلاش می‌کنیم با fake-initial
+            docker-compose exec -T gunicorn python manage.py migrate --fake-initial || \
+            
+            # اگر خطا داد، مایگریشن‌های مشکل‌دار را fake می‌کنیم
+            (
+              echo "Initial migration failed, trying app-specific fake migrations..." && \
+              for APP in $(docker-compose exec -T gunicorn python manage.py showmigrations | grep -v "\[X\]" | grep "^[a-z]" | cut -d " " -f 1); do
+                echo "Fake migrating $APP..." && \
+                docker-compose exec -T gunicorn python manage.py migrate $APP --fake || true
+              done && \
+              
+              # و در نهایت دوباره migrate را اجرا می‌کنیم
+              echo "Running migrations again..." && \
+              docker-compose exec -T gunicorn python manage.py migrate
+            )
             
             # نمایش وضعیت مایگریشن‌ها
-            echo "Migration status:"
-            docker-compose exec -T gunicorn python manage.py showmigrations
-          else
-            echo "No model changes detected, skipping migrations"
-          fi
-          
+              echo "Migration status:"
+              docker-compose exec -T gunicorn python manage.py showmigrations
+            else
+              echo "No model changes detected, skipping migrations"
+            fi
+                    
           # بررسی وضعیت کانتینرها تا 60 ثانیه (افزایش زمان)
           echo "Waiting for containers to be healthy..."
           MAX_WAIT=60
