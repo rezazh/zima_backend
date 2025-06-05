@@ -12,6 +12,8 @@ urlpatterns = [
     path('users/', include('users.urls', namespace='users')),
     path('cart/', include('cart.urls', namespace='cart')),
     path('orders/', include('orders.urls', namespace='orders')),
+    path('chat/', include('chat.urls')),  # اضافه شد
+
 ]
 
 # اضافه کردن مسیرهای فایل‌های رسانه‌ای در محیط توسعه

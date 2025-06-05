@@ -50,12 +50,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'channels',
     # My apps
     'users',
     'products',
     'orders',
     'cart',
     'pages',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -68,6 +70,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'chat.middleware.UserActivityMiddleware',
     # 'middleware.middleware.RequestLogMiddleware',
 ]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -91,6 +94,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'cart.context_processors.cart_items_count',
+                'cart.context_processors.banners',
             ],
         },
     },
@@ -129,6 +133,20 @@ DATABASES = {
         'CONN_MAX_AGE': 600,
     }
 }
+
+ASGI_APPLICATION = 'zima.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+
+# WebSocket settings
+WEBSOCKET_URL = '/ws/'
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -348,6 +366,8 @@ DATABASES = {
         'CONN_MAX_AGE': 600,
     }
 }
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024  # 12MB
 
 # غیرفعال کردن تنظیمات HTTPS در محیط توسعه
 SECURE_SSL_REDIRECT = False

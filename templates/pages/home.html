@@ -276,9 +276,13 @@
 <div class="row mt-4">
     {% for banner in top_banners %}
     <div class="col-md-{% if top_banners.count == 1 %}12{% elif top_banners.count == 2 %}6{% elif top_banners.count == 3 %}4{% else %}3{% endif %} mb-3">
+        {% if banner.url %}
         <a href="{{ banner.url }}" class="d-block">
             <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="img-fluid rounded">
         </a>
+        {% else %}
+        <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="img-fluid rounded">
+        {% endif %}
     </div>
     {% endfor %}
 </div>
@@ -398,4 +402,38 @@
         });
     });
 </script>
+    {% if sidebar_banners %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h3>بنرهای جانبی</h3>
+    </div>
+    {% for banner in sidebar_banners %}
+    <div class="col-md-4 mb-3">
+        {% if banner.url %}
+        <a href="{{ banner.url }}" class="d-block">
+            <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="img-fluid rounded">
+            {% if banner.title %}
+            <div class="text-center mt-2">
+                <h5>{{ banner.title }}</h5>
+                {% if banner.subtitle %}
+                <p class="text-muted">{{ banner.subtitle }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </a>
+        {% else %}
+        <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="img-fluid rounded">
+        {% if banner.title %}
+        <div class="text-center mt-2">
+            <h5>{{ banner.title }}</h5>
+            {% if banner.subtitle %}
+            <p class="text-muted">{{ banner.subtitle }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 {% endblock %}

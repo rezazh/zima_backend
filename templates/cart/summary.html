@@ -81,6 +81,48 @@
         color: #dee2e6;
         margin-bottom: 1rem;
     }
+
+    /* استایل‌های جدید برای تخفیفات */
+    .price-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .original-price {
+        text-decoration: line-through;
+        color: #999;
+        font-size: 0.9rem;
+    }
+
+    .discounted-price {
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .discount-badge {
+        background-color: #dc3545;
+        color: white;
+        font-size: 0.75rem;
+        padding: 2px 6px;
+        border-radius: 3px;
+        display: inline-block;
+        margin-top: 2px;
+    }
+
+    .savings-highlight {
+        color: #28a745;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .discount-row {
+        color: #dc3545;
+    }
+
+    .savings-row {
+        color: #28a745;
+        font-weight: bold;
+    }
 </style>
 {% endblock %}
 
@@ -124,18 +166,23 @@
                                                     <span class="mx-2">|</span>
                                                     <span>سایز: {{ item.size }}</span>
                                                 </div>
+                                                {% if item.product.has_discount %}
+                                                <span class="discount-badge">
+                                                    {{ item.product.discount_percent }}% تخفیف
+                                                </span>
+                                                {% endif %}
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        {% if item.product.has_discount %}
-                                        <div>
-                                            <span class="text-muted text-decoration-line-through">{{ item.product.price|floatformat:0 }}</span>
-                                            <span class="d-block">{{ item.product.get_discount_price|floatformat:0 }} تومان</span>
+                                        <div class="price-info">
+                                            {% if item.product.has_discount %}
+                                                <span class="original-price">{{ item.product.price|floatformat:0 }} تومان</span>
+                                                <span class="discounted-price">{{ item.get_unit_price|floatformat:0 }} تومان</span>
+                                            {% else %}
+                                                <span>{{ item.get_unit_price|floatformat:0 }} تومان</span>
+                                            {% endif %}
                                         </div>
-                                        {% else %}
-                                        <span>{{ item.product.price|floatformat:0 }} تومان</span>
-                                        {% endif %}
                                     </td>
                                     <td>
                                         <div class="quantity-control">
@@ -152,7 +199,24 @@
                                             </form>
                                         </div>
                                     </td>
-                                    <td>{{ item.get_final_price|floatformat:0 }} تومان</td>
+                                    <td>
+                                        <div class="price-info">
+                                            {% if item.get_product_discount_amount > 0 %}
+                                                <span class="original-price">{{ item.get_original_total_price|floatformat:0 }} تومان</span>
+                                                <span class="discounted-price">{{ item.get_total_price|floatformat:0 }} تومان</span>
+                                                {% if item.get_coupon_discount_amount > 0 %}
+                                                    <span class="savings-highlight">نهایی: {{ item.get_final_price|floatformat:0 }} تومان</span>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if item.get_coupon_discount_amount > 0 %}
+                                                    <span class="original-price">{{ item.get_total_price|floatformat:0 }} تومان</span>
+                                                    <span class="discounted-price">{{ item.get_final_price|floatformat:0 }} تومان</span>
+                                                {% else %}
+                                                    <span>{{ item.get_final_price|floatformat:0 }} تومان</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </td>
                                     <td>
                                         <form method="post" action="{% url 'cart:remove_from_cart' item.id %}">
                                             {% csrf_token %}
@@ -182,14 +246,26 @@
                     </div>
 
                     <div class="summary-row">
-                        <span>مجموع قیمت:</span>
+                        <span>قیمت اصلی کالاها:</span>
+                        <span>{{ cart_total.original_subtotal|floatformat:0 }} تومان</span>
+                    </div>
+
+                    {% if cart_total.product_discount > 0 %}
+                    <div class="summary-row discount-row">
+                        <span>تخفیف محصولات:</span>
+                        <span>-{{ cart_total.product_discount|floatformat:0 }} تومان</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="summary-row">
+                        <span>مجموع قیمت (با تخفیف محصولات):</span>
                         <span>{{ cart_total.subtotal|floatformat:0 }} تومان</span>
                     </div>
 
-                    {% if cart_total.discount > 0 %}
-                    <div class="summary-row text-danger">
-                        <span>تخفیف:</span>
-                        <span>{{ cart_total.discount|floatformat:0 }} تومان</span>
+                    {% if cart_total.coupon_discount > 0 %}
+                    <div class="summary-row discount-row">
+                        <span>تخفیف کوپن:</span>
+                        <span>-{{ cart_total.coupon_discount|floatformat:0 }} تومان</span>
                     </div>
                     {% endif %}
 
@@ -201,6 +277,13 @@
                         <span class="text-success">رایگان</span>
                         {% endif %}
                     </div>
+
+                    {% if cart_total.total_savings > 0 %}
+                    <div class="summary-row savings-row">
+                        <span>مجموع صرفه‌جویی شما:</span>
+                        <span>{{ cart_total.total_savings|floatformat:0 }} تومان</span>
+                    </div>
+                    {% endif %}
 
                     <div class="summary-row summary-total">
                         <span>مبلغ قابل پرداخت:</span>
@@ -216,15 +299,41 @@
                         </div>
                     </form>
 
+                    <!-- نمایش پیام‌های موفقیت یا خطا -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
                     <!-- دکمه‌های عملیات -->
                     <div class="d-grid gap-2 mt-3">
                         <a href="#" class="btn btn-primary">ادامه فرایند خرید</a>
 
                         <form method="post" action="{% url 'cart:clear_cart' %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger w-100">خالی کردن سبد خرید</button>
+                            <button type="submit" class="btn btn-outline-danger w-100"
+                                    onclick="return confirm('آیا از خالی کردن سبد خرید اطمینان دارید؟')">
+                                خالی کردن سبد خرید
+                            </button>
                         </form>
                     </div>
+
+                    <!-- نمایش اطلاعات اضافی -->
+                    {% if cart_total.shipping_cost == 0 and cart_total.subtotal > 0 %}
+                    <div class="alert alert-success mt-3" role="alert">
+                        <i class="fas fa-truck"></i>
+                        ارسال رایگان برای خرید بالای 300,000 تومان
+                    </div>
+                    {% elif cart_total.free_shipping_remaining > 0 %}
+                    <div class="alert alert-info mt-3" role="alert">
+                        <i class="fas fa-info-circle"></i>
+                        با خرید {{ cart_total.free_shipping_remaining|floatformat:0 }} تومان بیشتر، ارسال رایگان خواهد بود!
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

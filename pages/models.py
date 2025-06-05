@@ -33,7 +33,6 @@ class Slider(models.Model):
             img_path = self.image.path
             img = Image.open(img_path)
 
-            # تبدیل تصویر به نسبت ابعاد 16:9 با افزودن حاشیه
             width, height = img.size
             target_ratio = 16 / 9
             current_ratio = width / height
@@ -53,5 +52,4 @@ class Slider(models.Model):
             else:
                 new_img = img
 
-            # ذخیره تصویر با کیفیت بالا
             new_img.save(img_path, quality=95, optimize=True)

@@ -10,25 +10,35 @@ from django.utils import timezone
 
 @login_required
 def cart_summary(request):
-    """نمایش سبد خرید"""
     cart_items = CartItem.objects.filter(user=request.user)
 
     # محاسبه مجموع قیمت‌ها
-    subtotal = sum(item.get_total_price() for item in cart_items)
-    discount = sum(item.get_discount_amount() for item in cart_items)
+    original_subtotal = sum(item.get_original_total_price() for item in cart_items)  # قیمت اصلی
+    subtotal = sum(item.get_total_price() for item in cart_items)  # قیمت با تخفیف محصولات
+    product_discount = sum(item.get_product_discount_amount() for item in cart_items)  # تخفیف محصولات
+    coupon_discount = sum(item.get_coupon_discount_amount() for item in cart_items)  # تخفیف کوپن
+    total_discount = product_discount + coupon_discount  # مجموع تخفیفات
 
-    # محاسبه هزینه ارسال
+    # هزینه حمل و نقل
     shipping_cost = 30000 if subtotal < 300000 and subtotal > 0 else 0
 
-    # محاسبه مبلغ نهایی
-    total = subtotal - discount + shipping_cost
+    # قیمت نهایی
+    total = subtotal - coupon_discount + shipping_cost
+
+    # محاسبه مبلغ باقی‌مانده برای ارسال رایگان
+    free_shipping_remaining = max(0, 300000 - subtotal) if subtotal > 0 and subtotal < 300000 else 0
 
     cart_total = {
         'total_items': sum(item.quantity for item in cart_items),
-        'subtotal': subtotal,
-        'discount': discount,
+        'original_subtotal': original_subtotal,  # قیمت اصلی
+        'subtotal': subtotal,  # قیمت با تخفیف محصولات
+        'product_discount': product_discount,  # تخفیف محصولات
+        'coupon_discount': coupon_discount,  # تخفیف کوپن
+        'total_discount': total_discount,  # مجموع تخفیفات
         'shipping_cost': shipping_cost,
-        'total': total
+        'total': total,  # قیمت نهایی
+        'total_savings': total_discount,  # مجموع صرفه‌جویی
+        'free_shipping_remaining': free_shipping_remaining,  # مبلغ باقی‌مانده برای ارسال رایگان
     }
 
     context = {
@@ -57,29 +67,23 @@ def add_to_cart(request):
         size_id = data.get('size_id')
         inventory_id = data.get('inventory_id')
 
-        # بررسی اعتبار داده‌ها
         product = Product.objects.get(id=product_id, is_active=True)
 
-        # اگر کاربر لاگین نکرده باشد، به صفحه ورود هدایت شود
         if not request.user.is_authenticated:
             return JsonResponse(
                 {'success': False, 'error': 'لطفاً ابتدا وارد حساب کاربری خود شوید.', 'redirect': '/users/login/'})
 
-        # دریافت رنگ و سایز
         color_name = None
         size_name = None
 
         if inventory_id:
-            # اگر inventory_id ارسال شده باشد، از آن استفاده می‌کنیم
             inventory = ProductInventory.objects.get(id=inventory_id)
             color_name = inventory.color.name
             size_name = inventory.size.name
 
-            # بررسی موجودی
             if quantity > inventory.quantity:
                 return JsonResponse({'success': False, 'error': 'موجودی کافی نیست.'})
         else:
-            # در غیر این صورت، از color_id و size_id استفاده می‌کنیم
             if color_id:
                 color = Color.objects.get(id=color_id)
                 color_name = color.name
@@ -88,11 +92,9 @@ def add_to_cart(request):
                 size = Size.objects.get(id=size_id)
                 size_name = size.name
 
-            # بررسی موجودی کلی محصول
             if quantity > product.stock:
                 return JsonResponse({'success': False, 'error': 'موجودی کافی نیست.'})
 
-        # اضافه کردن به سبد خرید
         cart_item, created = CartItem.objects.get_or_create(
             user=request.user,
             product=product,
@@ -101,12 +103,10 @@ def add_to_cart(request):
             defaults={'quantity': quantity, 'inventory_id': inventory_id}
         )
 
-        # اگر این آیتم قبلاً در سبد خرید بوده، تعداد آن را افزایش می‌دهیم
         if not created:
             cart_item.quantity += quantity
             cart_item.save()
 
-        # تعداد کل آیتم‌های سبد خرید را برمی‌گردانیم
         cart_items_count = CartItem.objects.filter(user=request.user).count()
 
         return JsonResponse({
@@ -124,14 +124,12 @@ def add_to_cart(request):
 
 @login_required
 def update_cart(request, item_id):
-    """بروزرسانی تعداد محصول در سبد خرید"""
     cart_item = get_object_or_404(CartItem, id=item_id, user=request.user)
 
     if request.method == 'POST':
         action = request.POST.get('action')
 
         if action == 'increase':
-            # بررسی موجودی کالا
             if cart_item.quantity < cart_item.product.stock:
                 cart_item.quantity += 1
                 cart_item.save()
@@ -147,7 +145,6 @@ def update_cart(request, item_id):
 
 @login_required
 def remove_from_cart(request, item_id):
-    """حذف محصول از سبد خرید"""
     cart_item = get_object_or_404(CartItem, id=item_id, user=request.user)
 
     if request.method == 'POST':
@@ -159,7 +156,6 @@ def remove_from_cart(request, item_id):
 
 @login_required
 def clear_cart(request):
-    """خالی کردن سبد خرید"""
     if request.method == 'POST':
         CartItem.objects.filter(user=request.user).delete()
         messages.success(request, 'سبد خرید خالی شد.')
@@ -169,7 +165,6 @@ def clear_cart(request):
 
 @login_required
 def apply_coupon(request):
-    """اعمال کد تخفیف"""
     if request.method == 'POST':
         code = request.POST.get('code')
 
@@ -181,18 +176,15 @@ def apply_coupon(request):
                 active=True
             )
 
-            # بررسی اینکه کاربر قبلاً از این کد تخفیف استفاده کرده یا نه
             if coupon.users.filter(id=request.user.id).exists():
                 messages.error(request, 'شما قبلاً از این کد تخفیف استفاده کرده‌اید.')
             else:
-                # اعمال تخفیف
                 cart_items = CartItem.objects.filter(user=request.user)
 
                 for item in cart_items:
                     item.discount = coupon.discount_percent
                     item.save()
 
-                # ثبت استفاده کاربر از کد تخفیف
                 coupon.users.add(request.user)
 
                 messages.success(request, f'کد تخفیف {coupon.discount_percent}% با موفقیت اعمال شد.')

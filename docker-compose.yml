@@ -90,6 +90,34 @@ services:
     expose:
       - "8000"
 
+
+  daphne:
+    build:
+      context: .
+      dockerfile: Dockerfile.gunicorn
+    container_name: zima_daphne
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - DJANGO_ENV=production
+    volumes:
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+      - ./logs:/app/logs
+    networks:
+      - zima_network
+    restart: unless-stopped
+    expose:
+      - "8001"
+    command: daphne -b 0.0.0.0 -p 8001 zima.asgi:application
+
   # nginx
   nginx:
     image: nginx:alpine

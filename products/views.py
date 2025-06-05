@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q, Avg, Min, Max
 from django.contrib import messages
-from .models import Product, Category, Review, ProductInventory
+from .models import Product, Category, Review, ProductInventory, Size, Color
 
 
 def product_list(request):
@@ -250,152 +250,86 @@ def add_review(request, product_id):
     return redirect('products:detail', product_id=product_id)
 
 
-def category_detail(request, category_slug):  # یا category_slug بسته به تعریف URL شما
+def category_detail(request, category_slug):
     category = get_object_or_404(Category, slug=category_slug, is_active=True)
-
-    # دریافت زیردسته‌های این دسته‌بندی
     subcategories = Category.objects.filter(parent=category, is_active=True)
 
-    # دریافت محصولات این دسته‌بندی و زیردسته‌های آن
-    products = Product.objects.filter(is_active=True)
-
     if subcategories.exists():
-        # اگر زیردسته دارد، محصولات خود دسته و زیردسته‌ها را نمایش بده
         category_ids = [category.id] + list(subcategories.values_list('id', flat=True))
-        products = products.filter(category_id__in=category_ids)
+        all_products = Product.objects.filter(category_id__in=category_ids, is_active=True)
     else:
-        # اگر زیردسته ندارد، فقط محصولات خود دسته را نمایش بده
-        products = products.filter(category=category)
+        all_products = Product.objects.filter(category=category, is_active=True)
 
-    # دریافت تمام برندهای موجود در محصولات این دسته
-    all_brands = Product.objects.filter(
-        category__in=[category] + list(subcategories),
-        is_active=True
-    ).values_list('brand', flat=True).distinct()
+    all_brands = list(all_products.values_list('brand', flat=True).distinct().order_by('brand'))
 
-    # دریافت تمام سایزهای موجود در محصولات این دسته
-    all_sizes = set()
-    for product in Product.objects.filter(
-            category__in=[category] + list(subcategories),
-            is_active=True
-    ):
-        if hasattr(product, 'sizes') and product.sizes:
-            all_sizes.update(product.sizes)
-    all_sizes = sorted(list(all_sizes))
+    size_objects = Size.objects.filter(
+        productinventory__product__in=all_products,
+        productinventory__quantity__gt=0
+    ).distinct().order_by('name')
+    all_sizes = [size.name for size in size_objects]
 
-    # دریافت تمام رنگ‌های موجود در محصولات این دسته
-    all_colors = set()
-    all_color_codes = {}
-    for product in Product.objects.filter(
-            category__in=[category] + list(subcategories),
-            is_active=True
-    ):
-        if hasattr(product, 'colors') and product.colors:
-            for i, color in enumerate(product.colors):
-                all_colors.add(color)
-                if hasattr(product, 'color_codes') and product.color_codes and i < len(product.color_codes):
-                    all_color_codes[color] = product.color_codes[i]
-    all_colors = sorted(list(all_colors))
+    color_objects = Color.objects.filter(
+        productinventory__product__in=all_products,
+        productinventory__quantity__gt=0
+    ).distinct().order_by('name')
+    all_colors = [color.name for color in color_objects]
 
-    # دریافت محدوده قیمت محصولات
-    price_range = products.aggregate(min_price=Min('price'), max_price=Max('price'))
+    products = all_products
 
-    # دریافت پارامترهای فیلتر از URL
-    filters_applied = False
-    filter_params = {}
-
-    # فیلتر بر اساس برند
     brand = request.GET.get('brand')
     if brand and brand != 'none':
-        filter_params['brand'] = brand
-        filters_applied = True
+        products = products.filter(brand__iexact=brand)
 
-    # فیلتر بر اساس قیمت
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
 
-    if min_price and min_price.strip():
+    if min_price:
         try:
-            min_price = int(min_price)
-            filter_params['min_price'] = min_price
-            filters_applied = True
-        except (ValueError, TypeError):
-            min_price = None
+            products = products.filter(price__gte=int(min_price))
+        except ValueError:
+            pass
 
-    if max_price and max_price.strip():
+    if max_price:
         try:
-            max_price = int(max_price)
-            filter_params['max_price'] = max_price
-            filters_applied = True
-        except (ValueError, TypeError):
-            max_price = None
+            products = products.filter(price__lte=int(max_price))
+        except ValueError:
+            pass
 
-    # فیلتر بر اساس سایز
     size = request.GET.get('size')
-    if size and size != 'none':
-        filter_params['size'] = size
-        filters_applied = True
-
-    # فیلتر بر اساس رنگ
     color = request.GET.get('color')
+
+    if size and size != 'none':
+        products = products.filter(
+            inventories__size__name=size,
+            inventories__quantity__gt=0
+        ).distinct()
+
     if color and color != 'none':
-        filter_params['color'] = color
-        filters_applied = True
+        products = products.filter(
+            inventories__color__name=color,
+            inventories__quantity__gt=0
+        ).distinct()
 
-    # اعمال فیلترها - روش جدید
-    # ابتدا محصولات را بر اساس فیلترهای پایگاه داده فیلتر می‌کنیم
-    if 'brand' in filter_params:
-        products = products.filter(brand=filter_params['brand'])
-
-    if 'min_price' in filter_params:
-        products = products.filter(price__gte=filter_params['min_price'])
-
-    if 'max_price' in filter_params:
-        products = products.filter(price__lte=filter_params['max_price'])
-
-    # حالا محصولات را به لیست تبدیل می‌کنیم تا بتوانیم فیلترهای پیچیده‌تر را اعمال کنیم
-    filtered_products = list(products)
-    final_products = []
-
-    # اعمال فیلترهای سایز و رنگ
-    for product in filtered_products:
-        # بررسی فیلتر سایز
-        if 'size' in filter_params:
-            if not hasattr(product, 'sizes') or not product.sizes or filter_params['size'] not in product.sizes:
-                continue
-
-        # بررسی فیلتر رنگ
-        if 'color' in filter_params:
-            if not hasattr(product, 'colors') or not product.colors or filter_params['color'] not in product.colors:
-                continue
-
-        # اگر محصول از همه فیلترها عبور کرد، آن را به لیست نهایی اضافه می‌کنیم
-        final_products.append(product)
-
-    # مرتب‌سازی محصولات
     sort_by = request.GET.get('sort', 'newest')
     if sort_by == 'price_low':
-        final_products = sorted(final_products, key=lambda p: p.price)
+        products = products.order_by('price')
     elif sort_by == 'price_high':
-        final_products = sorted(final_products, key=lambda p: -p.price)
+        products = products.order_by('-price')
     elif sort_by == 'popular':
-        final_products = sorted(final_products, key=lambda p: -p.total_sales if hasattr(p, 'total_sales') else 0)
+        products = products.order_by('-total_sales')
     else:  # newest
-        final_products = sorted(final_products, key=lambda p: p.created_at, reverse=True)
+        products = products.order_by('-created_at')
 
-    # محدود کردن تعداد محصولات به 6 تا
-    if sort_by in ['price_low', 'price_high', 'popular', 'newest']:
-        final_products = final_products[:6]
+    products = products[:12]  # یا استفاده از Paginator
 
     context = {
         'category': category,
         'subcategories': subcategories,
-        'products': final_products,
+        'products': products,
         'all_brands': all_brands,
         'all_sizes': all_sizes,
         'all_colors': all_colors,
-        'all_color_codes': all_color_codes,
-        'price_range': price_range,
+        'price_range': all_products.aggregate(min_price=Min('price'), max_price=Max('price')),
         'current_filters': {
             'brand': brand if brand and brand != 'none' else None,
             'size': size if size and size != 'none' else None,
@@ -404,8 +338,13 @@ def category_detail(request, category_slug):  # یا category_slug بسته به
             'max_price': max_price,
             'sort': sort_by
         },
-        'filters_applied': filters_applied,
-        'filter_params': filter_params
+        'filters_applied': any([
+            brand and brand != 'none',
+            size and size != 'none',
+            color and color != 'none',
+            min_price,
+            max_price
+        ])
     }
 
     return render(request, 'products/category_detail.html', context)

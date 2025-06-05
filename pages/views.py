@@ -5,7 +5,6 @@ from products.models import Product, Banner, Category
 
 
 def home(request):
-    # دریافت اسلایدرهای فعال
     sliders = Slider.objects.filter(is_active=True).order_by('order')
 
     main_categories = {
@@ -14,16 +13,14 @@ def home(request):
         'boys': Category.objects.filter(slug='boys-clothing').first(),
         'girls': Category.objects.filter(slug='girls-clothing').first(),
     }
-    # دریافت محصولات ویژه
     featured_products = Product.objects.filter(is_active=True, is_featured=True).order_by('-created_at')[:8]
 
-    # دریافت محصولات جدید
     new_products = Product.objects.filter(is_active=True).order_by('-created_at')[:8]
 
-    # دریافت بنرهای صفحه اصلی
     top_banners = Banner.objects.filter(is_active=True, position='home_top').order_by('order')
     middle_banners = Banner.objects.filter(is_active=True, position='home_middle').order_by('order')
     bottom_banners = Banner.objects.filter(is_active=True, position='home_bottom').order_by('order')
+    sidebar_banners = Banner.objects.filter(is_active=True, position='sidebar').order_by('order')  # اضافه شد
 
     context = {
         'sliders': sliders,
@@ -32,6 +29,7 @@ def home(request):
         'top_banners': top_banners,
         'middle_banners': middle_banners,
         'bottom_banners': bottom_banners,
+        'sidebar_banners': sidebar_banners,  # اضافه شد
         'main_categories': main_categories,
     }
     return render(request, 'pages/home.html', context)
@@ -76,10 +74,8 @@ def newsletter(request):
     """عضویت در خبرنامه"""
     if request.method == 'POST':
         email = request.POST.get('email')
-        # اینجا کد ذخیره ایمیل در خبرنامه را اضافه کنید
         from django.contrib import messages
         messages.success(request, 'ایمیل شما با موفقیت در خبرنامه ثبت شد.')
 
-    # در هر حالت به صفحه قبلی برگرد
     from django.shortcuts import redirect
     return redirect(request.META.get('HTTP_REFERER', 'home'))

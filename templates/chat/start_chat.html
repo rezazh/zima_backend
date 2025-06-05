@@ -1,0 +1,32 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}شروع چت جدید{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">شروع گفتگو با پشتیبانی</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">برای شروع گفتگو با پشتیبانی زیما، لطفاً روی دکمه زیر کلیک کنید.</p>
+                    <p>کارشناسان ما آماده پاسخگویی به سوالات شما هستند.</p>
+                    
+                    <form method="post" action="{% url 'chat:start_chat' %}">
+                        {% csrf_token %}
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-comments me-2"></i>
+                                شروع گفتگو
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

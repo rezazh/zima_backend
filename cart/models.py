@@ -11,7 +11,7 @@ class CartItem(models.Model):
     size = models.CharField(max_length=10)
     color = models.CharField(max_length=50)
     quantity = models.PositiveIntegerField(default=1)
-    discount = models.PositiveIntegerField(default=0)  # درصد تخفیف
+    discount = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     inventory = models.ForeignKey(ProductInventory, on_delete=models.SET_NULL, null=True, blank=True)
@@ -20,24 +20,50 @@ class CartItem(models.Model):
         ordering = ['-created_at']
         verbose_name = 'آیتم سبد خرید'
         verbose_name_plural = 'آیتم‌های سبد خرید'
-        unique_together = ['user', 'product', 'size', 'color']  # هر محصول با سایز و رنگ مشخص فقط یکبار در سبد باشد
+        unique_together = ['user', 'product', 'size', 'color']
 
     def __str__(self):
         return f"{self.quantity} عدد {self.product.name} ({self.size}, {self.color}) - کاربر: {self.user.username}"
 
-    def get_total_price(self):
-        """محاسبه قیمت کل آیتم (بدون اعمال تخفیف)"""
+    def get_unit_price(self):
+        """قیمت واحد محصول (با احتساب تخفیف محصول)"""
+        if self.product.has_discount():
+            return self.product.get_discount_price()
+        return self.product.price
+
+    def get_original_total_price(self):
+        """قیمت کل اصلی (بدون تخفیف)"""
         return self.product.price * self.quantity
 
-    def get_discount_amount(self):
-        """محاسبه مبلغ تخفیف"""
-        if self.discount > 0:
-            return (self.product.price * self.quantity * self.discount) / 100
+    def get_product_discount_amount(self):
+        """مبلغ تخفیف محصول"""
+        if self.product.has_discount():
+            original_price = self.product.price * self.quantity
+            discounted_price = self.product.get_discount_price() * self.quantity
+            return original_price - discounted_price
         return 0
 
+    def get_total_price(self):
+        """قیمت کل آیتم (با احتساب تخفیف محصول، بدون تخفیف کوپن)"""
+        return self.get_unit_price() * self.quantity
+
+    def get_coupon_discount_amount(self):
+        """مبلغ تخفیف کوپن"""
+        if self.discount > 0:
+            return (self.get_total_price() * self.discount) / 100
+        return 0
+
+    def get_total_discount_amount(self):
+        """مجموع تخفیفات (محصول + کوپن)"""
+        return self.get_product_discount_amount() + self.get_coupon_discount_amount()
+
     def get_final_price(self):
-        """محاسبه قیمت نهایی آیتم (با اعمال تخفیف)"""
-        return self.get_total_price() - self.get_discount_amount()
+        """قیمت نهایی آیتم (با اعمال همه تخفیفات)"""
+        return self.get_total_price() - self.get_coupon_discount_amount()
+
+    def get_savings(self):
+        """مجموع صرفه‌جویی"""
+        return self.get_total_discount_amount()
 
 
 class Coupon(models.Model):
