@@ -55,12 +55,10 @@ sqlparse==0.5.3
 tomli==2.2.1
 Twisted==24.11.0
 txaio==23.1.1
-typing_extensions==4.13.2
 tzdata==2025.1
 urllib3==2.1.0
 uvicorn==0.34.3
 vine==5.1.0
 wcwidth==0.2.13
 whitenoise==6.9.0
-zarinpal==1.0.0
 zope.interface==7.2
