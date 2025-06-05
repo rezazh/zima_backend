@@ -143,7 +143,7 @@ class Notification(models.Model):
 class DeletedChat(models.Model):
     """مدل برای ذخیره چت‌هایی که کاربر حذف کرده است"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    room = models.ForeignKey('ChatRoom', on_delete=models.CASCADE)
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='del_messages')
     deleted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
