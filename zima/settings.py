@@ -135,16 +135,36 @@ DATABASES = {
 }
 
 ASGI_APPLICATION = 'zima.asgi.application'
-
+REDIS_HOST = os.environ.get('REDIS_HOST', 'redis' if is_running_in_docker() else 'localhost')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
+REDIS_DB = int(os.environ.get('REDIS_DB', 0))
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
+            "capacity": 1500,  # اندازه صف پیام‌ها
+            "expiry": 10,  # مدت زمان انقضای پیام‌ها (ثانیه)
         },
     },
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_CONNECT_TIMEOUT': 5,  # زمان تایم‌اوت اتصال (ثانیه)
+            'SOCKET_TIMEOUT': 5,  # زمان تایم‌اوت خواندن/نوشتن (ثانیه)
+            'CONNECTION_POOL_KWARGS': {'max_connections': 100},  # حداکثر تعداد اتصالات همزمان
+            'RETRY_ON_TIMEOUT': True,  # تلاش مجدد در صورت تایم‌اوت
+            'IGNORE_EXCEPTIONS': True,  # نادیده گرفتن خطاها (برای جلوگیری از شکست برنامه)
+        }
+    }
+}
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
 # WebSocket settings
 WEBSOCKET_URL = '/ws/'
 
