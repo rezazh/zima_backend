@@ -206,3 +206,5 @@ class ProductDetailSerializer(BaseProductSerializer):
 
     # نیازی به بازنویسی to_representation نیست چون از BaseProductSerializer ارث‌بری می‌شود
     # و متدهای get_... هم ارث‌بری می‌شوند.
+
+
