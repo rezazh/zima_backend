@@ -56,3 +56,4 @@ def send_chat_notification(room, message_obj):
                 }
             )
     return True
+

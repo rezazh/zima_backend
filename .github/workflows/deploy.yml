@@ -22,7 +22,6 @@ jobs:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false
         command_timeout: 40m
         script: |
           #!/bin/bash
