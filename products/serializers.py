@@ -208,3 +208,5 @@ class ProductDetailSerializer(BaseProductSerializer):
     # و متدهای get_... هم ارث‌بری می‌شوند.
 
 
+
+
