@@ -1,5 +1,4 @@
 #!/bin/bash
-# config/entrypoint.sh
 set -e
 
 echo "=== Django/Gunicorn Server Entrypoint ==="
@@ -7,6 +6,7 @@ echo "=== Django/Gunicorn Server Entrypoint ==="
 # تنظیم دایرکتوری‌های مورد نیاز
 mkdir -p /app/static /app/staticfiles /app/media /app/logs
 export PYTHONPATH=/app
+cd /app
 
 # تشخیص نوع سرویس از متغیر محیطی یا نام کانتینر
 SERVICE_TYPE=${SERVICE_TYPE:-gunicorn}

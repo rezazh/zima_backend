@@ -29,7 +29,6 @@ RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
     && pip install gunicorn
 
-# کپی کل پروژه ابتدا
 COPY . .
 
 RUN addgroup -S app && adduser -S app -G app
@@ -39,10 +38,8 @@ RUN mkdir -p $APP_HOME/staticfiles $APP_HOME/media $APP_HOME/logs \
 
 COPY ./config/nginx.conf /etc/nginx/conf.d/default.conf
 
-# کپی فایل entrypoint به مسیر root برای سازگاری
 COPY --chown=app:app ./config/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-RUN apk add --no-cache postgresql-client
 
 USER app
 

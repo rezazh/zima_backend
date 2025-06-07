@@ -5,12 +5,10 @@ import django
 from django.db import connection
 from django.core.management import call_command
 
-
 def setup_django():
     """تنظیم محیط جنگو"""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'zima.settings')
     django.setup()
-
 
 def clean_app_migrations(app_name):
     """پاکسازی مایگریشن‌های یک اپلیکیشن خاص"""
@@ -56,7 +54,6 @@ def clean_app_migrations(app_name):
 
     print(f"Successfully cleaned migrations for {app_name}")
 
-
 def fake_migrations(app_name=None):
     """اجرای fake migrations برای یک اپلیکیشن یا همه اپلیکیشن‌ها"""
     setup_django()
@@ -70,12 +67,10 @@ def fake_migrations(app_name=None):
 
     print("Fake migrations completed")
 
-
 def check_migrations():
     """بررسی وضعیت مایگریشن‌ها"""
     setup_django()
     call_command('showmigrations')
-
 
 def safe_migrate(app_name=None):
     """اجرای مایگریشن با استراتژی امن"""
@@ -101,7 +96,6 @@ def safe_migrate(app_name=None):
             call_command('migrate')
 
     print("Safe migration completed")
-
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

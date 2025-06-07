@@ -107,6 +107,7 @@ services:
       - DJANGO_ENV=production
       - SERVICE_TYPE=daphne
     volumes:
+      - ./:/app
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
       - ./logs:/app/logs
