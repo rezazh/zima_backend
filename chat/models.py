@@ -151,3 +151,4 @@ class DeletedChat(models.Model):
 
     def __str__(self):
         return f"{self.user.username} deleted chat {self.room.id}"
+
