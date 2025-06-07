@@ -13,10 +13,15 @@ SERVICE_TYPE=${SERVICE_TYPE:-gunicorn}
 
 # انتظار برای دیتابیس
 echo "Waiting for database..."
-until nc -z postgres 5432
-do
+timeout=120   # حداکثر ۲ دقیقه صبر می‌کند
+while ! nc -z postgres 5432; do
   echo "Waiting for postgres database connection..."
   sleep 2
+  timeout=$((timeout-2))
+  if [ $timeout -le 0 ]; then
+    echo "Database connection timeout!"
+    exit 1
+  fi
 done
 echo "PostgreSQL is ready!"
 
