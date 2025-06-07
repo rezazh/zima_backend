@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  prepare:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -19,10 +19,9 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Deploy to server
-      # تغییر در این بخش - افزایش تایم‌اوت و اضافه کردن پارامترهای keepalive
+    - name: Prepare server
       run: |
-        ssh -T -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ServerAliveInterval=60 -o ServerAliveCountMax=10 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+        ssh -T -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ServerAliveInterval=30 -o ServerAliveCountMax=10 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
           echo "===== Starting deployment process ====="
           
           # بررسی وجود دایرکتوری پروژه
@@ -39,7 +38,6 @@ jobs:
             cd zima_backend
           fi
           
-          # بقیه اسکریپت بدون تغییر...
           # دریافت آخرین تغییرات از گیت
           echo "Pulling latest changes from git..."
           git pull --ff-only origin main || (echo "Fast-forward pull failed, fetching and resetting..." && git fetch origin main && git reset --hard origin/main)
@@ -50,99 +48,56 @@ jobs:
           
           # توقف کانتینرهای موجود با حفظ داده‌ها
           echo "Stopping containers..."
-          timeout 60 docker-compose down || echo "Docker-compose down timed out or failed"
+          docker-compose down || echo "Docker-compose down failed"
+          
+          echo "Preparation completed"
+        EOF
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy application
+      run: |
+        ssh -T -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ServerAliveInterval=30 -o ServerAliveCountMax=10 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          cd /var/www/zimabestshop/zima_backend
           
           # شناسایی سرویس‌های تغییر یافته برای بیلد انتخابی
-          echo "Identifying changed services..."
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
-          
-          # آرایه‌ای برای نگهداری سرویس‌های تغییر یافته
-          SERVICES_TO_BUILD=()
-          
-          # بررسی تغییرات در هر سرویس
-          if echo "$CHANGED_FILES" | grep -q "Dockerfile\|docker-compose.yml\|requirements.txt"; then
-            echo "Core docker files changed, rebuilding all services"
-            BUILD_CMD="docker-compose build --progress=plain"
-          else
-            # بررسی تغییرات در سرویس‌های مختلف
-            if echo "$CHANGED_FILES" | grep -q "nginx/"; then
-              SERVICES_TO_BUILD+=("nginx")
-            fi
-            if echo "$CHANGED_FILES" | grep -q "zima/\|apps/"; then
-              SERVICES_TO_BUILD+=("django" "gunicorn")
-            fi
-            
-            # ساخت دستور بیلد بر اساس سرویس‌های تغییر یافته
-            if [ ${#SERVICES_TO_BUILD[@]} -eq 0 ]; then
-              echo "No service-specific changes detected, using cached builds"
-              BUILD_CMD="docker-compose build --progress=plain"
-            else
-              echo "Building changed services: ${SERVICES_TO_BUILD[*]}"
-              BUILD_CMD="docker-compose build --progress=plain --no-cache ${SERVICES_TO_BUILD[*]}"
-            fi
-          fi
-          
-          # بیلد با استفاده از BuildKit برای سرعت بیشتر
-          echo "Building containers: $BUILD_CMD"
-          DOCKER_BUILDKIT=1 eval $BUILD_CMD
+          echo "Building containers..."
+          DOCKER_BUILDKIT=1 docker-compose build --progress=plain
           
           # راه‌اندازی کانتینرها در پس‌زمینه
           echo "Starting containers..."
           docker-compose up -d
           
-          # بررسی تغییرات مایگریشن
-          echo "===== Checking for migrations ====="
-          if echo "$CHANGED_FILES" | grep -q "migrations/\|models.py"; then
-            echo "Model changes detected, running migrations..."
-              
-            # اجرای مایگریشن‌ها با استراتژی امن‌تر
-            echo "Running migrations with safer strategy..."
-            
-            # اول تلاش می‌کنیم با fake-initial
-            docker-compose exec -T gunicorn python manage.py migrate --fake-initial || \
-            
-            # اگر خطا داد، مایگریشن‌های مشکل‌دار را fake می‌کنیم
-            (
-              echo "Initial migration failed, trying app-specific fake migrations..." && \
-              for APP in $(docker-compose exec -T gunicorn python manage.py showmigrations | grep -v "\[X\]" | grep "^[a-z]" | cut -d " " -f 1); do
-                echo "Fake migrating $APP..." && \
-                docker-compose exec -T gunicorn python manage.py migrate $APP --fake || true
-              done && \
-              
-              # و در نهایت دوباره migrate را اجرا می‌کنیم
-              echo "Running migrations again..." && \
-              docker-compose exec -T gunicorn python manage.py migrate
-            )
-            
-            # نمایش وضعیت مایگریشن‌ها
-              echo "Migration status:"
-              docker-compose exec -T gunicorn python manage.py showmigrations
-            else
-              echo "No model changes detected, skipping migrations"
-            fi
-                    
-          # بررسی وضعیت کانتینرها تا 60 ثانیه (افزایش زمان)
-          echo "Waiting for containers to be healthy..."
-          MAX_WAIT=60
-          WAIT_INTERVAL=2
-          ELAPSED=0
+          echo "Deployment completed"
+        EOF
+
+  finalize:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Run migrations and check status
+      run: |
+        ssh -T -o StrictHostKeyChecking=no -o ConnectTimeout=120 -o ServerAliveInterval=30 -o ServerAliveCountMax=10 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          cd /var/www/zimabestshop/zima_backend
           
-          while [ $ELAPSED -lt $MAX_WAIT ]; do
-            # بررسی وضعیت کانتینرها
-            CONTAINERS_UP=$(docker-compose ps --services --filter "status=running" | wc -l)
-            EXPECTED_CONTAINERS=$(docker-compose config --services | wc -l)
-            
-            if [ "$CONTAINERS_UP" -eq "$EXPECTED_CONTAINERS" ]; then
-              echo "All containers are up and running!"
-              break
-            fi
-            
-            echo "Waiting for containers... ($CONTAINERS_UP/$EXPECTED_CONTAINERS running, ${ELAPSED}s elapsed)"
-            sleep $WAIT_INTERVAL
-            ELAPSED=$((ELAPSED + WAIT_INTERVAL))
-          done
+          # اجرای مایگریشن‌ها
+          echo "Running migrations..."
+          docker-compose exec -T gunicorn python manage.py migrate chat || true
+          docker-compose exec -T gunicorn python manage.py migrate --fake-initial || true
           
-          # نمایش وضعیت نهایی کانتینرها
+          # بررسی وضعیت کانتینرها
           echo "Container status:"
           docker-compose ps
           
