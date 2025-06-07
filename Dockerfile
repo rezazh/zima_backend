@@ -42,6 +42,7 @@ COPY ./config/nginx.conf /etc/nginx/conf.d/default.conf
 # کپی فایل entrypoint به مسیر root برای سازگاری
 COPY --chown=app:app ./config/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+RUN apk add --no-cache postgresql-client
 
 USER app
 
