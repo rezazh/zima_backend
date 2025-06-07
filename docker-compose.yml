@@ -1,3 +1,5 @@
+version: '3.9'
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -6,7 +8,6 @@ services:
       POSTGRES_DB: ${DB_NAME:-zima}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-rezazh79}
-      DJANGO_ENV: production
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     networks:
@@ -23,8 +24,6 @@ services:
     container_name: zima_redis
     networks:
       - zima_network
-    environment:
-      DJANGO_ENV: production
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -32,11 +31,10 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # کانتینر Django جداگانه برای دیباگ و توسعه
   django:
     build:
       context: .
-      dockerfile: Dockerfile.gunicorn
+      dockerfile: Dockerfile
     container_name: zima_django
     depends_on:
       postgres:
@@ -51,7 +49,7 @@ services:
       - DJANGO_ENV=development
       - SERVICE_TYPE=django
     volumes:
-      - ./:/app
+      - .:/app
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
       - ./logs:/app/logs
@@ -59,13 +57,12 @@ services:
       - zima_network
     restart: unless-stopped
     ports:
-      - "8001:8000"
+      - "8002:8000" # فقط برای توسعه و دیباگ، gunicorn و daphne روی پورت‌های اصلی هستند
 
-  # کانتینر Gunicorn اصلی
   gunicorn:
     build:
       context: .
-      dockerfile: Dockerfile.gunicorn
+      dockerfile: Dockerfile
     container_name: zima_gunicorn
     depends_on:
       postgres:
@@ -80,6 +77,7 @@ services:
       - DJANGO_ENV=production
       - SERVICE_TYPE=gunicorn
     volumes:
+      - .:/app
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
       - ./logs:/app/logs
@@ -92,7 +90,7 @@ services:
   daphne:
     build:
       context: .
-      dockerfile: Dockerfile.gunicorn
+      dockerfile: Dockerfile
     container_name: zima_daphne
     depends_on:
       postgres:
@@ -107,80 +105,23 @@ services:
       - DJANGO_ENV=production
       - SERVICE_TYPE=daphne
     volumes:
-      - ./:/app
+      - .:/app
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
       - ./logs:/app/logs
     networks:
       - zima_network
     restart: unless-stopped
-    expose:
-      - "8001"
+    ports:
+      - "8001:8001"
+    command: [ "/entrypoint.sh", "daphne" ]
 
-  # سرویس پاکسازی دیتابیس
-  db-cleanup:
-    image: postgres:15-alpine
-    container_name: zima_db_cleanup
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: "no"
-    environment:
-      PGPASSWORD: ${DB_PASSWORD:-rezazh79}
-    networks:
-      - zima_network
-    command: >
-      sh -c "
-        echo 'Waiting for postgres...'
-        until pg_isready -h postgres -U ${DB_USER:-postgres} -d ${DB_NAME:-zima}; do
-          echo 'Waiting for PostgreSQL...'
-          sleep 2
-        done
-        
-        echo 'Cleaning up chat tables if needed...'
-        psql -h postgres -U ${DB_USER:-postgres} -d ${DB_NAME:-zima} << 'EOF'
-        -- حذف رکوردهای مایگریشن مربوط به chat
-        DELETE FROM django_migrations WHERE app='chat';
-        
-        -- حذف جداول چت
-        DROP TABLE IF EXISTS chat_chatroom CASCADE;
-        DROP TABLE IF EXISTS chat_chatmessage CASCADE;
-        DROP TABLE IF EXISTS chat_deletedchat CASCADE;
-        
-        -- حذف سایر جداول مرتبط با چت
-        DO \$\$
-        DECLARE
-            r RECORD;
-        BEGIN
-            FOR r IN (SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'chat_%' AND table_schema='public')
-            LOOP
-                EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.table_name) || ' CASCADE';
-            END LOOP;
-        END
-        \$\$;
-        
-        -- حذف نوع‌های مرتبط با چت
-        DO \$\$
-        DECLARE
-            r RECORD;
-        BEGIN
-            FOR r IN (SELECT typname FROM pg_type WHERE typname LIKE 'chat_%')
-            LOOP
-                EXECUTE 'DROP TYPE IF EXISTS ' || quote_ident(r.typname) || ' CASCADE';
-            END LOOP;
-        END
-        \$\$;
-        EOF
-        
-        echo 'Cleanup completed!'
-      "
-
-  # nginx
   nginx:
     image: nginx:alpine
     container_name: zima_nginx
     depends_on:
       - gunicorn
+      - daphne
     ports:
       - "80:80"
       - "443:443"
@@ -191,7 +132,7 @@ services:
     networks:
       - zima_network
     environment:
-      - NGINX_SERVER_NAMES_HASH_BUCKET_SIZE=64
+      - NGINX_SERVER_NAMES_HASH_BUCKET_SIZE=128
     restart: unless-stopped
 
 volumes:

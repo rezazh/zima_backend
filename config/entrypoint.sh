@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-echo "=== Django/Gunicorn Server Entrypoint ==="
+echo "=== Django/Gunicorn/Daphne Entrypoint ==="
 
 # تنظیم دایرکتوری‌های مورد نیاز
 mkdir -p /app/static /app/staticfiles /app/media /app/logs
+
 export PYTHONPATH=/app
 cd /app
 
-# تشخیص نوع سرویس از متغیر محیطی یا نام کانتینر
 SERVICE_TYPE=${SERVICE_TYPE:-gunicorn}
 
 # انتظار برای دیتابیس
@@ -20,10 +20,8 @@ do
 done
 echo "PostgreSQL is ready!"
 
-# استراتژی ساده برای مایگریشن‌ها
+# اجرای مایگریشن‌ها
 echo "Running migrations..."
-
-# تلاش برای اجرای مایگریشن با روش‌های مختلف
 if python manage.py migrate --fake-initial 2>/dev/null; then
     echo "Migrations completed with --fake-initial"
 elif python manage.py migrate 2>/dev/null; then

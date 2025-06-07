@@ -10,24 +10,23 @@ WORKDIR $APP_HOME
 
 RUN apk update \
     && apk add --no-cache \
-    postgresql-dev \
-    postgresql-client \
-    gcc \
-    python3-dev \
-    musl-dev \
-    jpeg-dev \
-    zlib-dev \
-    libffi-dev \
-    gettext \
-    bash \
-    netcat-openbsd \
-    nginx
+        postgresql-dev \
+        postgresql-client \
+        gcc \
+        python3-dev \
+        musl-dev \
+        jpeg-dev \
+        zlib-dev \
+        libffi-dev \
+        gettext \
+        bash \
+        netcat-openbsd
 
 COPY requirements.txt .
 
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
-    && pip install gunicorn
+    && pip install gunicorn daphne
 
 COPY . .
 
@@ -35,8 +34,6 @@ RUN addgroup -S app && adduser -S app -G app
 
 RUN mkdir -p $APP_HOME/staticfiles $APP_HOME/media $APP_HOME/logs \
     && chown -R app:app $APP_HOME
-
-COPY ./config/nginx.conf /etc/nginx/conf.d/default.conf
 
 COPY --chown=app:app ./config/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
