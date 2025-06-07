@@ -11,7 +11,7 @@ WORKDIR $APP_HOME
 RUN apk update \
     && apk add --no-cache \
     postgresql-dev \
-    postgresql-client \  # اضافه کردن کلاینت PostgreSQL
+    postgresql-client \
     gcc \
     python3-dev \
     musl-dev \
@@ -19,8 +19,8 @@ RUN apk update \
     zlib-dev \
     libffi-dev \
     gettext \
-    bash \  # اضافه کردن bash برای اسکریپت‌های پیچیده‌تر
-    netcat-openbsd \  # برای بررسی اتصال به پورت‌ها
+    bash \
+    netcat-openbsd \
     nginx
 
 COPY requirements.txt .
@@ -29,11 +29,7 @@ RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
     && pip install gunicorn
 
-# کپی اسکریپت‌های مدیریت مایگریشن
-COPY ./config/migration_utils.py /app/config/
-COPY ./config/db_cleanup.sql /app/config/
-
-# کپی کل پروژه
+# کپی کل پروژه ابتدا
 COPY . .
 
 RUN addgroup -S app && adduser -S app -G app
@@ -43,11 +39,10 @@ RUN mkdir -p $APP_HOME/staticfiles $APP_HOME/media $APP_HOME/logs \
 
 COPY ./config/nginx.conf /etc/nginx/conf.d/default.conf
 
-# اطمینان از دسترسی به اسکریپت‌های entrypoint
-COPY --chown=app:app ./config/gunicorn-entrypoint.sh /app/config/
-COPY --chown=app:app ./config/django-entrypoint.sh /app/config/
-RUN chmod +x /app/config/gunicorn-entrypoint.sh /app/config/django-entrypoint.sh
+# کپی فایل entrypoint به مسیر root برای سازگاری
+COPY --chown=app:app ./config/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 USER app
 
-ENTRYPOINT ["/app/config/gunicorn-entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]

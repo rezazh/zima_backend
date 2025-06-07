@@ -7,7 +7,6 @@ services:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-rezazh79}
       DJANGO_ENV: production
-
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     networks:
@@ -26,7 +25,6 @@ services:
       - zima_network
     environment:
       DJANGO_ENV: production
-
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -51,6 +49,7 @@ services:
       - DB_HOST=postgres
       - REDIS_HOST=redis
       - DJANGO_ENV=development
+      - SERVICE_TYPE=django
     volumes:
       - ./:/app
       - ./staticfiles:/app/staticfiles
@@ -61,7 +60,6 @@ services:
     restart: unless-stopped
     ports:
       - "8001:8000"
-    command: python manage.py runserver 0.0.0.0:8000
 
   # کانتینر Gunicorn اصلی
   gunicorn:
@@ -80,6 +78,7 @@ services:
       - DB_HOST=postgres
       - REDIS_HOST=redis
       - DJANGO_ENV=production
+      - SERVICE_TYPE=gunicorn
     volumes:
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
@@ -89,7 +88,6 @@ services:
     restart: unless-stopped
     expose:
       - "8000"
-
 
   daphne:
     build:
@@ -107,6 +105,7 @@ services:
       - DB_HOST=postgres
       - REDIS_HOST=redis
       - DJANGO_ENV=production
+      - SERVICE_TYPE=daphne
     volumes:
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
@@ -116,7 +115,64 @@ services:
     restart: unless-stopped
     expose:
       - "8001"
-    command: daphne -b 0.0.0.0 -p 8001 zima.asgi:application
+
+  # سرویس پاکسازی دیتابیس
+  db-cleanup:
+    image: postgres:15-alpine
+    container_name: zima_db_cleanup
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    environment:
+      PGPASSWORD: ${DB_PASSWORD:-rezazh79}
+    networks:
+      - zima_network
+    command: >
+      sh -c "
+        echo 'Waiting for postgres...'
+        until pg_isready -h postgres -U ${DB_USER:-postgres} -d ${DB_NAME:-zima}; do
+          echo 'Waiting for PostgreSQL...'
+          sleep 2
+        done
+        
+        echo 'Cleaning up chat tables if needed...'
+        psql -h postgres -U ${DB_USER:-postgres} -d ${DB_NAME:-zima} << 'EOF'
+        -- حذف رکوردهای مایگریشن مربوط به chat
+        DELETE FROM django_migrations WHERE app='chat';
+        
+        -- حذف جداول چت
+        DROP TABLE IF EXISTS chat_chatroom CASCADE;
+        DROP TABLE IF EXISTS chat_chatmessage CASCADE;
+        DROP TABLE IF EXISTS chat_deletedchat CASCADE;
+        
+        -- حذف سایر جداول مرتبط با چت
+        DO \$\$
+        DECLARE
+            r RECORD;
+        BEGIN
+            FOR r IN (SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'chat_%' AND table_schema='public')
+            LOOP
+                EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.table_name) || ' CASCADE';
+            END LOOP;
+        END
+        \$\$;
+        
+        -- حذف نوع‌های مرتبط با چت
+        DO \$\$
+        DECLARE
+            r RECORD;
+        BEGIN
+            FOR r IN (SELECT typname FROM pg_type WHERE typname LIKE 'chat_%')
+            LOOP
+                EXECUTE 'DROP TYPE IF EXISTS ' || quote_ident(r.typname) || ' CASCADE';
+            END LOOP;
+        END
+        \$\$;
+        EOF
+        
+        echo 'Cleanup completed!'
+      "
 
   # nginx
   nginx:
@@ -136,36 +192,6 @@ services:
     environment:
       - NGINX_SERVER_NAMES_HASH_BUCKET_SIZE=64
     restart: unless-stopped
-
-  db-cleanup:
-    image: postgres:15-alpine
-    container_name: zima_db_cleanup
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: "no"
-    environment:
-      PGPASSWORD: ${DB_PASSWORD:-rezazh79}
-      POSTGRES_DB: ${DB_NAME:-zima}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-rezazh79}
-    volumes:
-      - ./config/db_cleanup.sql:/db_cleanup.sql
-    networks:
-      - zima_network
-    command: >
-      sh -c "
-        echo 'Waiting for postgres...'
-        until pg_isready -h postgres -U ${DB_USER:-postgres} -d ${DB_NAME:-zima}; do
-          echo 'Waiting for PostgreSQL...'
-          sleep 2
-        done
-      
-        echo 'Cleaning up problematic tables if needed...'
-        psql -h postgres -U ${DB_USER:-postgres} -d ${DB_NAME:-zima} -f /db_cleanup.sql
-      
-        echo 'Cleanup completed!'
-      "
 
 volumes:
   postgres_data:

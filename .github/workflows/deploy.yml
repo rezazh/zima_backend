@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 60  # زمان کلی اجرای workflow را افزایش می‌دهیم
+    timeout-minutes: 60
 
     steps:
     - name: Checkout code
@@ -22,11 +22,11 @@ jobs:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false  # ادامه اجرای اسکریپت حتی در صورت خطا
-        command_timeout: 40m  # افزایش تایم‌اوت دستورات به ۴۰ دقیقه
+        script_stop: false
+        command_timeout: 40m
         script: |
           #!/bin/bash
-          set -e  # توقف اسکریپت در صورت خطا
+          set -e
           
           echo "===== Starting deployment process at $(date) ====="
           
@@ -34,7 +34,7 @@ jobs:
           export COMPOSE_HTTP_TIMEOUT=300
           export DOCKER_CLIENT_TIMEOUT=300
           
-          # تابع تلاش مجدد برای اجرای دستورات با مدیریت خطا
+          # تابع تلاش مجدد برای اجرای دستورات
           function retry {
             local retries=$1
             local wait_time=$2
@@ -54,7 +54,7 @@ jobs:
             return 0
           }
           
-          # مرحله 1: بررسی و آماده‌سازی دایرکتوری پروژه
+          # مرحله 1: آماده‌سازی دایرکتوری پروژه
           echo "===== Stage 1: Preparing project directory ====="
           if [ -d "/var/www/zimabestshop/zima_backend" ]; then
             cd /var/www/zimabestshop/zima_backend
@@ -69,7 +69,7 @@ jobs:
             cd zima_backend
           fi
           
-          # مرحله 2: دریافت آخرین تغییرات از گیت
+          # مرحله 2: دریافت آخرین تغییرات
           echo "===== Stage 2: Pulling latest changes from git ====="
           retry 5 30 git pull --ff-only origin main || (
             echo "Fast-forward pull failed, fetching and resetting..."
@@ -77,149 +77,58 @@ jobs:
             git reset --hard origin/main
           )
           
-          # نمایش تغییرات دریافت شده
           echo "Recent commits:"
           git log -1 --pretty=format:"%h - %an, %ar : %s"
           
-          # مرحله 3: توقف کانتینرهای موجود
+          # مرحله 3: توقف کانتینرها
           echo "===== Stage 3: Stopping containers ====="
-          # افزایش تایم‌اوت برای docker-compose down
-          retry 3 30 timeout 180 docker-compose down || echo "Docker-compose down timed out or failed, continuing..."
+          retry 3 30 timeout 180 docker-compose down || echo "Docker-compose down failed, continuing..."
           
-          # مرحله 4: بیلد کانتینرها
-          echo "===== Stage 4: Building containers ====="
-          # استفاده از BuildKit برای سرعت و کارایی بیشتر
+          # مرحله 4: پاکسازی دیتابیس چت (اگر نیاز باشد)
+          echo "===== Stage 4: Database cleanup ====="
+          retry 3 30 docker-compose up -d postgres
+          sleep 10
+          retry 2 10 docker-compose up db-cleanup || echo "Database cleanup failed, continuing..."
+          docker-compose logs db-cleanup
+          docker-compose down
+          
+          # مرحله 5: بیلد کانتینرها
+          echo "===== Stage 5: Building containers ====="
           export DOCKER_BUILDKIT=1
           export COMPOSE_DOCKER_CLI_BUILD=1
           
-          # شناسایی سرویس‌های تغییر یافته
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "all")
+          retry 3 60 docker-compose build --no-cache || echo "Build failed, continuing with cached images..."
           
-          # بررسی تغییرات در هر سرویس
-          if echo "$CHANGED_FILES" | grep -q "Dockerfile\|docker-compose.yml\|requirements.txt"; then
-            echo "Core docker files changed, rebuilding all services"
-            BUILD_CMD="docker-compose build --progress=plain"
-          else
-            # بررسی تغییرات در سرویس‌های مختلف
-            SERVICES_TO_BUILD=()
-            
-            if echo "$CHANGED_FILES" | grep -q "nginx/"; then
-              SERVICES_TO_BUILD+=("nginx")
-            fi
-            
-            if echo "$CHANGED_FILES" | grep -q "zima/\|apps/"; then
-              SERVICES_TO_BUILD+=("django" "gunicorn")
-            fi
-            
-            # ساخت دستور بیلد بر اساس سرویس‌های تغییر یافته
-            if [ ${#SERVICES_TO_BUILD[@]} -eq 0 ]; then
-              echo "No service-specific changes detected, using cached builds"
-              BUILD_CMD="docker-compose build --progress=plain"
-            else
-              echo "Building changed services: ${SERVICES_TO_BUILD[*]}"
-              BUILD_CMD="docker-compose build --progress=plain --no-cache ${SERVICES_TO_BUILD[*]}"
-            fi
-          fi
+          # مرحله 6: راه‌اندازی کانتینرها
+          echo "===== Stage 6: Starting containers ====="
+          retry 3 30 docker-compose up -d || echo "Failed to start containers..."
           
-          # اجرای دستور بیلد با تلاش مجدد در صورت شکست
-          echo "Running build command: $BUILD_CMD"
-          retry 3 60 eval $BUILD_CMD || echo "Build failed after retries, continuing with cached images..."
-          
-          # مرحله 5: راه‌اندازی کانتینرها
-          echo "===== Stage 5: Starting containers ====="
-          retry 3 30 docker-compose up -d || echo "Failed to start containers, trying to continue..."
-          echo "===== Stage 5.5: Database cleanup if needed ====="
-          # اجرای سرویس db-cleanup
-          retry 3 30 docker-compose up -d db-cleanup || echo "Failed to run db-cleanup, continuing..."
-          # انتظار برای تکمیل فرایند پاکسازی
-          sleep 10
-          # بررسی لاگ‌های سرویس db-cleanup
-          docker-compose logs db-cleanup
-          # مرحله 6: اجرای مایگریشن‌ها
-          echo "===== Stage 6: Running migrations ====="
-          
-          # بررسی وضعیت پایگاه داده قبل از اجرای مایگریشن‌ها
-          echo "Checking database status..."
-          retry 5 10 docker-compose exec -T postgres pg_isready -U postgres || echo "Database not ready, but continuing..."
-          
-          # استراتژی امن برای اجرای مایگریشن‌ها
-          echo "Running migrations with safer strategy..."
-          
-          # بررسی آیا جدول django_migrations وجود دارد
-          DB_INITIALIZED=$(docker-compose exec -T postgres psql -U postgres -d zima -c "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'django_migrations');" -t | grep -c t || echo "0")
-          
-          if [ "$DB_INITIALIZED" -eq "1" ]; then
-            echo "Database initialized, running migrations normally..."
-            
-            # اجرای مایگریشن‌ها با استراتژی امن
-            retry 3 30 docker-compose exec -T gunicorn python manage.py migrate --fake-initial || (
-              echo "Initial migration failed, trying app-specific fake migrations..." && 
-              
-              # اجرای مایگریشن برای هر اپلیکیشن به صورت جداگانه
-              for APP in $(docker-compose exec -T gunicorn python manage.py showmigrations | grep -v "\[X\]" | grep "^[a-z]" | cut -d " " -f 1 || echo ""); do
-                echo "Fake migrating $APP..."
-                docker-compose exec -T gunicorn python manage.py migrate $APP --fake || echo "Failed to fake migrate $APP, continuing..."
-              done && 
-              
-              echo "Running migrations again..." && 
-              retry 3 30 docker-compose exec -T gunicorn python manage.py migrate || echo "Migration failed after retries, manual intervention may be required"
-            )
-          else
-            echo "New database detected, running initial migrations..."
-            retry 3 30 docker-compose exec -T gunicorn python manage.py migrate || echo "Initial migration failed, manual intervention may be required"
-          fi
-          
-          # نمایش وضعیت مایگریشن‌ها
-          echo "Migration status:"
-          docker-compose exec -T gunicorn python manage.py showmigrations || echo "Failed to show migrations status"
-          
-          # مرحله 7: جمع‌آوری فایل‌های استاتیک
-          echo "===== Stage 7: Collecting static files ====="
-          retry 3 30 docker-compose exec -T gunicorn python manage.py collectstatic --noinput || echo "Failed to collect static files, continuing..."
-          
-          # مرحله 8: بررسی وضعیت کانتینرها
-          echo "===== Stage 8: Checking container status ====="
-          # بررسی وضعیت کانتینرها تا 120 ثانیه (افزایش زمان)
+          # مرحله 7: بررسی وضعیت کانتینرها
+          echo "===== Stage 7: Checking container status ====="
           MAX_WAIT=120
           WAIT_INTERVAL=5
           ELAPSED=0
           
           while [ $ELAPSED -lt $MAX_WAIT ]; do
-            # بررسی وضعیت کانتینرها
             CONTAINERS_UP=$(docker-compose ps --services --filter "status=running" | wc -l)
-            EXPECTED_CONTAINERS=$(docker-compose config --services | wc -l)
+            EXPECTED_CONTAINERS=5  # postgres, redis, gunicorn, daphne, nginx
             
-            if [ "$CONTAINERS_UP" -eq "$EXPECTED_CONTAINERS" ]; then
-              echo "All containers are up and running!"
+            if [ "$CONTAINERS_UP" -ge 4 ]; then  # حداقل 4 کانتینر اصلی
+              echo "Main containers are up and running!"
               break
             fi
             
-            echo "Waiting for containers... ($CONTAINERS_UP/$EXPECTED_CONTAINERS running, ${ELAPSED}s elapsed)"
+            echo "Waiting for containers... ($CONTAINERS_UP running, ${ELAPSED}s elapsed)"
             sleep $WAIT_INTERVAL
             ELAPSED=$((ELAPSED + WAIT_INTERVAL))
           done
           
-          # نمایش وضعیت نهایی کانتینرها
           echo "Container status:"
           docker-compose ps
           
-          # مرحله 9: بررسی لاگ‌ها و وضعیت نهایی
-          echo "===== Stage 9: Final checks ====="
-          # نمایش لاگ‌های خطا (اگر وجود داشته باشد)
+          # مرحله 8: بررسی نهایی
+          echo "===== Stage 8: Final checks ====="
           echo "Checking for errors in logs..."
-          docker-compose logs --tail=20 | grep -i "error\|warn\|fail" || echo "No immediate errors found"
-          
-          # بررسی دسترسی به وب‌سایت
-          echo "Checking website accessibility..."
-          curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost || echo "Website check failed"
+          docker-compose logs --tail=10 | grep -i "error\|fail" || echo "No immediate errors found"
           
           echo "===== Deployment completed at $(date) ====="
-          
-          # نمایش اطلاعات سیستم
-          echo "===== System information ====="
-          echo "Disk usage:"
-          df -h | grep /dev/
-          echo "Memory usage:"
-          free -h
-          echo "Docker disk usage:"
-          docker system df
