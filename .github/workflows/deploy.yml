@@ -131,3 +131,6 @@ jobs:
           docker-compose logs --tail=10 | grep -i "error\|fail" || echo "No immediate errors found"
           
           echo "===== Deployment completed at $(date) ====="
+          
+          
+          
