@@ -137,6 +137,36 @@ services:
       - NGINX_SERVER_NAMES_HASH_BUCKET_SIZE=64
     restart: unless-stopped
 
+  db-cleanup:
+    image: postgres:15-alpine
+    container_name: zima_db_cleanup
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    environment:
+      PGPASSWORD: ${DB_PASSWORD:-rezazh79}
+      POSTGRES_DB: ${DB_NAME:-zima}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-rezazh79}
+    volumes:
+      - ./config/db_cleanup.sql:/db_cleanup.sql
+    networks:
+      - zima_network
+    command: >
+      sh -c "
+        echo 'Waiting for postgres...'
+        until pg_isready -h postgres -U ${DB_USER:-postgres} -d ${DB_NAME:-zima}; do
+          echo 'Waiting for PostgreSQL...'
+          sleep 2
+        done
+      
+        echo 'Cleaning up problematic tables if needed...'
+        psql -h postgres -U ${DB_USER:-postgres} -d ${DB_NAME:-zima} -f /db_cleanup.sql
+      
+        echo 'Cleanup completed!'
+      "
+
 volumes:
   postgres_data:
     name: zima_postgres_data

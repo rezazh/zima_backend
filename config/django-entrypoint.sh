@@ -17,23 +17,18 @@ while ! nc -z postgres 5432; do
 done
 echo "PostgreSQL is ready!"
 
-# بررسی وجود جدول django_migrations
-echo "Checking database migration status..."
-MIGRATIONS_TABLE_EXISTS=$(PGPASSWORD=$DB_PASSWORD psql -h postgres -U $DB_USER -d $DB_NAME -t -c "
-    SELECT EXISTS (
-        SELECT FROM information_schema.tables
-        WHERE table_name = 'django_migrations'
-    );
-" | grep -q t && echo "true" || echo "false")
-
-# استراتژی امن برای مایگریشن‌ها
-if [ "$MIGRATIONS_TABLE_EXISTS" = "true" ]; then
-    echo "Database initialized, using --fake-initial for migrations..."
-    python manage.py migrate --fake-initial
-else
-    echo "New database detected, running initial migrations..."
-    python manage.py migrate
+# بررسی و اصلاح مشکلات احتمالی در دیتابیس
+echo "Checking database for potential issues..."
+if [ -f "/app/config/db_cleanup.sql" ]; then
+  PGPASSWORD=$DB_PASSWORD psql -h postgres -U $DB_USER -d $DB_NAME -f /app/config/db_cleanup.sql || echo "Cleanup script execution failed, continuing..."
 fi
+
+# استراتژی امن برای مایگریشن‌ها با استفاده از اسکریپت پایتون
+echo "Running migrations with safe strategy..."
+python /app/config/migration_utils.py safe || (
+  echo "Safe migration failed, trying alternative approach..." &&
+  python manage.py migrate --fake-initial || python manage.py migrate
+)
 
 # جمع‌آوری فایل‌های استاتیک
 echo "Collecting static files..."

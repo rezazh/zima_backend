@@ -128,7 +128,13 @@ jobs:
           # مرحله 5: راه‌اندازی کانتینرها
           echo "===== Stage 5: Starting containers ====="
           retry 3 30 docker-compose up -d || echo "Failed to start containers, trying to continue..."
-          
+          echo "===== Stage 5.5: Database cleanup if needed ====="
+          # اجرای سرویس db-cleanup
+          retry 3 30 docker-compose up -d db-cleanup || echo "Failed to run db-cleanup, continuing..."
+          # انتظار برای تکمیل فرایند پاکسازی
+          sleep 10
+          # بررسی لاگ‌های سرویس db-cleanup
+          docker-compose logs db-cleanup
           # مرحله 6: اجرای مایگریشن‌ها
           echo "===== Stage 6: Running migrations ====="
           

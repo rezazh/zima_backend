@@ -18,39 +18,51 @@ do
 done
 echo "PostgreSQL is ready!"
 
-# بررسی وجود جدول django_migrations
-echo "Checking database migration status..."
-MIGRATIONS_TABLE_EXISTS=$(PGPASSWORD=$DB_PASSWORD psql -h postgres -U $DB_USER -d $DB_NAME -t -c "
-    SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_name = 'django_migrations'
-    );
-" | grep -q t && echo "true" || echo "false")
-
-# استراتژی امن برای مایگریشن‌ها
-if [ "$MIGRATIONS_TABLE_EXISTS" = "true" ]; then
-    echo "Database initialized, checking for chat app migrations..."
-    
-    # بررسی وجود رکوردهای مایگریشن برای اپلیکیشن chat
-    CHAT_MIGRATIONS_EXIST=$(PGPASSWORD=$DB_PASSWORD psql -h postgres -U $DB_USER -d $DB_NAME -t -c "
-        SELECT EXISTS (
-            SELECT FROM django_migrations 
-            WHERE app = 'chat'
-        );
-    " | grep -q t && echo "true" || echo "false")
-    
-    if [ "$CHAT_MIGRATIONS_EXIST" = "true" ]; then
-        echo "Chat migrations exist, using --fake for chat app..."
-        python manage.py migrate chat --fake
-        python manage.py migrate --fake-initial
-    else
-        echo "No chat migrations found, running normal migrations..."
-        python manage.py migrate
-    fi
-else
-    echo "New database detected, running initial migrations..."
-    python manage.py migrate
+# بررسی و اصلاح مشکلات احتمالی در دیتابیس
+echo "Checking database for potential issues..."
+if [ -f "/app/config/db_cleanup.sql" ]; then
+  PGPASSWORD=$DB_PASSWORD psql -h postgres -U $DB_USER -d $DB_NAME -f /app/config/db_cleanup.sql || echo "Cleanup script execution failed, continuing..."
 fi
+
+# استراتژی امن برای مایگریشن‌ها با استفاده از اسکریپت پایتون
+echo "Running migrations with safe strategy..."
+python /app/config/migration_utils.py safe || (
+  echo "Safe migration failed, trying alternative approach..." &&
+
+  # بررسی وجود جدول django_migrations
+  MIGRATIONS_TABLE_EXISTS=$(python -c "
+  import os
+  import psycopg2
+  try:
+      conn = psycopg2.connect(
+          dbname=os.environ.get('DB_NAME', 'zima'),
+          user=os.environ.get('DB_USER', 'postgres'),
+          password=os.environ.get('DB_PASSWORD', 'rezazh79'),
+          host=os.environ.get('DB_HOST', 'postgres'),
+          port=os.environ.get('DB_PORT', '5432')
+      )
+      cursor = conn.cursor()
+      cursor.execute(\"\"\"
+          SELECT EXISTS (
+              SELECT FROM information_schema.tables
+              WHERE table_name = 'django_migrations'
+          );
+      \"\"\")
+      result = cursor.fetchone()[0]
+      print('true' if result else 'false')
+      conn.close()
+  except Exception as e:
+      print('false')
+  ")
+
+  if [ "$MIGRATIONS_TABLE_EXISTS" = "true" ]; then
+      echo "Database initialized, using --fake-initial..."
+      python manage.py migrate --fake-initial
+  else
+      echo "New database detected, running initial migrations..."
+      python manage.py migrate
+  fi
+)
 
 # جمع‌آوری فایل‌های استاتیک
 echo "Collecting static files..."
