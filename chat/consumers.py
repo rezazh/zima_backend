@@ -431,7 +431,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return chat_message
 
 
-
+# اصلاح NotificationConsumer - این بود که مشکل داشت
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope["user"]
@@ -464,15 +464,34 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             )
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        message_type = data.get('type')
+        try:
+            data = json.loads(text_data)
+            message_type = data.get('type')
 
-        if message_type == 'check_unread':
-            unread_count = await self.get_unread_count()
-            await self.send(text_data=json.dumps({
-                'type': 'unread_count',
-                'count': unread_count
-            }))
+            if message_type == 'check_unread':
+                unread_count = await self.get_unread_count()
+                await self.send(text_data=json.dumps({
+                    'type': 'unread_count',
+                    'count': unread_count
+                }))
+            elif message_type == 'ping':
+                await self.send(text_data=json.dumps({
+                    'type': 'pong',
+                    'message': 'Connection is alive'
+                }))
+        except json.JSONDecodeError:
+            pass
+
+    # اضافه کردن handler مفقود - این بود که مشکل اصلی بود
+    async def user_status_update(self, event):
+        """Handle user status updates - این handler مفقود بود!"""
+        await self.send(text_data=json.dumps({
+            'type': 'user_status_update',
+            'user_id': event.get('user_id'),
+            'username': event.get('username'),
+            'status': event.get('status'),
+            'is_staff': event.get('is_staff', False)
+        }))
 
     async def chat_notification(self, event):
         await self.send(text_data=json.dumps({
@@ -487,6 +506,16 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'type': 'unread_count',
             'count': event['count']
+        }))
+
+    # اضافه کردن handler برای notification عمومی
+    async def notification_message(self, event):
+        """Handle general notification messages"""
+        await self.send(text_data=json.dumps({
+            'type': 'notification',
+            'message': event.get('message', ''),
+            'title': event.get('title', ''),
+            'data': event.get('data', {})
         }))
 
     @database_sync_to_async

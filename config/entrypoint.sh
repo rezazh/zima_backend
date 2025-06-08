@@ -3,8 +3,9 @@ set -e
 
 echo "=== Starting service: ${SERVICE_TYPE:-gunicorn} ==="
 
-# ایجاد دایرکتوری‌ها
+# ایجاد و تنظیم مجوزهای دایرکتوری‌ها
 mkdir -p /app/static /app/staticfiles /app/media
+chmod 755 /app/staticfiles /app/media 2>/dev/null || echo "Permission adjustment failed, continuing..."
 
 export PYTHONPATH=/app
 cd /app
@@ -32,9 +33,9 @@ export USE_FILE_LOGGING=false
 echo "Running migrations..."
 python manage.py migrate --run-syncdb || echo "Migration failed, continuing..."
 
-# جمع‌آوری static files
+# جمع‌آوری static files بدون clear
 echo "Collecting static files..."
-python manage.py collectstatic --noinput --clear || echo "Static collection failed, continuing..."
+python manage.py collectstatic --noinput || echo "Static collection failed, continuing..."
 
 # اجرای سرویس
 case $SERVICE_TYPE in

@@ -23,11 +23,12 @@ RUN addgroup -S app && adduser -S app -G app
 
 COPY . .
 
-# تنظیم مجوزها برای تمام دایرکتوری‌ها
-RUN mkdir -p staticfiles media logs \
+# تنظیم مجوزها - اصلاح شده
+RUN mkdir -p staticfiles media \
     && chown -R app:app /app \
     && chmod -R 755 /app \
-    && chmod -R 777 /app/logs
+    && chmod -R 777 /app/staticfiles \
+    && chmod -R 777 /app/media
 
 COPY --chown=app:app ./config/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

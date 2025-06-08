@@ -77,8 +77,8 @@ services:
       - USE_FILE_LOGGING=false
     volumes:
       - .:/app
-      - ./staticfiles:/app/staticfiles
-      - ./media:/app/media
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
     networks:
       - zima_network
     restart: unless-stopped
@@ -105,8 +105,8 @@ services:
       - USE_FILE_LOGGING=false
     volumes:
       - .:/app
-      - ./staticfiles:/app/staticfiles
-      - ./media:/app/media
+      - static_volume:/app/staticfiles  # استفاده از volume
+      - media_volume:/app/media
     networks:
       - zima_network
     restart: unless-stopped
@@ -124,8 +124,8 @@ services:
       - "443:443"
     volumes:
       - ./config/nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./staticfiles:/app/staticfiles:ro
-      - ./media:/app/media:ro
+      - static_volume:/app/staticfiles:ro  # استفاده از volume
+      - media_volume:/app/media:ro
     networks:
       - zima_network
     restart: unless-stopped
@@ -133,7 +133,10 @@ services:
 volumes:
   postgres_data:
     name: zima_postgres_data
-
+  static_volume:    # volume جدید برای static files
+    name: zima_static
+  media_volume:     # volume جدید برای media files
+    name: zima_media
 networks:
   zima_network:
     name: zima_network
