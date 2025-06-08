@@ -3,14 +3,16 @@ set -e
 
 echo "=== Starting service: ${SERVICE_TYPE:-gunicorn} ==="
 
-mkdir -p /app/static /app/staticfiles /app/media /app/logs
+# ایجاد دایرکتوری‌ها
+mkdir -p /app/static /app/staticfiles /app/media
+
 export PYTHONPATH=/app
 cd /app
 
 SERVICE_TYPE=${SERVICE_TYPE:-gunicorn}
 
 # انتظار برای دیتابیس
-echo "Waiting for database..."
+echo "Checking database connection..."
 timeout=60
 while ! nc -z postgres 5432 && [ $timeout -gt 0 ]; do
   sleep 2
@@ -18,18 +20,21 @@ while ! nc -z postgres 5432 && [ $timeout -gt 0 ]; do
 done
 
 if [ $timeout -le 0 ]; then
-  echo "Database connection timeout, but continuing..."
+  echo "⚠️  Database connection timeout, but continuing..."
 else
-  echo "Database is ready!"
+  echo "✅ Database is ready!"
 fi
 
-# مایگریشن ساده بدون پاکسازی
+# تنظیم logging برای Docker
+export USE_FILE_LOGGING=false
+
+# مایگریشن ساده
 echo "Running migrations..."
-python manage.py migrate || echo "Migration failed, continuing..."
+python manage.py migrate --run-syncdb || echo "Migration failed, continuing..."
 
 # جمع‌آوری static files
 echo "Collecting static files..."
-python manage.py collectstatic --noinput || echo "Static collection failed, continuing..."
+python manage.py collectstatic --noinput --clear || echo "Static collection failed, continuing..."
 
 # اجرای سرویس
 case $SERVICE_TYPE in
@@ -49,6 +54,7 @@ case $SERVICE_TYPE in
             --timeout 60 \
             --log-level info \
             --access-logfile - \
-            --error-logfile -
+            --error-logfile - \
+            --capture-output
         ;;
 esac

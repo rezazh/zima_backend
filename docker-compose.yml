@@ -46,11 +46,11 @@ services:
       - REDIS_HOST=redis
       - DJANGO_ENV=development
       - SERVICE_TYPE=django
+      - USE_FILE_LOGGING=false
     volumes:
       - .:/app
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
-      - ./logs:/app/logs
     networks:
       - zima_network
     restart: unless-stopped
@@ -74,11 +74,11 @@ services:
       - REDIS_HOST=redis
       - DJANGO_ENV=production
       - SERVICE_TYPE=gunicorn
+      - USE_FILE_LOGGING=false
     volumes:
       - .:/app
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
-      - ./logs:/app/logs
     networks:
       - zima_network
     restart: unless-stopped
@@ -102,11 +102,11 @@ services:
       - REDIS_HOST=redis
       - DJANGO_ENV=production
       - SERVICE_TYPE=daphne
+      - USE_FILE_LOGGING=false
     volumes:
       - .:/app
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
-      - ./logs:/app/logs
     networks:
       - zima_network
     restart: unless-stopped

@@ -71,8 +71,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'chat.middleware.UserActivityMiddleware',
-    # 'middleware.middleware.RequestLogMiddleware',
 ]
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # تنظیمات CORS
@@ -116,15 +116,14 @@ if DJANGO_ENV == 'production':
 
 WSGI_APPLICATION = 'zima.wsgi.application'
 
-# تنظیمات پایگاه داده
+# تنظیمات پایگاه داده - اصلاح شده برای Docker
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'zima'),
         'USER': os.environ.get('DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'rezazh79'),
-        # تنظیم خودکار هاست بر اساس محیط
-        'HOST': os.environ.get('DB_HOST', 'postgres' if DJANGO_ENV == 'production' else 'localhost'),
+        'HOST': os.environ.get('DB_HOST', 'postgres'),
         'PORT': os.environ.get('DB_PORT', '5432'),
         'OPTIONS': {
             'sslmode': 'disable',
@@ -138,13 +137,14 @@ ASGI_APPLICATION = 'zima.asgi.application'
 REDIS_HOST = os.environ.get('REDIS_HOST', 'redis' if is_running_in_docker() else 'localhost')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 REDIS_DB = int(os.environ.get('REDIS_DB', 0))
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             "hosts": [(REDIS_HOST, REDIS_PORT)],
-            "capacity": 1500,  # اندازه صف پیام‌ها
-            "expiry": 10,  # مدت زمان انقضای پیام‌ها (ثانیه)
+            "capacity": 1500,
+            "expiry": 10,
         },
     },
 }
@@ -155,17 +155,17 @@ CACHES = {
         'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'SOCKET_CONNECT_TIMEOUT': 5,  # زمان تایم‌اوت اتصال (ثانیه)
-            'SOCKET_TIMEOUT': 5,  # زمان تایم‌اوت خواندن/نوشتن (ثانیه)
-            'CONNECTION_POOL_KWARGS': {'max_connections': 100},  # حداکثر تعداد اتصالات همزمان
-            'RETRY_ON_TIMEOUT': True,  # تلاش مجدد در صورت تایم‌اوت
-            'IGNORE_EXCEPTIONS': True,  # نادیده گرفتن خطاها (برای جلوگیری از شکست برنامه)
+            'SOCKET_CONNECT_TIMEOUT': 5,
+            'SOCKET_TIMEOUT': 5,
+            'CONNECTION_POOL_KWARGS': {'max_connections': 100},
+            'RETRY_ON_TIMEOUT': True,
+            'IGNORE_EXCEPTIONS': True,
         }
     }
 }
+
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
-# WebSocket settings
 WEBSOCKET_URL = '/ws/'
 
 # Password validation
@@ -193,7 +193,6 @@ TIME_ZONE = os.environ.get('TIME_ZONE', 'Asia/Tehran')
 USE_I18N = os.environ.get('USE_I18N', 'True').lower() in ('true', '1', 't')
 USE_TZ = os.environ.get('USE_TZ', 'True').lower() in ('true', '1', 't')
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # تنظیمات REST Framework
@@ -225,20 +224,14 @@ REST_FRAMEWORK = {
 
 # تنظیمات آپلود فایل
 FILE_UPLOAD_PERMISSIONS = 0o644
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024  # 12MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 PILLOW_FILE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 ALLOWED_IMAGE_TYPES = [
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'image/bmp',
-    'image/webp',
-    'image/svg+xml',
-    'image/tiff',
-    'image/heic',
-    'image/x-icon'
+    'image/jpeg', 'image/png', 'image/gif', 'image/bmp',
+    'image/webp', 'image/svg+xml', 'image/tiff', 'image/heic', 'image/x-icon'
 ]
 
 # تنظیمات JWT
@@ -271,22 +264,14 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', f'Zima Shop <{os.environ.get("EMAIL_HOST_USER", "")}>')
 
-# تنظیمات امنیتی بر اساس محیط
-SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', str(DJANGO_ENV == 'production')).lower() in ('true', '1', 't')
-SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', str(DJANGO_ENV == 'production')).lower() in ('true', '1', 't')
-CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', str(DJANGO_ENV == 'production')).lower() in ('true', '1', 't')
-
-if DJANGO_ENV == 'production':
-    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True').lower() in ('true', '1', 't')
-    SECURE_HSTS_PRELOAD = os.environ.get('SECURE_HSTS_PRELOAD', 'True').lower() in ('true', '1', 't')
-    SECURE_CONTENT_TYPE_NOSNIFF = os.environ.get('SECURE_CONTENT_TYPE_NOSNIFF', 'True').lower() in ('true', '1', 't')
-    SECURE_BROWSER_XSS_FILTER = os.environ.get('SECURE_BROWSER_XSS_FILTER', 'True').lower() in ('true', '1', 't')
-    X_FRAME_OPTIONS = os.environ.get('X_FRAME_OPTIONS', 'DENY')
-else:
-    SECURE_HSTS_SECONDS = 0
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-    SECURE_HSTS_PRELOAD = False
+# تنظیمات امنیتی - ساده شده برای Docker
+ALLOWED_HOSTS = ['*']
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
 
 # تنظیمات CSRF
 CSRF_TRUSTED_ORIGINS = [
@@ -300,70 +285,44 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = False
 SESSION_COOKIE_SAMESITE = 'Lax'
 
-# تنظیمات لاگ
-LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'logs')
-os.makedirs(LOG_DIR, exist_ok=True)
+# تنظیمات لاگ - ساده شده برای Docker
+USE_FILE_LOGGING = os.environ.get('USE_FILE_LOGGING', 'false').lower() == 'true'
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '[{levelname}] {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '[{levelname}] {asctime} {name} {message}',
             'style': '{',
         },
         'simple': {
             'format': '[{levelname}] {message}',
             'style': '{',
         },
-        'request_formatter': {
-            'format': '[REQUEST] {asctime} "{method} {path}" {status_code} {user} {duration:.2f}ms',
-            'style': '{',
-        },
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+            'formatter': 'simple',
         },
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOG_DIR, 'django.log'),
-            'formatter': 'verbose',
-        },
-        'request_handler': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'request_formatter',
-        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'INFO',
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'zima': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-        'zima.requests': {
-            'handlers': ['request_handler'],
-            'level': 'DEBUG',
             'propagate': False,
         },
     },
 }
 
 print(f"Settings loaded for {DJANGO_ENV} environment")
+print("Django settings configured for Docker deployment")
 # Override settings for Docker deployment
 import os
 
@@ -386,8 +345,6 @@ DATABASES = {
         'CONN_MAX_AGE': 600,
     }
 }
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024  # 12MB
 
 # غیرفعال کردن تنظیمات HTTPS در محیط توسعه
 SECURE_SSL_REDIRECT = False
