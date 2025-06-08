@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 45  # کاهش timeout
 
     steps:
     - name: Checkout code
@@ -22,18 +22,20 @@ jobs:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        command_timeout: 40m
+        command_timeout: 30m  # کاهش timeout
         script: |
           #!/bin/bash
           set -e
           
           echo "===== Starting deployment process at $(date) ====="
           
-          # تنظیم متغیرهای محیطی برای مدیریت تایم‌اوت‌ها
-          export COMPOSE_HTTP_TIMEOUT=300
-          export DOCKER_CLIENT_TIMEOUT=300
+          # تنظیم متغیرهای محیطی
+          export COMPOSE_HTTP_TIMEOUT=180
+          export DOCKER_CLIENT_TIMEOUT=180
+          export DOCKER_BUILDKIT=1
+          export COMPOSE_DOCKER_CLI_BUILD=1
           
-          # تابع تلاش مجدد برای اجرای دستورات
+          # تابع retry ساده‌تر
           function retry {
             local retries=$1
             local wait_time=$2
@@ -43,94 +45,63 @@ jobs:
               exit_status=$?
               count=$((count + 1))
               if [ $count -lt $retries ]; then
-                echo "Command failed with exit status $exit_status. Retrying in $wait_time seconds..."
+                echo "Retry $count/$retries failed. Waiting ${wait_time}s..."
                 sleep $wait_time
               else
-                echo "Command failed after $count attempts. Continuing..."
+                echo "All $retries attempts failed."
                 return $exit_status
               fi
             done
             return 0
           }
           
-          # مرحله 1: آماده‌سازی دایرکتوری پروژه
-          echo "===== Stage 1: Preparing project directory ====="
-          if [ -d "/var/www/zimabestshop/zima_backend" ]; then
-            cd /var/www/zimabestshop/zima_backend
-            echo "Resetting any local changes..."
-            git reset --hard || echo "Git reset failed, continuing..."
-            git clean -fd || echo "Git clean failed, continuing..."
+          # مرحله 1: آماده‌سازی
+          echo "===== Stage 1: Preparing ====="
+          cd /var/www/zimabestshop/zima_backend || exit 1
+          git reset --hard
+          git clean -fd
+          
+          # مرحله 2: دریافت تغییرات
+          echo "===== Stage 2: Pulling changes ====="
+          retry 3 10 git pull --ff-only origin main
+          
+          # مرحله 3: توقف سریع کانتینرها
+          echo "===== Stage 3: Quick stop ====="
+          docker-compose down --timeout 30 || echo "Stop failed, continuing..."
+          
+          # مرحله 4: پاکسازی (اختیاری)
+          echo "===== Stage 4: Optional cleanup ====="
+          if docker-compose --profile cleanup ps db-cleanup &>/dev/null; then
+            docker-compose --profile cleanup up db-cleanup || echo "Cleanup skipped"
           else
-            echo "Directory not found, creating..."
-            mkdir -p /var/www/zimabestshop
-            cd /var/www/zimabestshop
-            retry 3 30 git clone https://github.com/rezazh/zima_backend.git
-            cd zima_backend
+            echo "No cleanup service defined, skipping..."
           fi
           
-          # مرحله 2: دریافت آخرین تغییرات
-          echo "===== Stage 2: Pulling latest changes from git ====="
-          retry 5 30 git pull --ff-only origin main || (
-            echo "Fast-forward pull failed, fetching and resetting..."
-            retry 3 30 git fetch origin main && 
-            git reset --hard origin/main
-          )
+          # مرحله 5: بیلد سریع‌تر
+          echo "===== Stage 5: Fast build ====="
+          # فقط اگر Dockerfile تغییر کرده باشد rebuild کن
+          if git diff HEAD~1 --name-only | grep -E "(Dockerfile|requirements.txt)" > /dev/null; then
+            echo "Dependencies changed, rebuilding..."
+            docker-compose build --parallel
+          else
+            echo "No dependency changes, using cached images..."
+          fi
           
-          echo "Recent commits:"
-          git log -1 --pretty=format:"%h - %an, %ar : %s"
+          # مرحله 6: راه‌اندازی
+          echo "===== Stage 6: Starting services ====="
+          docker-compose up -d --wait --timeout 120
           
-          # مرحله 3: توقف کانتینرها
-          echo "===== Stage 3: Stopping containers ====="
-          retry 3 30 timeout 180 docker-compose down || echo "Docker-compose down failed, continuing..."
-          
-          # مرحله 4: پاکسازی دیتابیس چت (اگر نیاز باشد)
-          echo "===== Stage 4: Database cleanup ====="
-          retry 3 30 docker-compose up -d postgres
+          # مرحله 7: بررسی سریع
+          echo "===== Stage 7: Quick health check ====="
           sleep 10
-          retry 2 10 docker-compose up db-cleanup || echo "Database cleanup failed, continuing..."
-          docker-compose logs db-cleanup
-          docker-compose down
-          
-          # مرحله 5: بیلد کانتینرها
-          echo "===== Stage 5: Building containers ====="
-          export DOCKER_BUILDKIT=1
-          export COMPOSE_DOCKER_CLI_BUILD=1
-          
-          retry 3 60 docker-compose build --no-cache || echo "Build failed, continuing with cached images..."
-          
-          # مرحله 6: راه‌اندازی کانتینرها
-          echo "===== Stage 6: Starting containers ====="
-          retry 3 30 docker-compose up -d || echo "Failed to start containers..."
-          
-          # مرحله 7: بررسی وضعیت کانتینرها
-          echo "===== Stage 7: Checking container status ====="
-          MAX_WAIT=120
-          WAIT_INTERVAL=5
-          ELAPSED=0
-          
-          while [ $ELAPSED -lt $MAX_WAIT ]; do
-            CONTAINERS_UP=$(docker-compose ps --services --filter "status=running" | wc -l)
-            EXPECTED_CONTAINERS=5  # postgres, redis, gunicorn, daphne, nginx
-            
-            if [ "$CONTAINERS_UP" -ge 4 ]; then  # حداقل 4 کانتینر اصلی
-              echo "Main containers are up and running!"
-              break
-            fi
-            
-            echo "Waiting for containers... ($CONTAINERS_UP running, ${ELAPSED}s elapsed)"
-            sleep $WAIT_INTERVAL
-            ELAPSED=$((ELAPSED + WAIT_INTERVAL))
-          done
-          
-          echo "Container status:"
           docker-compose ps
           
-          # مرحله 8: بررسی نهایی
-          echo "===== Stage 8: Final checks ====="
-          echo "Checking for errors in logs..."
-          docker-compose logs --tail=10 | grep -i "error\|fail" || echo "No immediate errors found"
+          # بررسی لاگ‌های خطا
+          if docker-compose logs --tail=5 | grep -i "error\|failed" > /dev/null; then
+            echo "⚠️  Some errors detected in logs:"
+            docker-compose logs --tail=5 | grep -i "error\|failed"
+          else
+            echo "✅ No immediate errors found"
+          fi
           
           echo "===== Deployment completed at $(date) ====="
-          
-          
-          
