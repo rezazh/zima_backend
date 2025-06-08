@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from .models import ChatRoom, ChatMessage, UserChatStatus, Notification
 from django.utils import timezone
 from django.db.models import Q
+from channels.db import database_sync_to_async
+from django.contrib.auth.models import AnonymousUser
 
 User = get_user_model()
 import json
@@ -9,7 +11,6 @@ import base64
 import uuid
 import os
 from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
 from django.core.files.base import ContentFile
 from django.conf import settings
 
@@ -19,6 +20,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = f'chat_{self.room_id}'
         self.user = self.scope['user']
+
+        # بررسی احراز هویت کاربر
+        if isinstance(self.user, AnonymousUser) or not self.user.is_authenticated:
+            await self.close()
+            return
+
+        # اول accept کنید، بعد بقیه کارها
+        await self.accept()
 
         # اضافه کردن کاربر به گروه چت
         await self.channel_layer.group_add(
@@ -41,6 +50,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'is_staff': self.user.is_staff
             }
         )
+
+        # بررسی وضعیت کاربر طرف مقابل
         other_user = await self.get_other_user(room)
         if other_user:
             other_user_status = await self.get_user_status(other_user)
@@ -51,33 +62,34 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'status': other_user_status,
                 'is_staff': other_user.is_staff
             }))
+
         # علامت‌گذاری پیام‌های خوانده نشده به عنوان خوانده شده
         if not self.user.is_staff:
             await self.mark_messages_as_read()
 
-        await self.accept()
-
     async def disconnect(self, close_code):
         # حذف کاربر از گروه چت
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        if hasattr(self, 'room_group_name'):
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
 
         # تنظیم وضعیت کاربر به آفلاین
-        await self.set_user_status('offline')
+        if hasattr(self, 'user') and self.user.is_authenticated:
+            await self.set_user_status('offline')
 
-        # اعلام به همه کاربران در اتاق که این کاربر آفلاین شده
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'user_status_update',
-                'user_id': self.user.id,
-                'username': self.user.username,
-                'status': 'offline',
-                'is_staff': self.user.is_staff
-            }
-        )
+            # اعلام به همه کاربران در اتاق که این کاربر آفلاین شده
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'user_status_update',
+                    'user_id': self.user.id,
+                    'username': self.user.username,
+                    'status': 'offline',
+                    'is_staff': self.user.is_staff
+                }
+            )
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -203,7 +215,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     async def typing_status(self, event):
-        # تغییر نام متد از typing به typing_status برای روشن‌تر بودن
         await self.send(text_data=json.dumps({
             'type': 'typing',
             'username': event['username'],
@@ -274,7 +285,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_user_status(self, user):
-        """دریافت وضعیت واقعی کاربر"""
+        """دریافت وضعیت واقعی کاربر - اصلاح شده"""
         if not user:
             return 'offline'
 
@@ -302,10 +313,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def set_user_status(self, status):
-        """تنظیم وضعیت آنلاین/آفلاین کاربر با به‌روزرسانی زمان فعالیت"""
+        """تنظیم وضعیت آنلاین/آفلاین کاربر - اصلاح شده"""
         try:
+            # اطمینان از اینکه user واقعی است نه LazyObject
+            if hasattr(self.user, '_wrapped'):
+                # اگر LazyObject است، آن را resolve کنید
+                actual_user = self.user._wrapped
+            else:
+                actual_user = self.user
+
+            if not actual_user or not actual_user.is_authenticated:
+                return
+
             user_status, created = UserChatStatus.objects.get_or_create(
-                user=self.user,
+                user=actual_user,
                 defaults={'status': status}
             )
             user_status.status = status
@@ -373,9 +394,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message.read_at = timezone.now()
                 message.save()
 
-                # ارسال رویداد خوانده شدن پیام
-                print(f"Sent message_read event for message {message.id}")
-
             return len(unread_messages)
         except Exception as e:
             print(f"Error marking messages as read: {e}")
@@ -439,12 +457,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return chat_message
 
 
-# اصلاح NotificationConsumer - این بود که مشکل داشت
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope["user"]
 
-        if self.user.is_anonymous:
+        # بررسی احراز هویت کاربر
+        if isinstance(self.user, AnonymousUser) or not self.user.is_authenticated:
             await self.close()
             return
 
@@ -490,9 +508,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         except json.JSONDecodeError:
             pass
 
-    # اضافه کردن handler مفقود - این بود که مشکل اصلی بود
+    # اضافه کردن handler مفقود
     async def user_status_update(self, event):
-        """Handle user status updates - این handler مفقود بود!"""
+        """Handle user status updates"""
         await self.send(text_data=json.dumps({
             'type': 'user_status_update',
             'user_id': event.get('user_id'),
@@ -516,7 +534,6 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'count': event['count']
         }))
 
-    # اضافه کردن handler برای notification عمومی
     async def notification_message(self, event):
         """Handle general notification messages"""
         await self.send(text_data=json.dumps({
