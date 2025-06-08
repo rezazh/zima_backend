@@ -281,15 +281,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             status_obj = UserChatStatus.objects.get(user=user)
 
-            # بررسی زمان آخرین فعالیت
-            from datetime import timedelta
-            threshold = timezone.now() - timedelta(minutes=2)
+            # استفاده از last_seen به جای last_activity
+            if status_obj.last_seen:
+                # بررسی زمان آخرین فعالیت
+                from datetime import timedelta
+                threshold = timezone.now() - timedelta(minutes=2)
 
-            if status_obj.last_activity and status_obj.last_activity > threshold:
-                return status_obj.status
+                if status_obj.last_seen > threshold:
+                    return status_obj.status
+                else:
+                    return 'offline'
             else:
                 return 'offline'
+
         except UserChatStatus.DoesNotExist:
+            return 'offline'
+        except Exception as e:
+            print(f"Error in get_user_status: {e}")
             return 'offline'
 
     @database_sync_to_async
@@ -301,7 +309,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 defaults={'status': status}
             )
             user_status.status = status
-            user_status.last_activity = timezone.now()
+            # last_seen خودکار بروزرسانی می‌شود چون auto_now=True دارد
             user_status.save()
         except Exception as e:
             print(f"Error setting user status: {e}")
