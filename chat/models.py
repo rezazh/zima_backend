@@ -5,6 +5,8 @@ from django.conf import settings  # برای دسترسی به AUTH_USER_MODEL
 from django.utils import timezone
 import uuid
 
+from chat.utils import create_system_message
+
 
 class ChatRoom(models.Model):
     """اتاق چت"""
@@ -23,11 +25,48 @@ class ChatRoom(models.Model):
     updated_at = models.DateTimeField('تاریخ بروزرسانی', auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_chat_rooms', null=True, blank=True)
     admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='admin_chat_rooms', null=True, blank=True)
+    is_closed_by_admin = models.BooleanField(default=False)
+    is_closed_by_user = models.BooleanField(default=False)
+    is_closed = models.BooleanField(default=False)
+    closed_at = models.DateTimeField(null=True, blank=True)
+
 
     class Meta:
         verbose_name = 'اتاق چت'
         verbose_name_plural = 'اتاق‌های چت'
         ordering = ['-updated_at']
+
+    def save(self, *args, **kwargs):
+        # تنظیم is_closed بر اساس مقادیر is_closed_by_user و is_closed_by_admin
+        self.is_closed = self.is_closed_by_user or self.is_closed_by_admin
+        super().save(*args, **kwargs)
+
+
+    def close_by_user(self):
+        """بستن چت توسط کاربر"""
+        self.is_closed_by_user = True
+        self.closed_at = timezone.now()
+        self.save()
+
+        # ایجاد پیام سیستمی
+        from .utils import create_system_message
+        try:
+            create_system_message(self, "این گفتگو توسط کاربر بسته شده است.")
+        except Exception as e:
+            print(f"خطا در ایجاد پیام سیستمی: {e}")
+
+    def close_by_admin(self):
+        """بستن چت توسط ادمین"""
+        self.is_closed_by_admin = True
+        self.closed_at = timezone.now()
+        self.save()
+
+        # ایجاد پیام سیستمی
+        from .utils import create_system_message
+        try:
+            create_system_message(self, "این گفتگو توسط پشتیبانی بسته شده است.")
+        except Exception as e:
+            print(f"خطا در ایجاد پیام سیستمی: {e}")
 
     def __str__(self):
         return f"{self.name} ({self.get_room_type_display()})"

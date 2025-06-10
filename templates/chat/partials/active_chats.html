@@ -3,7 +3,7 @@
         <div class="chat-list-item active">
             <div class="chat-header">
                 <div>
-                    <span class="chat-title">{{ room.name }}</span>
+                    <span class="chat-title">{{ room.name|default:"گفتگو" }}</span>
                     <span class="chat-status chat-status-active">فعال</span>
                     {% if room.unread_count > 0 %}
                         <span class="badge-unread">{{ room.unread_count }}</span>
@@ -19,9 +19,9 @@
                     کاربر ناشناس
                 {% endif %}
             </div>
-            {% if room.last_message %}
+            {% if room.messages.last %}
                 <div class="last-message">
-                    <i class="fas fa-comment-dots"></i> {{ room.last_message.content|truncatechars:50 }}
+                    <i class="fas fa-comment-dots"></i> {{ room.messages.last.content|truncatechars:50 }}
                 </div>
             {% endif %}
             <div class="chat-actions">

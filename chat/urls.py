@@ -10,6 +10,7 @@ urlpatterns = [
     path('start/', views.start_chat, name='start_chat'),
     path('room/<uuid:room_id>/', views.chat_room, name='chat_room'),
     path('support/create/', views.create_support_chat, name='create_support_chat'),
+    path('api/user-closed-chats/', views.api_user_closed_chats, name='api_user_closed_chats'),
 
     # اصلاح مسیر notifications
     path('notifications/', views.notifications, name='notifications'),
@@ -30,7 +31,7 @@ urlpatterns = [
     path('set-offline/', views.SetUserOfflineView.as_view(), name='set_offline_status'),
     path('unread-count/', views.unread_count, name='unread_count'),
     path('user-status/<int:user_id>/', views.get_user_status, name='get_user_status'),
-
-
-
+    path('user-close/<uuid:room_id>/', views.user_close_chat, name='user_close_chat'),
+    path('admin-close/<uuid:room_id>/', views.admin_close_chat, name='admin_close_chat'),
+    path('archive/<uuid:room_id>/', views.archive_chat, name='archive_chat'),
 ]

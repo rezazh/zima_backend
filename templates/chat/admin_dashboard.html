@@ -34,21 +34,25 @@
         background: linear-gradient(45deg, #dc3545, #bd2130);
     }
     
+    .stat-card-purple {
+        background: linear-gradient(45deg, #6f42c1, #4527a0);
+    }
+
     .stat-card h3 {
         font-size: 2.5rem;
         margin-bottom: 10px;
     }
-    
+
     .stat-card p {
         font-size: 1rem;
         margin: 0;
         opacity: 0.8;
     }
-    
+
     .chat-list {
         margin-bottom: 30px;
     }
-    
+
     .chat-list-item {
         padding: 15px;
         border-radius: 8px;
@@ -57,41 +61,45 @@
         border-right: 4px solid #6c757d;
         transition: all 0.3s ease;
     }
-    
+
     .chat-list-item:hover {
         background-color: #e9ecef;
         border-right-color: #007bff;
     }
-    
+
     .chat-list-item.pending {
         border-right-color: #dc3545;
     }
-    
+
     .chat-list-item.active {
         border-right-color: #28a745;
     }
-    
+
+    .chat-list-item.user-closed {
+        border-right-color: #6f42c1;
+    }
+
     .chat-header {
         display: flex;
         justify-content: space-between;
         margin-bottom: 5px;
     }
-    
+
     .chat-title {
         font-weight: bold;
         color: #333;
     }
-    
+
     .chat-time {
         color: #666;
         font-size: 0.8rem;
     }
-    
+
     .chat-user {
         color: #555;
         font-size: 0.9rem;
     }
-    
+
     .chat-status {
         display: inline-block;
         padding: 2px 8px;
@@ -99,17 +107,27 @@
         font-size: 0.75rem;
         margin-right: 8px;
     }
-    
+
     .chat-status-pending {
         background-color: #fff3cd;
         color: #856404;
     }
-    
+
     .chat-status-active {
         background-color: #d4edda;
         color: #155724;
     }
-    
+
+    .chat-status-closed {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .chat-status-user-closed {
+        background-color: #e2d9f3;
+        color: #4527a0;
+    }
+
     .chat-actions {
         margin-top: 10px;
     }
@@ -166,6 +184,16 @@
         border-radius: 10px;
         margin-right: 5px;
     }
+
+    .nav-tabs {
+        margin-bottom: 20px;
+    }
+
+    .closed-info {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
 </style>
 {% endblock %}
 
@@ -193,9 +221,9 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stat-card stat-card-red">
-                <h3>{{ admin_active_chats|length }}</h3>
-                <p>چت‌های فعال شما</p>
+            <div class="stat-card stat-card-purple">
+                <h3>{{ user_closed_chats|length }}</h3>
+                <p>چت‌های بسته شده توسط کاربر</p>
             </div>
         </div>
     </div>
@@ -252,54 +280,117 @@
         </div>
 
         <div class="col-md-6">
-            <div class="card chat-list">
-                <div class="card-header">
-                    <h5><i class="fas fa-comments"></i> چت‌های فعال شما</h5>
-                    <i class="fas fa-sync refresh-btn" id="refresh-active" title="بارگذاری مجدد"></i>
-                </div>
-                <div class="card-body" id="active-chats-container">
-                    {% if admin_active_chats %}
-                        {% for room in admin_active_chats %}
-                            <div class="chat-list-item active">
-                                <div class="chat-header">
-                                    <div>
-                                        <span class="chat-title">{{ room.name }}</span>
-                                        <span class="chat-status chat-status-active">فعال</span>
-                                        {% if room.unread_count > 0 %}
-                                            <span class="badge-unread">{{ room.unread_count }}</span>
-                                        {% endif %}
-                                    </div>
-                                    <span class="chat-time">{{ room.updated_at|date:"Y/m/d H:i" }}</span>
-                                </div>
-                                <div class="chat-user">
-                                    <i class="fas fa-user"></i>
-                                    {% if room.user %}
-                                        {{ room.user.get_full_name|default:room.user.username }}
-                                    {% else %}
-                                        کاربر ناشناس
-                                    {% endif %}
-                                </div>
-                                {% if room.messages.last %}
-                                    <div class="last-message">
-                                        <i class="fas fa-comment-dots"></i> {{ room.messages.last.content|truncatechars:50 }}
-                                    </div>
-                                {% endif %}
-                                <div class="chat-actions">
-                                    <a href="{% url 'chat:chat_room' room.id %}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-comments"></i> ادامه چت
-                                    </a>
-                                    <button class="btn btn-sm btn-danger close-chat-btn" data-id="{{ room.id }}">
-                                        <i class="fas fa-times"></i> بستن چت
-                                    </button>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-info-circle text-info"></i>
-                            <p>شما هیچ چت فعالی ندارید.</p>
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active-chats" type="button" role="tab" aria-controls="active-chats" aria-selected="true">چت‌های فعال</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="user-closed-tab" data-bs-toggle="tab" data-bs-target="#user-closed-chats" type="button" role="tab" aria-controls="user-closed-chats" aria-selected="false">بسته شده توسط کاربر</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="active-chats" role="tabpanel" aria-labelledby="active-tab">
+                    <div class="card chat-list">
+                        <div class="card-header">
+                            <h5><i class="fas fa-comments"></i> چت‌های فعال شما</h5>
+                            <i class="fas fa-sync refresh-btn" id="refresh-active" title="بارگذاری مجدد"></i>
                         </div>
-                    {% endif %}
+                        <div class="card-body" id="active-chats-container">
+                            {% if admin_active_chats %}
+                                {% for room in admin_active_chats %}
+                                    <div class="chat-list-item active">
+                                        <div class="chat-header">
+                                            <div>
+                                                <span class="chat-title">{{ room.name }}</span>
+                                                <span class="chat-status chat-status-active">فعال</span>
+                                                {% if room.unread_count > 0 %}
+                                                    <span class="badge-unread">{{ room.unread_count }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <span class="chat-time">{{ room.updated_at|date:"Y/m/d H:i" }}</span>
+                                        </div>
+                                        <div class="chat-user">
+                                            <i class="fas fa-user"></i>
+                                            {% if room.user %}
+                                                {{ room.user.get_full_name|default:room.user.username }}
+                                            {% else %}
+                                                کاربر ناشناس
+                                            {% endif %}
+                                        </div>
+                                        {% if room.messages.last %}
+                                            <div class="last-message">
+                                                <i class="fas fa-comment-dots"></i> {{ room.messages.last.content|truncatechars:50 }}
+                                            </div>
+                                        {% endif %}
+                                        <div class="chat-actions">
+                                            <a href="{% url 'chat:chat_room' room.id %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-comments"></i> ادامه چت
+                                            </a>
+                                            <button class="btn btn-sm btn-danger close-chat-btn" data-id="{{ room.id }}">
+                                                <i class="fas fa-times"></i> بستن چت
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="fas fa-info-circle text-info"></i>
+                                    <p>شما هیچ چت فعالی ندارید.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="user-closed-chats" role="tabpanel" aria-labelledby="user-closed-tab">
+                    <div class="card chat-list">
+                        <div class="card-header">
+                            <h5><i class="fas fa-door-closed"></i> چت‌های بسته شده توسط کاربر;</h5>
+                            <i class="fas fa-sync refresh-btn" id="refresh-user-closed" title="بارگذاری مجدد"></i>
+                        </div>
+                        <div class="card-body" id="user-closed-chats-container">
+                            {% if user_closed_chats %}
+                                {% for room in user_closed_chats %}
+                                    <div class="chat-list-item user-closed">
+                                        <div class="chat-header">
+                                            <div>
+                                                <span class="chat-title">{{ room.name }}</span>
+                                                <span class="chat-status chat-status-user-closed">بسته شده توسط کاربر</span>
+                                            </div>
+                                            <span class="chat-time">{{ room.updated_at|date:"Y/m/d H:i" }}</span>
+                                        </div>
+                                        <div class="chat-user">
+                                            <i class="fas fa-user"></i>
+                                            {% if room.user %}
+                                                {{ room.user.get_full_name|default:room.user.username }}
+                                            {% else %}
+                                                کاربر ناشناس
+                                            {% endif %}
+                                        </div>
+                                        {% if room.closed_at %}
+                                            <div class="closed-info">
+                                                <i class="fas fa-clock"></i> بسته شده در: {{ room.closed_at|date:"Y/m/d H:i" }}
+                                            </div>
+                                        {% endif %}
+                                        <div class="chat-actions">
+                                            <a href="{% url 'chat:chat_room' room.id %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye"></i> مشاهده
+                                            </a>
+                                            <button class="btn btn-sm btn-danger admin-close-chat-btn" data-id="{{ room.id }}">
+                                                <i class="fas fa-archive"></i> بایگانی چت
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <p>چت بسته شده‌ای توسط کاربران وجود ندارد.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -322,6 +413,18 @@
             });
         });
 
+        // دکمه‌های بایگانی چت (برای چت‌های بسته شده توسط کاربر)
+        const adminCloseButtons = document.querySelectorAll('.admin-close-chat-btn');
+
+        adminCloseButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (confirm('آیا از بایگانی این چت اطمینان دارید؟ پس از بایگانی، چت از لیست شما حذف خواهد شد.')) {
+                    const roomId = this.getAttribute('data-id');
+                    closeChat(roomId);
+                }
+            });
+        });
+
         // دکمه‌های اختصاص به من
         const assignButtons = document.querySelectorAll('.assign-admin-btn');
 
@@ -335,6 +438,7 @@
         // دکمه‌های بارگذاری مجدد
         const refreshPendingBtn = document.getElementById('refresh-pending');
         const refreshActiveBtn = document.getElementById('refresh-active');
+        const refreshUserClosedBtn = document.getElementById('refresh-user-closed');
 
         if (refreshPendingBtn) {
             refreshPendingBtn.addEventListener('click', function() {
@@ -345,6 +449,12 @@
         if (refreshActiveBtn) {
             refreshActiveBtn.addEventListener('click', function() {
                 refreshActiveChats();
+            });
+        }
+
+        if (refreshUserClosedBtn) {
+            refreshUserClosedBtn.addEventListener('click', function() {
+                refreshUserClosedChats();
             });
         }
 
@@ -359,7 +469,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                if (data.status === 'success') {
                     // بارگذاری مجدد صفحه برای به‌روزرسانی لیست چت‌ها
                     location.reload();
                 } else {
@@ -383,7 +493,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                if (data.status === 'success') {
                     // بارگذاری مجدد صفحه برای به‌روزرسانی لیست چت‌ها
                     location.reload();
                 } else {
@@ -401,7 +511,7 @@
             fetch('/chat/api/pending-chats/')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
+                    if (data.status === 'success') {
                         const container = document.getElementById('pending-chats-container');
                         if (container) {
                             container.innerHTML = data.html;
@@ -422,7 +532,7 @@
             fetch('/chat/api/active-chats/')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
+                    if (data.status === 'success') {
                         const container = document.getElementById('active-chats-container');
                         if (container) {
                             container.innerHTML = data.html;
@@ -438,12 +548,43 @@
                 });
         }
 
+        // تابع بارگذاری مجدد چت‌های بسته شده توسط کاربر
+        function refreshUserClosedChats() {
+            fetch('/chat/api/user-closed-chats/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const container = document.getElementById('user-closed-chats-container');
+                        if (container) {
+                            container.innerHTML = data.html;
+                            // اضافه کردن مجدد event listener ها
+                            addEventListeners();
+                        }
+                    } else {
+                        console.error('Error refreshing user closed chats:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
         // تابع اضافه کردن مجدد event listener ها
         function addEventListeners() {
             // دکمه‌های بستن چت
             document.querySelectorAll('.close-chat-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     if (confirm('آیا از بستن این چت اطمینان دارید؟')) {
+                        const roomId = this.getAttribute('data-id');
+                        closeChat(roomId);
+                    }
+                });
+            });
+
+            // دکمه‌های بایگانی چت
+            document.querySelectorAll('.admin-close-chat-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (confirm('آیا از بایگانی این چت اطمینان دارید؟ پس از بایگانی، چت از لیست شما حذف خواهد شد.')) {
                         const roomId = this.getAttribute('data-id');
                         closeChat(roomId);
                     }
@@ -479,6 +620,7 @@
         setInterval(function() {
             refreshPendingChats();
             refreshActiveChats();
+            refreshUserClosedChats();
         }, 30000);
     });
 </script>

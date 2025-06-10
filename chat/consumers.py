@@ -75,21 +75,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 self.channel_name
             )
 
-        # تنظیم وضعیت کاربر به آفلاین
+        # تنظیم وضعیت کاربر به آفلاین فقط اگر کاربر در هیچ سوکت دیگری فعال نباشد
         if hasattr(self, 'user') and self.user.is_authenticated:
-            await self.set_user_status('offline')
+            # بررسی اگر این آخرین اتصال کاربر است
+            if await self.is_last_connection():
+                await self.set_user_status('offline')
 
-            # اعلام به همه کاربران در اتاق که این کاربر آفلاین شده
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'user_status_update',
-                    'user_id': self.user.id,
-                    'username': self.user.username,
-                    'status': 'offline',
-                    'is_staff': self.user.is_staff
-                }
-            )
+                # اعلام به همه کاربران در اتاق که این کاربر آفلاین شده
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'user_status_update',
+                        'user_id': self.user.id,
+                        'username': self.user.username,
+                        'status': 'offline',
+                        'is_staff': self.user.is_staff
+                    }
+                )
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -198,6 +200,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'is_staff': self.user.is_staff
                 }
             )
+        elif message_type == 'heartbeat':
+            # دریافت heartbeat و بروزرسانی وضعیت آنلاین
+            await self.set_user_status('online')
+            await self.send(text_data=json.dumps({
+                'type': 'heartbeat_response',
+                'status': 'received'
+            }))
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
@@ -264,6 +273,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         return chat_message
 
+    async def chat_system_message(self, event):
+        """
+        دریافت و ارسال پیام‌های سیستمی
+        """
+        # ارسال پیام به وب‌سوکت
+        self.send(text_data=json.dumps({
+            'type': event['event_type'],
+            'message': event['message'],
+            'timestamp': event['timestamp'],
+        }))
+
     @database_sync_to_async
     def get_room(self):
         """دریافت اطلاعات اتاق"""
@@ -310,6 +330,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             print(f"Error in get_user_status: {e}")
             return 'offline'
+
+    @database_sync_to_async
+    def is_last_connection(self):
+        """بررسی می‌کند آیا این آخرین اتصال فعال کاربر است یا خیر"""
+        # در یک پیاده‌سازی واقعی، باید تعداد اتصالات فعال کاربر را در ردیس یا دیتابیس ذخیره کنید
+        # برای سادگی، فرض می‌کنیم این آخرین اتصال است
+        return True
 
     @database_sync_to_async
     def set_user_status(self, status):
@@ -399,6 +426,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             print(f"Error marking messages as read: {e}")
             return 0
 
+    def chat_closed(self, event):
+        # دریافت پیام بسته شدن چت و ارسال به کلاینت
+        self.send(text_data=json.dumps({
+            'type': 'chat_closed',
+            'closed_by': event['closed_by'],
+            'message': event['message']
+        }))
+
     @database_sync_to_async
     def save_message_with_file(self, message, file_data):
         room = ChatRoom.objects.get(id=self.room_id)
@@ -475,6 +510,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
+        # تنظیم وضعیت کاربر به آنلاین در هنگام اتصال
+        await self.set_user_status('online')
+
         # ارسال تعداد پیام‌های خوانده نشده در هنگام اتصال
         unread_count = await self.get_unread_count()
         await self.send(text_data=json.dumps({
@@ -488,6 +526,12 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 self.notification_group_name,
                 self.channel_name
             )
+
+        # تنظیم وضعیت کاربر به آفلاین فقط اگر کاربر در هیچ سوکت دیگری فعال نباشد
+        if hasattr(self, 'user') and self.user.is_authenticated:
+            # بررسی اگر این آخرین اتصال کاربر است
+            if await self.is_last_connection():
+                await self.set_user_status('offline')
 
     async def receive(self, text_data):
         try:
@@ -505,10 +549,26 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                     'type': 'pong',
                     'message': 'Connection is alive'
                 }))
+            elif message_type == 'heartbeat':
+                # دریافت heartbeat و بروزرسانی وضعیت آنلاین
+                await self.set_user_status('online')
+                await self.send(text_data=json.dumps({
+                    'type': 'heartbeat_response',
+                    'status': 'received'
+                }))
+            elif message_type == 'set_status':
+                status = data.get('status', 'online')
+                await self.set_user_status(status)
+
+                # اطلاع‌رسانی به همه چت‌های فعال کاربر
+                await self.notify_user_status_change(status)
+            elif message_type == 'offline':
+                # کاربر در حال بستن صفحه است
+                await self.set_user_status('offline')
+                await self.notify_user_status_change('offline')
         except json.JSONDecodeError:
             pass
 
-    # اضافه کردن handler مفقود
     async def user_status_update(self, event):
         """Handle user status updates"""
         await self.send(text_data=json.dumps({
@@ -544,6 +604,70 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         }))
 
     @database_sync_to_async
+    def is_last_connection(self):
+        """بررسی می‌کند آیا این آخرین اتصال فعال کاربر است یا خیر"""
+        # در یک پیاده‌سازی واقعی، باید تعداد اتصالات فعال کاربر را در ردیس یا دیتابیس ذخیره کنید
+        # برای سادگی، فرض می‌کنیم این آخرین اتصال است
+        return True
+
+    @database_sync_to_async
+    def set_user_status(self, status):
+        """تنظیم وضعیت آنلاین/آفلاین کاربر"""
+        try:
+            # اطمینان از اینکه user واقعی است نه LazyObject
+            if hasattr(self.user, '_wrapped'):
+                # اگر LazyObject است، آن را resolve کنید
+                actual_user = self.user._wrapped
+            else:
+                actual_user = self.user
+
+            if not actual_user or not actual_user.is_authenticated:
+                return
+
+            user_status, created = UserChatStatus.objects.get_or_create(
+                user=actual_user,
+                defaults={'status': status}
+            )
+            user_status.status = status
+            user_status.save()
+
+            return True
+        except Exception as e:
+            print(f"Error setting user status: {e}")
+            return False
+
+    async def notify_user_status_change(self, status):
+        """اطلاع‌رسانی تغییر وضعیت کاربر به تمام چت‌های فعال"""
+        try:
+            # دریافت تمام اتاق‌های چت فعال کاربر
+            chat_rooms = await self.get_user_chat_rooms()
+
+            for room in chat_rooms:
+                room_group_name = f'chat_{room.id}'
+
+                # ارسال پیام به گروه چت
+                await self.channel_layer.group_send(
+                    room_group_name,
+                    {
+                        'type': 'user_status_update',
+                        'user_id': self.user.id,
+                        'username': self.user.username,
+                        'status': status,
+                        'is_staff': self.user.is_staff
+                    }
+                )
+        except Exception as e:
+            print(f"Error notifying status change: {e}")
+
+    @database_sync_to_async
+    def get_user_chat_rooms(self):
+        """دریافت تمام اتاق‌های چت فعال کاربر"""
+        if self.user.is_staff:
+            return list(ChatRoom.objects.filter(admin=self.user, is_active=True))
+        else:
+            return list(ChatRoom.objects.filter(user=self.user, is_active=True))
+
+    @database_sync_to_async
     def get_unread_count(self):
         """محاسبه تعداد پیام‌های خوانده نشده برای کاربر فعلی"""
         if not self.user.is_authenticated:
@@ -567,3 +691,178 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             print(f"Error in get_unread_count: {e}")
             return 0
+
+
+class OnlineStatusConsumer(AsyncWebsocketConsumer):
+    """
+    این کلاس برای مدیریت وضعیت آنلاین کاربر در هر جای سایت استفاده می‌شود
+    """
+
+    async def connect(self):
+        self.user = self.scope["user"]
+
+        # بررسی احراز هویت کاربر
+        if isinstance(self.user, AnonymousUser) or not self.user.is_authenticated:
+            await self.close()
+            return
+
+        self.user_group_name = f'user_status_{self.user.id}'
+
+        # اضافه کردن کاربر به گروه وضعیت کاربر
+        await self.channel_layer.group_add(
+            self.user_group_name,
+            self.channel_name
+        )
+
+        await self.accept()
+
+        # تنظیم وضعیت کاربر به آنلاین در هنگام اتصال
+        await self.set_user_status('online')
+
+        # اطلاع‌رسانی به همه چت‌های فعال کاربر
+        await self.notify_user_status_change('online')
+
+    async def disconnect(self, close_code):
+        if hasattr(self, 'user_group_name'):
+            await self.channel_layer.group_discard(
+                self.user_group_name,
+                self.channel_name
+            )
+
+        # تنظیم وضعیت کاربر به آفلاین فقط اگر کاربر در هیچ سوکت دیگری فعال نباشد
+        if hasattr(self, 'user') and self.user.is_authenticated:
+            # بررسی اگر این آخرین اتصال کاربر است
+            if await self.is_last_connection():
+                await self.set_user_status('offline')
+                await self.notify_user_status_change('offline')
+
+    async def receive(self, text_data):
+        try:
+            data = json.loads(text_data)
+            message_type = data.get('type')
+
+            if message_type == 'heartbeat':
+                # دریافت heartbeat و بروزرسانی وضعیت آنلاین
+                await self.set_user_status('online')
+                await self.send(text_data=json.dumps({
+                    'type': 'heartbeat_response',
+                    'status': 'received'
+                }))
+            elif message_type == 'set_status':
+                status = data.get('status', 'online')
+                await self.set_user_status(status)
+
+                # اطلاع‌رسانی به همه چت‌های فعال کاربر
+                await self.notify_user_status_change(status)
+            elif message_type == 'check_status':
+                # بررسی وضعیت کاربر خاص
+                user_id = data.get('user_id')
+                if user_id:
+                    status = await self.get_user_status_by_id(user_id)
+                    await self.send(text_data=json.dumps({
+                        'type': 'user_status',
+                        'user_id': user_id,
+                        'status': status
+                    }))
+            elif message_type == 'offline':
+                # کاربر در حال بستن صفحه است
+                await self.set_user_status('offline')
+                await self.notify_user_status_change('offline')
+        except json.JSONDecodeError:
+            pass
+
+    async def status_update(self, event):
+        """ارسال بروزرسانی وضعیت به کلاینت"""
+        await self.send(text_data=json.dumps({
+            'type': 'status_update',
+            'user_id': event.get('user_id'),
+            'status': event.get('status')
+        }))
+
+    @database_sync_to_async
+    def get_user_chat_rooms(self):
+        """دریافت تمام اتاق‌های چت فعال کاربر"""
+        if self.user.is_staff:
+            return list(ChatRoom.objects.filter(admin=self.user, is_active=True))
+        else:
+            return list(ChatRoom.objects.filter(user=self.user, is_active=True))
+
+    @database_sync_to_async
+    def is_last_connection(self):
+        """بررسی می‌کند آیا این آخرین اتصال فعال کاربر است یا خیر"""
+        # در یک پیاده‌سازی واقعی، باید تعداد اتصالات فعال کاربر را در ردیس یا دیتابیس ذخیره کنید
+        # برای سادگی، فرض می‌کنیم این آخرین اتصال است
+        return True
+
+    @database_sync_to_async
+    def set_user_status(self, status):
+        """تنظیم وضعیت آنلاین/آفلاین کاربر"""
+        try:
+            # اطمینان از اینکه user واقعی است نه LazyObject
+            if hasattr(self.user, '_wrapped'):
+                # اگر LazyObject است، آن را resolve کنید
+                actual_user = self.user._wrapped
+            else:
+                actual_user = self.user
+
+            if not actual_user or not actual_user.is_authenticated:
+                return
+
+            user_status, created = UserChatStatus.objects.get_or_create(
+                user=actual_user,
+                defaults={'status': status}
+            )
+            user_status.status = status
+            user_status.save()
+
+            return True
+        except Exception as e:
+            print(f"Error setting user status: {e}")
+            return False
+
+    @database_sync_to_async
+    def get_user_status_by_id(self, user_id):
+        """دریافت وضعیت کاربر با شناسه مشخص"""
+        try:
+            user = User.objects.get(id=user_id)
+            status_obj = UserChatStatus.objects.filter(user=user).first()
+
+            if status_obj:
+                # بررسی زمان آخرین فعالیت
+                from datetime import timedelta
+                threshold = timezone.now() - timedelta(minutes=2)
+
+                if status_obj.last_seen and status_obj.last_seen > threshold:
+                    return status_obj.status
+                else:
+                    return 'offline'
+            else:
+                return 'offline'
+        except User.DoesNotExist:
+            return 'offline'
+        except Exception as e:
+            print(f"Error getting user status: {e}")
+            return 'offline'
+
+    async def notify_user_status_change(self, status):
+        """اطلاع‌رسانی تغییر وضعیت کاربر به تمام چت‌های فعال"""
+        try:
+            # دریافت تمام اتاق‌های چت فعال کاربر
+            chat_rooms = await self.get_user_chat_rooms()
+
+            for room in chat_rooms:
+                room_group_name = f'chat_{room.id}'
+
+                # ارسال پیام به گروه چت
+                await self.channel_layer.group_send(
+                    room_group_name,
+                    {
+                        'type': 'user_status_update',
+                        'user_id': self.user.id,
+                        'username': self.user.username,
+                        'status': status,
+                        'is_staff': self.user.is_staff
+                    }
+                )
+        except Exception as e:
+            print(f"Error notifying status change: {e}")

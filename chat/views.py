@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -18,6 +19,9 @@ from .models import ChatRoom, ChatMessage, UserChatStatus, Notification, Deleted
 import uuid
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+
+from .utils import notify_chat_reopened, notify_chat_closed_by_admin, notify_chat_closed_by_user
+
 User = get_user_model()
 
 
@@ -71,6 +75,7 @@ def chat_room(request, room_id):
 
         for message in unread_messages:
             message.is_read = True
+            message.read_at = timezone.now()
             message.save()
 
             if channel_layer:
@@ -89,6 +94,7 @@ def chat_room(request, room_id):
 
         chat_messages = room.messages.all().order_by('created_at')
 
+        # بررسی وضعیت آنلاین کاربران اتاق
         online_users = UserChatStatus.objects.filter(
             status='online',
             user__in=[room.user, room.admin] if room.admin else [room.user]
@@ -123,6 +129,7 @@ def mark_message_as_read(request, message_id):
             return JsonResponse({'success': True, 'already_read': True})
 
         message.is_read = True
+        message.read_at = timezone.now()
         message.save()
 
         try:
@@ -144,6 +151,7 @@ def mark_message_as_read(request, message_id):
         return JsonResponse({'success': False, 'error': 'پیام مورد نظر یافت نشد.'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
 
 @login_required
 def start_chat(request):
@@ -176,9 +184,26 @@ def start_chat(request):
             sender=sender
         )
 
+        # اطلاع‌رسانی به ادمین‌ها درباره چت جدید
         admins = User.objects.filter(is_staff=True)
+        channel_layer = get_channel_layer()
         for admin in admins:
-            pass
+            try:
+                # ارسال اعلان به ادمین‌ها
+                notification_group_name = f'notifications_{admin.id}'
+                async_to_sync(channel_layer.group_send)(
+                    notification_group_name,
+                    {
+                        'type': 'notification_message',
+                        'title': 'چت جدید',
+                        'message': f'کاربر {request.user.username} یک چت جدید ایجاد کرده است',
+                        'data': {
+                            'room_id': str(new_chat.id)
+                        }
+                    }
+                )
+            except Exception as e:
+                print(f"Error sending notification to admin {admin.id}: {e}")
 
         return redirect('chat:chat_room', room_id=new_chat.id)
 
@@ -186,6 +211,7 @@ def start_chat(request):
         return redirect('chat:admin_dashboard')
 
     return render(request, 'chat/start_chat.html')
+
 
 @login_required
 @require_POST
@@ -235,50 +261,127 @@ def delete_chat(request, room_id):
             'error': str(e)
         })
 
+
+@staff_member_required
+def api_user_closed_chats(request):
+    """API برای دریافت چت‌های بسته شده توسط کاربر"""
+    try:
+        user_closed_chats = ChatRoom.objects.filter(
+            admin=request.user,
+            is_closed_by_user=True,
+            is_closed_by_admin=False
+        ).order_by('-updated_at')
+
+        html = render_to_string('chat/partials/user_closed_chats.html', {
+            'user_closed_chats': user_closed_chats,
+        }, request=request)
+
+        return JsonResponse({
+            'status': 'success',
+            'html': html
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'error': str(e)
+        })
+
 @login_required
 @require_POST
 def close_chat(request, room_id):
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'شما اجازه بستن این چت را ندارید'})
+    room = get_object_or_404(ChatRoom, id=room_id)
 
-    try:
-        room = ChatRoom.objects.get(id=room_id)
-
-        room.is_active = False
-        room.save()
-
-        ChatMessage.objects.create(
-            room=room,
-            content='این گفتگو توسط پشتیبانی بسته شده است.',
-            message_type='system',
-            sender=request.user
+    # بررسی دسترسی کاربر
+    if request.user.is_staff:
+        room.close_by_admin()
+        # ارسال پیام به کاربر از طریق WebSocket
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{room_id}",
+            {
+                "type": "chat_closed",
+                "closed_by": "admin",
+                "message": "گفتگو توسط پشتیبانی بسته شده است."
+            }
+        )
+    else:
+        room.close_by_user()
+        # ارسال پیام به ادمین از طریق WebSocket
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{room_id}",
+            {
+                "type": "chat_closed",
+                "closed_by": "user",
+                "message": "گفتگو توسط کاربر بسته شده است."
+            }
         )
 
-        try:
-            from channels.layers import get_channel_layer
-            from asgiref.sync import async_to_sync
+    return JsonResponse({"status": "success"})
 
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f'chat_{room_id}',
-                {
-                    'type': 'chat_status_update',
-                    'is_closed': True,
-                    'message': 'این گفتگو توسط پشتیبانی بسته شده است.'
-                }
-            )
-        except ImportError:
-            pass
 
-        return JsonResponse({'success': True})
+@login_required
+def user_close_chat(request, room_id):
+    """بستن چت توسط کاربر"""
+    try:
+        room = ChatRoom.objects.get(id=room_id, user=request.user)
+        room.is_closed_by_user = True
+        room.closed_at = timezone.now()
+        room.save()
 
+        # ارسال اطلاع‌رسانی به ادمین
+        notify_chat_closed_by_user(room)
+
+        return JsonResponse({'status': 'success'})
     except ChatRoom.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'گفتگوی مورد نظر یافت نشد'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        return JsonResponse({'status': 'error', 'error': 'چت مورد نظر یافت نشد.'})
 
 
+@staff_member_required
+def admin_close_chat(request, room_id):
+    """بستن چت توسط ادمین"""
+    try:
+        room = ChatRoom.objects.get(id=room_id, admin=request.user)
+        room.is_closed_by_admin = True
+        room.closed_at = timezone.now()
+        room.save()
 
+        # ارسال اطلاع‌رسانی به کاربر
+        notify_chat_closed_by_admin(room)
+
+        return JsonResponse({'status': 'success'})
+    except ChatRoom.DoesNotExist:
+        return JsonResponse({'status': 'error', 'error': 'چت مورد نظر یافت نشد.'})
+
+
+@staff_member_required
+def reopen_chat(request, room_id):
+    """بازگشایی چت توسط ادمین"""
+    try:
+        room = ChatRoom.objects.get(id=room_id, admin=request.user)
+        room.is_closed_by_admin = False
+        room.is_closed_by_user = False
+        room.save()
+
+        # ارسال اطلاع‌رسانی به کاربر
+        notify_chat_reopened(room)
+
+        return JsonResponse({'status': 'success'})
+    except ChatRoom.DoesNotExist:
+        return JsonResponse({'status': 'error', 'error': 'چت مورد نظر یافت نشد.'})
+
+@staff_member_required
+def archive_chat(request, room_id):
+    """بایگانی چت توسط ادمین"""
+    try:
+        room = ChatRoom.objects.get(id=room_id, admin=request.user)
+        room.is_closed_by_admin = True
+        room.closed_at = timezone.now()
+        room.save()
+
+        return JsonResponse({'status': 'success'})
+    except ChatRoom.DoesNotExist:
+        return JsonResponse({'status': 'error', 'error': 'چت مورد نظر یافت نشد.'})
 @login_required
 def assign_admin(request, room_id):
     if not request.user.is_staff:
@@ -332,7 +435,12 @@ def admin_dashboard(request):
 
     pending_chats = pending_rooms.count()
 
-    online_users = UserChatStatus.objects.filter(status='online').count()
+    # شمارش کاربران آنلاین با بررسی زمان آخرین فعالیت
+    threshold = timezone.now() - timedelta(minutes=2)
+    online_users = UserChatStatus.objects.filter(
+        status='online',
+        last_seen__gt=threshold
+    ).count()
 
     admin_active_chats = ChatRoom.objects.filter(
         is_active=True,
@@ -357,78 +465,78 @@ def admin_dashboard(request):
     return render(request, 'chat/admin_dashboard.html', context)
 
 
-# @login_required
-# @require_POST
-# def mark_message_read(request, message_id):
-#     """علامت‌گذاری پیام به عنوان خوانده شده"""
-#     try:
-#         message = ChatMessage.objects.get(id=message_id)
-#
-#         # فقط پیام‌هایی که برای کاربر فعلی هستند را علامت‌گذاری کن
-#         if message.room.user == request.user or request.user.is_staff:
-#             if not message.is_read and message.sender != request.user:
-#                 message.is_read = True
-#                 message.save()
-#
-#                 # ارسال وضعیت خوانده شدن به وب‌سوکت
-#                 try:
-#                     from channels.layers import get_channel_layer
-#                     from asgiref.sync import async_to_sync
-#
-#                     channel_layer = get_channel_layer()
-#                     async_to_sync(channel_layer.group_send)(
-#                         f'chat_{message.room.id}',
-#                         {
-#                             'type': 'message_read',
-#                             'message_id': str(message_id),
-#                             'read_by_user_id': request.user.id
-#                         }
-#                     )
-#                 except Exception as e:
-#                     print(f"Error sending to channel: {e}")
-#
-#                 return JsonResponse({'success': True})
-#             else:
-#                 return JsonResponse({'success': True, 'info': 'پیام قبلاً خوانده شده است'})
-#         else:
-#             return JsonResponse({'success': False, 'error': 'شما اجازه دسترسی به این پیام را ندارید'})
-#
-#     except ChatMessage.DoesNotExist:
-#         return JsonResponse({'success': False, 'error': 'پیام مورد نظر یافت نشد'})
-#     except Exception as e:
-#         return JsonResponse({'success': False, 'error': str(e)})
-
-
+@staff_member_required
 def api_pending_chats(request):
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'دسترسی غیرمجاز'})
+    """API برای دریافت چت‌های در انتظار"""
+    try:
+        pending_rooms = ChatRoom.objects.filter(
+            admin=None,
+            is_closed_by_user=False,
+            is_closed_by_admin=False
+        ).order_by('-created_at')
 
-    pending_rooms = ChatRoom.objects.filter(is_active=True, admin=None).order_by('-created_at')
+        html = render_to_string('chat/partials/pending_chats.html', {
+            'pending_rooms': pending_rooms,
+        }, request=request)
 
-    for room in pending_rooms:
-        room.last_message = room.messages.order_by('-created_at').first()
+        return JsonResponse({
+            'status': 'success',
+            'html': html
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'error': str(e)
+        })
 
-    html = render_to_string('chat/partials/pending_chats.html', {'pending_rooms': pending_rooms})
 
-    return JsonResponse({'success': True, 'html': html})
-
-
+@staff_member_required
 def api_active_chats(request):
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'دسترسی غیرمجاز'})
+    """API برای دریافت چت‌های فعال"""
+    try:
+        admin_active_chats = ChatRoom.objects.filter(
+            admin=request.user,
+            is_closed_by_user=False,
+            is_closed_by_admin=False
+        ).order_by('-updated_at')
 
-    admin_active_chats = ChatRoom.objects.filter(is_active=True, admin=request.user).order_by('-updated_at')
+        # اضافه کردن تعداد پیام‌های خوانده نشده برای هر چت
+        for room in admin_active_chats:
+            room.unread_count = get_unread_count(room, request.user)
 
-    for room in admin_active_chats:
-        room.unread_count = room.messages.filter(is_read=False, sender=room.user).count()
-        room.last_message = room.messages.order_by('-created_at').first()
+        html = render_to_string('chat/partials/active_chats.html', {
+            'admin_active_chats': admin_active_chats,
+        }, request=request)
 
-    # تبدیل به HTML
-    html = render_to_string('chat/partials/active_chats.html', {'admin_active_chats': admin_active_chats})
+        return JsonResponse({
+            'status': 'success',
+            'html': html
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'error': str(e)
+        })
 
-    return JsonResponse({'success': True, 'html': html})
 
-
+def get_unread_count(room, user):
+    """
+    محاسبه تعداد پیام‌های خوانده نشده برای یک کاربر در یک اتاق چت
+    """
+    # اگر کاربر ادمین است، پیام‌های خوانده نشده از طرف کاربر را بشمار
+    if user.is_staff:
+        return ChatMessage.objects.filter(
+            room=room,
+            is_read=False,
+            sender=room.user
+        ).count()
+    # اگر کاربر عادی است، پیام‌های خوانده نشده از طرف ادمین را بشمار
+    else:
+        return ChatMessage.objects.filter(
+            room=room,
+            is_read=False,
+            sender=room.admin
+        ).count()
 @login_required
 def notifications(request):
     user_notifications = Notification.objects.filter(
@@ -484,44 +592,30 @@ def create_support_chat(request):
         sender=request.user  # تعیین کاربر فعلی به عنوان فرستنده
     )
 
+    # اطلاع‌رسانی به ادمین‌ها درباره چت جدید
+    admins = User.objects.filter(is_staff=True)
+    channel_layer = get_channel_layer()
+    for admin in admins:
+        try:
+            # ارسال اعلان به ادمین‌ها
+            notification_group_name = f'notifications_{admin.id}'
+            async_to_sync(channel_layer.group_send)(
+                notification_group_name,
+                {
+                    'type': 'notification_message',
+                    'title': 'چت جدید',
+                    'message': f'کاربر {request.user.username} یک چت جدید ایجاد کرده است',
+                    'data': {
+                        'room_id': str(new_chat.id)
+                    }
+                }
+            )
+        except Exception as e:
+            print(f"Error sending notification to admin {admin.id}: {e}")
+
     return redirect('chat:chat_room', room_id=new_chat.id)
 
 
-@login_required
-def reopen_chat(request, room_id):
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'شما اجازه بازگشایی این چت را ندارید'})
-
-    try:
-        room = ChatRoom.objects.get(id=room_id)
-
-        room.is_active = True
-        room.save()
-
-        ChatMessage.objects.create(
-            room=room,
-            content='این چت بازگشایی شده است.',
-            message_type='system',
-            sender=request.user
-        )
-
-        # ارسال پیام به کانال وب‌سوکت
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f'chat_{room_id}',
-            {
-                'type': 'chat_status_update',
-                'is_closed': False,
-                'message': 'این چت توسط ادمین بازگشایی شده است.'
-            }
-        )
-
-        return JsonResponse({'success': True})
-
-    except ChatRoom.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'چت مورد نظر یافت نشد'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
 
 def api_unread_counts(request):
     if not request.user.is_authenticated:
@@ -571,31 +665,78 @@ class SetUserOfflineView(View):
             status.save()
 
             # اطلاع‌رسانی به اتاق‌های چت
-            from .signals import notify_status_change
-            notify_status_change(request.user, 'offline')
+            channel_layer = get_channel_layer()
+            chat_rooms = self.get_user_chat_rooms(request.user)
+
+            for room in chat_rooms:
+                try:
+                    async_to_sync(channel_layer.group_send)(
+                        f'chat_{room.id}',
+                        {
+                            'type': 'user_status_update',
+                            'user_id': request.user.id,
+                            'username': request.user.username,
+                            'status': 'offline',
+                            'is_staff': request.user.is_staff
+                        }
+                    )
+                except Exception as e:
+                    print(f"Error sending status update to room {room.id}: {e}")
 
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+    def get_user_chat_rooms(self, user):
+        """دریافت تمام اتاق‌های چت فعال کاربر"""
+        if user.is_staff:
+            return list(ChatRoom.objects.filter(admin=user, is_closed=False))
+        else:
+            return list(ChatRoom.objects.filter(user=user, is_closed=False))
+
 
 def check_online_status():
+    """بررسی وضعیت آنلاین کاربران و بروزرسانی کاربران غیرفعال به آفلاین"""
     # زمان فعلی منهای 2 دقیقه
     threshold = timezone.now() - timedelta(minutes=2)
 
     # کاربرانی که آخرین فعالیت آنها قبل از threshold است را آفلاین کن
     offline_users = UserChatStatus.objects.filter(
         status='online',
-        last_activity__lt=threshold
+        last_seen__lt=threshold
     )
 
+    channel_layer = get_channel_layer()
+
     for user_status in offline_users:
+        # تغییر وضعیت به آفلاین
         user_status.status = 'offline'
         user_status.save()
 
-        # اطلاع‌رسانی به اتاق‌های چت
-        from .signals import notify_status_change
-        notify_status_change(user_status.user, 'offline')
+        user = user_status.user
+
+        # دریافت اتاق‌های چت کاربر
+        if user.is_staff:
+            chat_rooms = ChatRoom.objects.filter(admin=user, is_active=True)
+        else:
+            chat_rooms = ChatRoom.objects.filter(user=user, is_active=True)
+
+        # اطلاع‌رسانی به تمام اتاق‌های چت
+        for room in chat_rooms:
+            try:
+                async_to_sync(channel_layer.group_send)(
+                    f'chat_{room.id}',
+                    {
+                        'type': 'user_status_update',
+                        'user_id': user.id,
+                        'username': user.username,
+                        'status': 'offline',
+                        'is_staff': user.is_staff
+                    }
+                )
+            except Exception as e:
+                print(f"Error sending offline status to room {room.id}: {e}")
+
 
 class SetUserOnlineView(View):
     @method_decorator(csrf_exempt)
@@ -608,18 +749,44 @@ class SetUserOnlineView(View):
 
         try:
             status, created = UserChatStatus.objects.get_or_create(user=request.user)
+            old_status = status.status
             status.status = 'online'
-            status.last_activity = timezone.now()
+            status.last_seen = timezone.now()
             status.save()
 
-            # اطلاع‌رسانی به اتاق‌های چت
-            from .signals import notify_status_change
-            notify_status_change(request.user, 'online')
+            # اگر وضعیت تغییر کرده، به اتاق‌های چت اطلاع بده
+            if old_status != 'online' or created:
+                channel_layer = get_channel_layer()
+                chat_rooms = self.get_user_chat_rooms(request.user)
+
+                for room in chat_rooms:
+                    try:
+                        async_to_sync(channel_layer.group_send)(
+                            f'chat_{room.id}',
+                            {
+                                'type': 'user_status_update',
+                                'user_id': request.user.id,
+                                'username': request.user.username,
+                                'status': 'online',
+                                'is_staff': request.user.is_staff
+                            }
+                        )
+                    except Exception as e:
+                        print(f"Error sending status update to room {room.id}: {e}")
 
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+    def get_user_chat_rooms(self, user):
+        """دریافت تمام اتاق‌های چت فعال کاربر"""
+        if user.is_staff:
+            return list(ChatRoom.objects.filter(admin=user, is_active=True))
+        else:
+            return list(ChatRoom.objects.filter(user=user, is_active=True))
+
+
+@login_required
 def unread_count(request):
     """دریافت تعداد پیام‌های خوانده نشده"""
     if not request.user.is_authenticated:
@@ -662,16 +829,15 @@ def get_user_status(request, user_id):
         status_obj = UserChatStatus.objects.filter(user=user).first()
 
         if status_obj:
-            return JsonResponse({'status': status_obj.status})
+            # بررسی زمان آخرین فعالیت
+            threshold = timezone.now() - timedelta(minutes=2)
+            if status_obj.last_seen and status_obj.last_seen > threshold:
+                return JsonResponse({'status': status_obj.status})
+            else:
+                return JsonResponse({'status': 'offline'})
         else:
             return JsonResponse({'status': 'offline'})
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
-
-
-
-
-
