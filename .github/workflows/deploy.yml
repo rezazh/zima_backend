@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
     - name: Checkout code
@@ -22,7 +22,7 @@ jobs:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        command_timeout: 15m
+        command_timeout: 30m
         script: |
           #!/bin/bash
           set -e
@@ -39,17 +39,84 @@ jobs:
           echo "===== Stage 2: Pulling changes ====="
           git pull origin main
           
-          # مرحله 3: توقف کانتینرها
-          echo "===== Stage 3: Stopping containers ====="
+          # مرحله 3: ایجاد پشتیبان از دیتابیس
+          echo "===== Stage 3: Database backup ====="
+          BACKUP_DIR="/var/www/zimabestshop/backups"
+          mkdir -p $BACKUP_DIR
+          BACKUP_FILE="$BACKUP_DIR/db_backup_$(date +%Y%m%d_%H%M%S).sql"
+          
+          # استخراج اطلاعات دیتابیس از فایل docker-compose.yml
+          DB_CONTAINER=$(docker-compose ps -q postgres || echo "zima_postgres")
+          if docker inspect $DB_CONTAINER &>/dev/null; then
+            echo "Creating database backup..."
+            docker exec $DB_CONTAINER pg_dumpall -U postgres > $BACKUP_FILE
+            echo "Backup saved to $BACKUP_FILE"
+          else
+            echo "Database container not running, skipping backup"
+          fi
+          
+          # مرحله 4: توقف کانتینرها
+          echo "===== Stage 4: Stopping containers ====="
           docker-compose down --timeout 60 || echo "Stop failed, continuing..."
           
-          # مرحله 4: راه‌اندازی مجدد
-          echo "===== Stage 4: Starting containers ====="
+          # مرحله 5: بررسی و پاکسازی تصاویر قدیمی
+          echo "===== Stage 5: Cleaning up old images ====="
+          docker image prune -af --filter "until=24h" || echo "Image cleanup failed, continuing..."
+          
+          # مرحله 6: بیلد و راه‌اندازی کانتینرها
+          echo "===== Stage 6: Building and starting containers ====="
+          # پیش‌کش تصاویر مورد نیاز برای جلوگیری از خطای TLS handshake timeout
+          echo "Pre-pulling required images..."
+          docker pull python:3.11-alpine || echo "Failed to pull python:3.11-alpine, continuing..."
+          docker pull python:3.11-slim || echo "Failed to pull python:3.11-slim, continuing..."
+          docker pull postgres:15-alpine || echo "Failed to pull postgres:15-alpine, continuing..."
+          
+          # ساخت و راه‌اندازی کانتینرها
           docker-compose up -d --build
           
-          # مرحله 5: بررسی وضعیت
-          echo "===== Stage 5: Health check ====="
+          # مرحله 7: اجرای مایگریشن‌ها
+          echo "===== Stage 7: Running migrations ====="
+          # انتظار برای آماده شدن دیتابیس
+          sleep 15
+          
+          # شناسایی کانتینر جنگو
+          DJANGO_CONTAINER=$(docker-compose ps -q web || docker-compose ps -q django || docker-compose ps -q app || docker-compose ps -q gunicorn || echo "")
+          
+          if [ -n "$DJANGO_CONTAINER" ]; then
+            echo "Running migrations..."
+            docker exec $DJANGO_CONTAINER python manage.py migrate --noinput || echo "Migration failed, continuing..."
+            
+            # جمع‌آوری فایل‌های استاتیک
+            echo "Collecting static files..."
+            docker exec $DJANGO_CONTAINER python manage.py collectstatic --noinput || echo "Static collection failed, continuing..."
+          else
+            echo "Django container not found, skipping migrations"
+          fi
+          
+          # مرحله 8: بررسی وضعیت سلامت
+          echo "===== Stage 8: Health check ====="
           sleep 15
           docker-compose ps
           
+          # بررسی وضعیت سرویس‌ها
+          echo "Checking service health..."
+          for service in $(docker-compose config --services); do
+            echo "Service: $service - $(docker-compose ps $service | grep -q "Up" && echo "UP" || echo "DOWN")"
+          done
+          
+          # مرحله 9: پاکسازی کش و فایل‌های موقت
+          echo "===== Stage 9: Cleanup ====="
+          if [ -n "$DJANGO_CONTAINER" ]; then
+            # پاکسازی کش و فایل‌های موقت قدیمی
+            docker exec $DJANGO_CONTAINER find /tmp -type f -name "*.py[co]" -delete 2>/dev/null || echo "Cache cleanup failed, continuing..."
+            docker exec $DJANGO_CONTAINER find /tmp -type d -name "__pycache__" -delete 2>/dev/null || echo "Cache cleanup failed, continuing..."
+          fi
+          
+          # حذف بکاپ‌های قدیمی‌تر از 7 روز
+          find $BACKUP_DIR -name "db_backup_*.sql" -type f -mtime +7 -delete
+          
           echo "===== Deployment completed at $(date) ====="
+          
+          # مرحله 10: نمایش لاگ‌های اخیر
+          echo "===== Stage 10: Recent logs ====="
+          docker-compose logs --tail=50
