@@ -1,154 +1,289 @@
-import os
-
-from django.db import models
-from django.conf import settings  # برای دسترسی به AUTH_USER_MODEL
-from django.utils import timezone
 import uuid
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+from django.contrib.postgres.fields import JSONField
 
+
+class UserStatus(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='online_status'
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=[('online', 'Online'), ('offline', 'Offline')],
+        default='offline'
+    )
+    last_seen = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "وضعیت آنلاین کاربر"
+        verbose_name_plural = "وضعیت آنلاین کاربران"
+
+    def __str__(self):
+        return f"{self.user.username}: {self.get_status_display()}"
+
+    @property
+    def is_online(self):
+        # کاربر در 5 دقیقه گذشته فعالیت داشته باشد، آنلاین در نظر گرفته می‌شود
+        if self.status == 'online':
+            threshold = timezone.now() - timezone.timedelta(minutes=5)
+            return self.last_seen >= threshold
+        return False
 
 class ChatRoom(models.Model):
-    """اتاق چت"""
+    """
+    مدل اتاق گفتگو بین کاربر و پشتیبان
+    """
     ROOM_TYPES = [
         ('support', 'پشتیبانی'),
         ('general', 'عمومی'),
-        ('private', 'خصوصی'),
+    ]
+
+    STATUS_CHOICES = [
+        ('open', 'باز'),
+        ('closed', 'بسته شده'),
+        ('archived', 'آرشیو شده'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField('نام اتاق', max_length=100)
-    room_type = models.CharField('نوع اتاق', max_length=20, choices=ROOM_TYPES, default='support')
-    participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chat_rooms', blank=True)
-    is_active = models.BooleanField('فعال', default=True)
-    created_at = models.DateTimeField('تاریخ ایجاد', auto_now_add=True)
-    updated_at = models.DateTimeField('تاریخ بروزرسانی', auto_now=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_chat_rooms', null=True, blank=True)
-    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='admin_chat_rooms', null=True, blank=True)
-
+    name = models.CharField(max_length=255, verbose_name="نام گفتگو")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="user_chats",
+        verbose_name="کاربر"
+    )
+    agent = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="agent_chats",
+        verbose_name="پشتیبان"
+    )
+    room_type = models.CharField(
+        max_length=20,
+        choices=ROOM_TYPES,
+        default='support',
+        verbose_name="نوع گفتگو"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='open',
+        verbose_name="وضعیت"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="زمان ایجاد")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="آخرین بروزرسانی")
+    closed_at = models.DateTimeField(null=True, blank=True, verbose_name="زمان بسته شدن")
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="closed_chats",
+        verbose_name="بسته شده توسط"
+    )
+    is_deleted_by_user = models.BooleanField(default=False, verbose_name="حذف شده توسط کاربر")
+    is_deleted_by_agent = models.BooleanField(default=False, verbose_name="حذف شده توسط پشتیبان")
+    hidden_for_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='hidden_chat_rooms',
+        blank=True,
+        help_text='کاربرانی که این گفتگو را حذف کرده‌اند و دیگر نمی‌بینند'
+    )
     class Meta:
-        verbose_name = 'اتاق چت'
-        verbose_name_plural = 'اتاق‌های چت'
+        verbose_name = "اتاق گفتگو"
+        verbose_name_plural = "اتاق‌های گفتگو"
         ordering = ['-updated_at']
 
     def __str__(self):
-        return f"{self.name} ({self.get_room_type_display()})"
+        return f"{self.name} - {self.user.username}"
+
+    def close(self, user):
+        """بستن گفتگو"""
+        self.status = 'closed'
+        self.closed_at = timezone.now()
+        self.closed_by = user
+        self.save()
+
+        return True
+
+    def reopen(self, user):
+        """بازگشایی گفتگو"""
+        if self.status == 'closed':
+            self.status = 'open'
+            self.closed_at = None
+            self.closed_by = None
+            self.save()
+
+            return True
+        return False
+
+    def archive(self):
+        """آرشیو کردن گفتگو"""
+        if self.status == 'closed':
+            self.status = 'archived'
+            self.save()
+            return True
+        return False
+
+    def mark_deleted_by_user(self):
+        """علامت‌گذاری به عنوان حذف شده توسط کاربر"""
+        self.is_deleted_by_user = True
+        self.save()
+        return True
+
+    def mark_deleted_by_agent(self):
+        """علامت‌گذاری به عنوان حذف شده توسط پشتیبان"""
+        self.is_deleted_by_agent = True
+        self.save()
+        return True
 
     @property
-    def group_name(self):
-        """نام گروه برای channels"""
-        return f'chat_{self.id}'
+    def is_open(self):
+        """آیا گفتگو باز است؟"""
+        return self.status == 'open'
+
+    @property
+    def is_closed(self):
+        """آیا گفتگو بسته شده است؟"""
+        return self.status == 'closed'
+
+    @property
+    def is_archived(self):
+        """آیا گفتگو آرشیو شده است؟"""
+        return self.status == 'archived'
+
+    @property
+    def unread_count_for_user(self):
+        """تعداد پیام‌های خوانده نشده برای کاربر"""
+        return self.messages.filter(is_read=False, sender=self.agent).count()
+
+    @property
+    def unread_count_for_agent(self):
+        """تعداد پیام‌های خوانده نشده برای پشتیبان"""
+        return self.messages.filter(is_read=False, sender=self.user).count()
 
 
 class ChatMessage(models.Model):
-    MESSAGE_TYPE_CHOICES = [
-        ('text', 'Text'),
-        ('image', 'Image'),
-        ('file', 'File'),
-        ('system', 'System'),
+    """
+    مدل پیام گفتگو
+    """
+    MESSAGE_TYPES = [
+        ('text', 'متن'),
+        ('image', 'تصویر'),
+        ('file', 'فایل'),
+        ('system', 'سیستمی'),
     ]
 
-    # id فعلی را حفظ کنید (تغییر ندهید)
-    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
-    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    content = models.TextField()
-    file = models.FileField(upload_to='chat_files/', null=True, blank=True)
-    file_name = models.CharField(max_length=255, null=True, blank=True)
-    file_size = models.IntegerField(null=True, blank=True)  # در بایت
-    file_type = models.CharField(max_length=50, null=True, blank=True)  # مثلا image/jpeg یا application/pdf
-    message_type = models.CharField(max_length=10, choices=MESSAGE_TYPE_CHOICES, default='text')
-    is_read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="messages", verbose_name="اتاق گفتگو")
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sent_messages",
+        verbose_name="فرستنده"
+    )
+    content = models.TextField(verbose_name="متن پیام")
+    file = models.FileField(upload_to='chat_files/%Y/%m/%d/', null=True, blank=True, verbose_name="فایل پیوست")
+    message_type = models.CharField(
+        max_length=10,
+        choices=MESSAGE_TYPES,
+        default='text',
+        verbose_name="نوع پیام"
+    )
+    is_read = models.BooleanField(default=False, verbose_name="خوانده شده")
+    read_at = models.DateTimeField(null=True, blank=True, verbose_name="زمان خوانده شدن")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="زمان ارسال")
 
     class Meta:
+        verbose_name = "پیام گفتگو"
+        verbose_name_plural = "پیام‌های گفتگو"
         ordering = ['created_at']
 
     def __str__(self):
-        return f"{self.sender.username}: {self.content[:50]}"
+        sender_name = self.sender.username if self.sender else "سیستم"
+        return f"{sender_name}: {self.content[:50]}"
 
-    def save(self, *args, **kwargs):
-        # اگر فایل آپلود شده و نوع پیام مشخص نشده، نوع پیام را تعیین کن
-        if self.file and (not self.message_type or self.message_type == 'text'):
-            file_ext = os.path.splitext(self.file.name)[1].lower()
-            image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
-
-            if file_ext in image_extensions:
-                self.message_type = 'image'
-            else:
-                self.message_type = 'file'
-
-            # ذخیره نام فایل و سایز آن
-            if not self.file_name:
-                self.file_name = os.path.basename(self.file.name)
-
-            # سایز فایل را ذخیره کن
-            if not self.file_size and hasattr(self.file, 'size'):
-                self.file_size = self.file.size
-
-            # نوع فایل را ذخیره کن
-            if not self.file_type:
-                import mimetypes
-                self.file_type = mimetypes.guess_type(self.file.name)[0] or 'application/octet-stream'
-
-        super().save(*args, **kwargs)
-
-
-class UserChatStatus(models.Model):
-    """وضعیت آنلاین کاربران"""
-    STATUS_CHOICES = [
-        ('online', 'آنلاین'),
-        ('away', 'غایب'),
-        ('busy', 'مشغول'),
-        ('offline', 'آفلاین'),
-    ]
-
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_status')
-    status = models.CharField('وضعیت', max_length=20, choices=STATUS_CHOICES, default='offline')
-    last_seen = models.DateTimeField('آخرین بازدید', auto_now=True)
-    is_staff_available = models.BooleanField('ادمین در دسترس', default=False)
-
-    class Meta:
-        verbose_name = 'وضعیت چت کاربر'
-        verbose_name_plural = 'وضعیت چت کاربران'
-
-    def __str__(self):
-        return f"{self.user.username} - {self.get_status_display()}"
+    def mark_as_read(self):
+        """علامت‌گذاری پیام به عنوان خوانده شده"""
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save(update_fields=['is_read', 'read_at'])
+            return True
+        return False
 
 
 class Notification(models.Model):
-    """نوتیفیکیشن‌ها"""
+    """
+    مدل اعلان‌های سیستم
+    """
     NOTIFICATION_TYPES = [
-        ('chat', 'پیام چت'),
-        ('order', 'بروزرسانی سفارش'),
-        ('product', 'موجود شدن محصول'),
-        ('system', 'سیستم'),
+        ('chat', 'گفتگو'),
+        ('system', 'سیستمی'),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
-    notification_type = models.CharField('نوع نوتیفیکیشن', max_length=30, choices=NOTIFICATION_TYPES)
-    title = models.CharField('عنوان', max_length=200)
-    message = models.TextField('پیام')
-    data = models.JSONField('داده‌های اضافی', default=dict, blank=True)
-    is_read = models.BooleanField('خوانده شده', default=False)
-    created_at = models.DateTimeField('تاریخ ایجاد', auto_now_add=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+        verbose_name="کاربر"
+    )
+    title = models.CharField(max_length=255, verbose_name="عنوان")
+    message = models.TextField(verbose_name="متن اعلان")
+    notification_type = models.CharField(
+        max_length=20,
+        choices=NOTIFICATION_TYPES,
+        default='system',
+        verbose_name="نوع اعلان"
+    )
+    data = models.JSONField(default=dict, blank=True, null=True, verbose_name="داده‌های اضافی")
+    is_read = models.BooleanField(default=False, verbose_name="خوانده شده")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="زمان ایجاد")
 
     class Meta:
-        verbose_name = 'نوتیفیکیشن'
-        verbose_name_plural = 'نوتیفیکیشن‌ها'
+        verbose_name = "اعلان"
+        verbose_name_plural = "اعلان‌ها"
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.user.username}: {self.title}"
+        return f"{self.title} - {self.user.username}"
+
+    def mark_as_read(self):
+        """علامت‌گذاری اعلان به عنوان خوانده شده"""
+        if not self.is_read:
+            self.is_read = True
+            self.save(update_fields=['is_read'])
+            return True
+        return False
 
 
-class DeletedChat(models.Model):
-    """مدل برای ذخیره چت‌هایی که کاربر حذف کرده است"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='del_messages')
-    deleted_at = models.DateTimeField(auto_now_add=True)
+class TemporaryFile(models.Model):
+    """
+    مدل فایل موقت برای آپلود فایل‌ها قبل از ارسال پیام
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="temp_files",
+        verbose_name="کاربر"
+    )
+    file = models.FileField(upload_to='temp_files/%Y/%m/%d/', verbose_name="فایل")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="زمان آپلود")
 
     class Meta:
-        unique_together = ('user', 'room')
+        verbose_name = "فایل موقت"
+        verbose_name_plural = "فایل‌های موقت"
+        ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.user.username} deleted chat {self.room.id}"
-
+        return f"{self.user.username} - {self.file.name}"

@@ -1,0 +1,34 @@
+{% if user_closed_chats %}
+    {% for room in user_closed_chats %}
+        <div class="chat-item">
+            <div class="chat-header">
+                <span class="chat-title">{{ room.name|default:"گفتگو" }} بسته شده توسط کاربر</span>
+                <span class="chat-time">{{ room.updated_at|date:"Y/m/d H:i" }}</span>
+            </div>
+            <div class="chat-user">
+                {% if room.user %}
+                    {{ room.user.get_full_name|default:room.user.username }}
+                {% else %}
+                    کاربر ناشناس
+                {% endif %}
+            </div>
+            {% if room.closed_at %}
+                <div class="chat-closed-time">
+                    بسته شده در: {{ room.closed_at|date:"Y/m/d H:i" }}
+                </div>
+            {% endif %}
+            {% if room.messages.last %}
+                <div class="chat-preview">
+                    {{ room.messages.last.content|truncatechars:50 }}
+                </div>
+            {% endif %}
+            <div class="chat-actions">
+                <a href="{% url 'chat:chat_room' room.name %}" class="btn btn-secondary">مشاهده</a>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        چت بسته شده‌ای توسط کاربران وجود ندارد.
+    </div>
+{% endif %}

@@ -1,245 +1,306 @@
-{% extends "base/base.html" %}
+{% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}گفتگوهای من{% endblock %}
+{% block title %}لیست گفتگوها{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'chat/css/chat.css' %}">
+<link rel="stylesheet" href="{% static 'chat/css/chat-list.css' %}">
 <style>
-    .chat-list-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .chat-item {
-        background-color: #fff;
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .chat-item:hover {
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        transform: translateY(-2px);
-    }
-
-    .chat-info {
-        flex-grow: 1;
-    }
-
-    .chat-title {
-        font-weight: bold;
-        font-size: 1.1rem;
-        margin-bottom: 5px;
-    }
-
-    .chat-meta {
-        color: #777;
-        font-size: 0.85rem;
-    }
-
-    .chat-status {
-        margin-left: 10px;
-        padding: 3px 10px;
-        border-radius: 15px;
-        font-size: 0.8rem;
-    }
-
-    .chat-status-active {
-        background-color: #d4edda;
-        color: #155724;
-    }
-
-    .chat-status-closed {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-
-    .chat-actions {
-        display: flex;
-        align-items: center;
-    }
-
-    .chat-unread {
-        background-color: #007bff;
-        color: white;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.8rem;
-        margin-right: 15px;
-    }
-
-    .btn-chat-action {
-        margin-left: 5px;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 0.9rem;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 40px 20px;
-        background-color: #f9f9f9;
-        border-radius: 10px;
-        color: #666;
-    }
-
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 15px;
-        color: #ccc;
-    }
-
-    .btn-new-chat {
-        background: linear-gradient(135deg, #0b93f6, #0a84e0);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 30px;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px rgba(10, 132, 224, 0.3);
-    }
-
-    .btn-new-chat:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 10px rgba(10, 132, 224, 0.4);
-        color: white;
-    }
-
-    .btn-new-chat i {
-        margin-right: 8px;
+    .notification-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="chat-list-container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3>گفتگوهای من</h3>
-            <a href="{% url 'chat:start_chat' %}" class="btn btn-new-chat">
-                <i class="fas fa-plus"></i>
-                گفتگوی جدید
-            </a>
-        </div>
+<!-- کانتینر اعلان‌ها - اضافه شده در بالای صفحه -->
+<div class="notification-container"></div>
 
-        {% if user_chats %}
-            <div class="chat-list">
-                {% for chat in user_chats %}
-                    <div class="chat-item" id="chat-item-{{ chat.id }}">
-                        <div class="chat-info">
-                            <div class="chat-title">
-                                گفتگوی پشتیبانی
-                                <span class="chat-status chat-status-active">فعال</span>
-                            </div>
-                            <div class="chat-meta">
-                                <i class="far fa-clock"></i> آخرین بروزرسانی: {{ chat.updated_at|date:"Y/m/d H:i" }}
-                            </div>
-                        </div>
-                        <div class="chat-actions">
-                            {% if chat.unread_count > 0 %}
-                                <div class="chat-unread">{{ chat.unread_count }}</div>
-                            {% endif %}
-                            <a href="{% url 'chat:chat_room' room_id=chat.id %}" class="btn btn-primary btn-sm btn-chat-action">
-                                <i class="fas fa-comment"></i> مشاهده
-                            </a>
-                            <button class="btn btn-danger btn-sm btn-chat-action delete-chat-btn" data-id="{{ chat.id }}">
-                                <i class="fas fa-trash"></i> حذف
-                            </button>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="empty-state">
-                <i class="far fa-comments"></i>
-                <h4>هیچ گفتگویی ندارید</h4>
-                <p>برای شروع گفتگو با پشتیبانی، روی دکمه گفتگوی جدید کلیک کنید.</p>
-                <a href="{% url 'chat:start_chat' %}" class="btn btn-primary mt-3">
-                    <i class="fas fa-plus"></i> شروع گفتگوی جدید
+<div class="chat-list-container">
+    <div class="chat-list-header">
+        <h1>گفتگوهای من</h1>
+        <div>
+            {% if not request.user.is_staff %}
+                <a href="{% url 'chat:start' %}" class="btn btn-primary">
+                    <i class="fas fa-plus ml-1"></i> گفتگوی جدید
                 </a>
-            </div>
-        {% endif %}
+            {% else %}
+                <a href="{% url 'chat:admin_dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-tachometer-alt ml-1"></i> داشبورد پشتیبانی
+                </a>
+            {% endif %}
+        </div>
     </div>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="all-chats" role="tabpanel">
+            {% if rooms %}
+                <ul class="chat-list">
+                    {% for room in rooms %}
+                        <li class="chat-item position-relative">
+                            <a href="{% url 'chat:room' room_id=room.id %}" class="d-flex w-100 text-decoration-none">
+                                <div class="chat-item-avatar">
+                                    {% if room.user.profile_image %}
+                                        <img src="{{ room.user.profile_image.url }}" alt="{{ room.user.username }}">
+                                    {% else %}
+                                        <div class="avatar-placeholder">
+                                            {{ room.user.username|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="chat-item-content">
+                                    <div class="chat-item-header">
+                                        <h3>{{ room.name|cut:"("|cut:")" }}</h3>
+                                        <div class="chat-item-time">
+                                            {{ room.updated_at|date:"H:i" }}
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        {% if request.user.is_staff %}
+                                            <!-- اگر کاربر ادمین است، وضعیت کاربر عادی را نمایش بده -->
+                                            <div class="user-status {% if room.user.online_status.status == 'online' %}online{% else %}offline{% endif %}"
+                                                 data-user-id="{{ room.user.id }}"
+                                                 title="{% if room.user.online_status.status == 'online' %}آنلاین{% else %}آفلاین{% endif %}">
+                                                <span class="status-dot {% if room.user.online_status.status == 'online' %}online{% else %}offline{% endif %}"></span>
+                                            </div>
+                                        {% else %}
+                                            <!-- اگر کاربر عادی است، وضعیت ادمین/پشتیبان را نمایش بده (اگر پشتیبان وجود داشته باشد) -->
+                                            {% if room.agent %}
+                                                <div class="user-status {% if room.agent.online_status.status == 'online' %}online{% else %}offline{% endif %}"
+                                                     data-user-id="{{ room.agent.id }}"
+                                                     title="{% if room.agent.online_status.status == 'online' %}آنلاین{% else %}آفلاین{% endif %}">
+                                                    <span class="status-dot {% if room.agent.online_status.status == 'online' %}online{% else %}offline{% endif %}"></span>
+                                                </div>
+                                            {% else %}
+                                                <div class="user-status offline" title="آفلاین">
+                                                    <span class="status-dot offline"></span>
+                                                </div>
+                                            {% endif %}
+                                        {% endif %}
+                                        <span class="status-badge {% if room.status == 'closed' %}closed{% endif %}">
+                                            {{ room.get_status_display }}
+                                        </span>
+                                    </div>
+                                    <div class="chat-item-message">
+                                        {% if room.messages.last %}
+                                            {% if room.messages.last.sender == request.user %}
+                                                <i class="fas {% if room.messages.last.is_read %}fa-check-double{% else %}fa-check{% endif %} text-muted"></i>
+                                            {% endif %}
+                                            {% if room.messages.last.message_type == 'system' %}
+                                                <span class="system-message-preview">{{ room.messages.last.content|truncatechars:50 }}</span>
+                                            {% else %}
+                                                {{ room.messages.last.content|truncatechars:50 }}
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="no-message">بدون پیام</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if room.unread_count > 0 %}
+                                    <div class="chat-item-badge">
+                                        <div class="badge bg-primary">{{ room.unread_count }}</div>
+                                    </div>
+                                {% endif %}
+                            </a>
+                            <!-- دکمه حذف گفتگو فقط برای کاربران عادی و گفتگوهای بسته شده -->
+                            {% if not request.user.is_staff and room.status == 'closed' %}
+                                <button class="btn btn-sm btn-link text-danger delete-chat"
+                                        data-room-id="{{ room.id }}"
+                                        data-bs-toggle="tooltip"
+                                        title="حذف گفتگو">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty-list">
+                    <i class="fas fa-comments"></i>
+                    <p>هیچ گفتگویی یافت نشد.</p>
+                    {% if not request.user.is_staff %}
+                        <a href="{% url 'chat:start' %}" class="btn btn-primary">
+                            <i class="fas fa-plus ml-1"></i> شروع گفتگوی جدید
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- مودال تایید حذف گفتگو -->
+<div class="modal fade" id="deleteChatModal" tabindex="-1" aria-labelledby="deleteChatModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteChatModalLabel">حذف گفتگو</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        آیا از حذف این گفتگو اطمینان دارید؟
+        <p class="text-muted small">توجه: این گفتگو فقط از لیست شما حذف می‌شود و برای پشتیبانی قابل مشاهده خواهد بود.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+        <button type="button" class="btn btn-danger" id="confirmDelete">حذف</button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // حذف چت
-    document.addEventListener('DOMContentLoaded', function() {
-        const csrftoken = getCookie('csrftoken');
+document.addEventListener('DOMContentLoaded', function() {
+    // فعال‌سازی تولتیپ‌ها (اگر از Bootstrap 5 استفاده می‌کنید)
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
 
-        document.querySelectorAll('.delete-chat-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const chatId = this.getAttribute('data-id');
-                if (confirm('آیا از حذف این گفتگو اطمینان دارید؟')) {
-                    deleteChat(chatId);
-                }
-            });
+    // متغیر برای نگهداری شناسه اتاق انتخاب شده برای حذف
+    let selectedRoomId = null;
+
+    // مودال حذف گفتگو
+    const deleteModalElement = document.getElementById('deleteChatModal');
+    const deleteModal = new bootstrap.Modal(deleteModalElement);
+
+    // دکمه‌های حذف
+    const deleteButtons = document.querySelectorAll('.delete-chat');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            selectedRoomId = this.getAttribute('data-room-id');
+            deleteModal.show();
         });
+    });
 
-        function deleteChat(chatId) {
-            fetch(`/chat/delete/${chatId}/`, {
+    // دکمه تایید حذف در مودال
+    document.getElementById('confirmDelete').addEventListener('click', function() {
+        if (selectedRoomId) {
+            // ارسال درخواست حذف
+            fetch(`/chat/hide-room/${selectedRoomId}/`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('خطا در ارتباط با سرور');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    // حذف المان از صفحه
-                    const chatElement = document.getElementById(`chat-item-${chatId}`);
-                    chatElement.style.height = chatElement.offsetHeight + 'px';
-                    chatElement.style.opacity = '0';
-                    chatElement.style.transform = 'translateX(100%)';
+                    // حذف المان از DOM
+                    const chatItem = document.querySelector(`.delete-chat[data-room-id="${selectedRoomId}"]`).closest('.chat-item');
+                    chatItem.style.height = chatItem.offsetHeight + 'px';
+                    chatItem.style.overflow = 'hidden';
+
                     setTimeout(() => {
-                        chatElement.remove();
-                        // اگر دیگر چتی وجود ندارد، صفحه را رفرش کن
-                        if (document.querySelectorAll('.chat-item').length === 0) {
-                            location.reload();
-                        }
-                    }, 300);
+                        chatItem.style.height = '0';
+                        chatItem.style.padding = '0';
+                        chatItem.style.margin = '0';
+                        chatItem.style.opacity = '0';
+
+                        setTimeout(() => {
+                            chatItem.remove();
+
+                            // بررسی آیا لیست خالی شده است
+                            const remainingItems = document.querySelectorAll('.chat-item');
+                            if (remainingItems.length === 0) {
+                                const tabPane = document.querySelector('.tab-pane.active');
+                                tabPane.innerHTML = `
+                                    <div class="empty-list">
+                                        <i class="fas fa-comments"></i>
+                                        <p>هیچ گفتگویی یافت نشد.</p>
+                                        {% if not request.user.is_staff %}
+                                        <a href="/chat/start/" class="btn btn-primary">
+                                            <i class="fas fa-plus ml-1"></i> شروع گفتگوی جدید
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                `;
+                            }
+                        }, 300);
+                    }, 10);
+
+                    // نمایش پیام موفقیت
+                    showNotification('گفتگو با موفقیت حذف شد.', 'success');
                 } else {
-                    alert('خطا در حذف گفتگو: ' + (data.error || 'خطای نامشخص'));
+                    // نمایش خطا
+                    showNotification(data.error || 'خطا در حذف گفتگو.', 'danger');
                 }
+                deleteModal.hide();
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('خطا در ارتباط با سرور');
+                showNotification('خطا در ارتباط با سرور.', 'danger');
+                deleteModal.hide();
             });
         }
+    });
 
-        // دریافت توکن CSRF از کوکی‌ها
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
+    // نمایش اعلان
+    function showNotification(message, type) {
+        // بررسی وجود کانتینر اعلان
+        let notificationContainer = document.querySelector('.notification-container');
+        if (!notificationContainer) {
+            notificationContainer = document.createElement('div');
+            notificationContainer.className = 'notification-container';
+            notificationContainer.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+            `;
+            document.body.appendChild(notificationContainer);
+        }
+
+        // ایجاد اعلان
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show`;
+        notification.role = 'alert';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+
+        // افزودن اعلان به کانتینر
+        notificationContainer.appendChild(notification);
+
+        // حذف خودکار اعلان بعد از 5 ثانیه
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 150);
+        }, 5000);
+    }
+
+    // دریافت مقدار کوکی CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
-            return cookieValue;
         }
-    });
+        return cookieValue;
+    }
+});
 </script>
 {% endblock %}

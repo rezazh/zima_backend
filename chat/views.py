@@ -1,677 +1,532 @@
-from datetime import timedelta
-
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.contrib import messages
-from django.db.models import Q, Count
-from django.template.loader import render_to_string
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from django.views import View
-from django.views.decorators.http import require_POST
-
-from .models import ChatRoom, ChatMessage, UserChatStatus, Notification, DeletedChat
-import uuid
+from django.views.decorators.http import require_POST, require_GET
 from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-User = get_user_model()
+from django.utils import timezone
+from django.db.models import Q, Count, Max, F
+from django.contrib import messages
+from django.urls import reverse
+
+from .consumers import User
+from .models import ChatRoom, ChatMessage, Notification, UserStatus, TemporaryFile
 
 
 @login_required
 def chat_list(request):
-    user_chats = ChatRoom.objects.filter(
-        user=request.user,
-        is_active=True,
-    ).exclude(
-        id__in=DeletedChat.objects.filter(user=request.user).values('room_id')  # حذف چت‌های حذف شده توسط کاربر
-    ).order_by('-updated_at')
+    """
+    نمایش لیست گفتگوهای کاربر
+    """
+    user = request.user
 
-    for chat in user_chats:
-        chat.unread_count = ChatMessage.objects.filter(
-            room=chat,
-            is_read=False
-        ).exclude(sender=request.user).count()
+    # دریافت لیست گفتگوها بر اساس نوع کاربر
+    if user.is_staff:
+        # برای کاربران پشتیبان، تمام گفتگوهای غیر حذف شده
+        rooms = ChatRoom.objects.filter(
+            Q(is_deleted_by_agent=False)
+        ).annotate(
+            unread_count=Count('messages', filter=Q(messages__is_read=False, messages__sender=F('user')))
+        ).order_by('-updated_at')
+    else:
+        # برای کاربران عادی، فقط گفتگوهای خودشان
+        rooms = ChatRoom.objects.filter(
+            user=user,
+            is_deleted_by_user=False
+        ).annotate(
+            unread_count=Count('messages', filter=Q(messages__is_read=False, messages__sender=F('agent')))
+        ).order_by('-updated_at')
 
     context = {
-        'user_chats': user_chats,
+        'rooms': rooms,
     }
 
     return render(request, 'chat/chat_list.html', context)
 
 
-@login_required
 def chat_room(request, room_id):
-    try:
-        room = ChatRoom.objects.get(id=room_id)
+    """
+    نمایش صفحه گفتگو
+    """
+    user = request.user
 
-        # بررسی دسترسی کاربر
-        if not request.user.is_staff and request.user != room.user:
-            from django.contrib import messages as django_messages
-            django_messages.error(request, 'شما اجازه دسترسی به این چت را ندارید.')
+    # دریافت اتاق گفتگو
+    room = get_object_or_404(ChatRoom, id=room_id)
+
+    # بررسی دسترسی کاربر به اتاق
+    if user.is_staff:
+        if room.is_deleted_by_agent:
+            messages.error(request, "این گفتگو حذف شده است.")
+            return redirect('chat:chat_list')
+    else:
+        if room.user != user or room.is_deleted_by_user:
+            messages.error(request, "شما به این گفتگو دسترسی ندارید.")
             return redirect('chat:chat_list')
 
-        is_deleted_by_user = DeletedChat.objects.filter(room=room, user=room.user).exists()
+    # دریافت پیام‌های گفتگو
+    chat_messages = room.messages.all().order_by('created_at')
 
-        if request.user.is_staff:
-            unread_messages = room.messages.filter(is_read=False, sender=room.user)
-        else:
-            unread_messages = room.messages.filter(is_read=False).exclude(sender=request.user)
-
-        channel_layer = None
-        try:
-            from channels.layers import get_channel_layer
-            from asgiref.sync import async_to_sync
-            channel_layer = get_channel_layer()
-        except Exception as e:
-            print(f"Error getting channel layer: {e}")
-
-        for message in unread_messages:
-            message.is_read = True
-            message.save()
-
-            if channel_layer:
-                try:
-                    async_to_sync(channel_layer.group_send)(
-                        f'chat_{room.id}',
-                        {
-                            'type': 'message_read',
-                            'message_id': str(message.id),
-                            'read_by_user_id': request.user.id
-                        }
-                    )
-                    print(f"Sent message_read event for message {message.id}")
-                except Exception as e:
-                    print(f"Error sending to channel: {e}")
-
-        chat_messages = room.messages.all().order_by('created_at')
-
-        online_users = UserChatStatus.objects.filter(
-            status='online',
-            user__in=[room.user, room.admin] if room.admin else [room.user]
-        )
-
-        context = {
-            'room': room,
-            'room_id_str': str(room.id),
-            'chat_messages': chat_messages,
-            'online_users': online_users,
-            'is_deleted_by_user': is_deleted_by_user,
-        }
-
-        return render(request, 'chat/chat_room.html', context)
-
-    except ChatRoom.DoesNotExist:
-        from django.contrib import messages as django_messages
-        django_messages.error(request, 'چت مورد نظر یافت نشد.')
-        return redirect('chat:chat_list')
-
-
-@login_required
-@require_POST
-def mark_message_as_read(request, message_id):
-    try:
-        message = ChatMessage.objects.get(id=message_id)
-
-        if not request.user.is_staff and request.user != message.room.user:
-            return JsonResponse({'success': False, 'error': 'شما اجازه دسترسی به این پیام را ندارید.'})
-
-        if message.is_read:
-            return JsonResponse({'success': True, 'already_read': True})
-
+    # علامت‌گذاری پیام‌های خوانده نشده به عنوان خوانده شده
+    unread_messages = chat_messages.filter(is_read=False).exclude(sender=user)
+    for message in unread_messages:
         message.is_read = True
-        message.save()
+        message.read_at = timezone.now()
+        message.save(update_fields=['is_read', 'read_at'])
 
-        try:
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f'chat_{message.room.id}',
-                {
-                    'type': 'message_read',
-                    'message_id': str(message.id),
-                    'read_by_user_id': request.user.id
-                }
-            )
-        except Exception as e:
-            print(f"Error sending to channel: {e}")
+    context = {
+        'room': room,
+        'chat_messages': chat_messages,  # تغییر نام متغیر از messages به chat_messages
+    }
 
-        return JsonResponse({'success': True})
-
-    except ChatMessage.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'پیام مورد نظر یافت نشد.'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+    return render(request, 'chat/chat_room.html', context)
 
 @login_required
 def start_chat(request):
-    if request.user.is_staff:
-        return redirect('chat:admin_dashboard')
+    """
+    شروع گفتگوی جدید
+    """
+    user = request.user
+
+    # کاربران پشتیبان نمی‌توانند گفتگوی جدید ایجاد کنند
+    if user.is_staff:
+        messages.error(request, "کاربران پشتیبان نمی‌توانند گفتگوی جدید ایجاد کنند.")
+        return redirect('chat:chat_list')
+
+    # بررسی وجود گفتگوی باز قبلی
+    existing_open_room = ChatRoom.objects.filter(
+        user=user,
+        status='open',
+        is_deleted_by_user=False
+    ).first()
+
+    if existing_open_room:
+        return redirect('chat:room', room_id=existing_open_room.id)
 
     if request.method == 'POST':
-        existing_active_chat = ChatRoom.objects.filter(
-            user=request.user,
-            is_active=True
-        ).exclude(
-            id__in=DeletedChat.objects.filter(user=request.user).values('room_id')
-        ).first()
+        subject = request.POST.get('subject', '').strip()
+        message = request.POST.get('message', '').strip()
 
-        if existing_active_chat:
-            return redirect('chat:chat_room', room_id=existing_active_chat.id)
+        if not subject or not message:
+            messages.error(request, "لطفاً موضوع و پیام خود را وارد کنید.")
+            return render(request, 'chat/start_chat.html')
 
-        new_chat = ChatRoom.objects.create(
-            user=request.user,
-            is_active=True
+        # ایجاد گفتگوی جدید
+        new_room = ChatRoom.objects.create(
+            name=subject,
+            user=user,
+            room_type='support',
+            status='open'
         )
 
-        admin_user = User.objects.filter(is_staff=True).first()
-        sender = admin_user if admin_user else request.user
-
+        # ایجاد پیام اولیه
         ChatMessage.objects.create(
-            room=new_chat,
-            content="به پشتیبانی زیما خوش آمدید. چگونه می‌توانیم به شما کمک کنیم؟",
-            message_type="system",
-            sender=sender
+            room=new_room,
+            sender=user,
+            content=message,
+            message_type='text'
         )
 
-        admins = User.objects.filter(is_staff=True)
-        for admin in admins:
-            pass
+        # ایجاد اعلان برای پشتیبان‌ها
+        for admin in User.objects.filter(is_staff=True):
+            Notification.objects.create(
+                user=admin,
+                title="گفتگوی جدید",
+                message=f"گفتگوی جدید از {user.username}: {subject}",
+                notification_type="chat",
+                data={
+                    "room_id": str(new_room.id)
+                }
+            )
 
-        return redirect('chat:chat_room', room_id=new_chat.id)
-
-    if request.user.is_staff:
-        return redirect('chat:admin_dashboard')
+        return redirect('chat:room', room_id=new_room.id)
 
     return render(request, 'chat/start_chat.html')
 
+
 @login_required
-@require_POST
-def delete_chat(request, room_id):
-    """حذف (مخفی کردن) چت برای کاربر"""
-    try:
-        room = ChatRoom.objects.get(id=room_id)
-
-        if room.user != request.user and not request.user.is_staff:
-            return JsonResponse({
-                'success': False,
-                'error': 'شما اجازه حذف این گفتگو را ندارید'
-            })
-
+def hide_room(request, room_id):
+    """پنهان کردن (حذف نرم) یک گفتگو برای کاربر"""
+    if request.method == 'POST':
         try:
-            from channels.layers import get_channel_layer
-            from asgiref.sync import async_to_sync
+            room = ChatRoom.objects.get(id=room_id)
 
+            # بررسی دسترسی کاربر
+            if request.user != room.user and not request.user.is_staff:
+                return JsonResponse({'success': False, 'error': 'شما اجازه دسترسی به این گفتگو را ندارید'}, status=403)
+
+            # اضافه کردن کاربر به لیست کاربران پنهان کننده
+            room.hidden_for_users.add(request.user)
+
+            # علامت‌گذاری به عنوان حذف شده
+            if request.user == room.user:
+                room.mark_deleted_by_user()
+            elif request.user.is_staff:
+                room.mark_deleted_by_agent()
+
+            room.save()
+
+            # اطلاع‌رسانی به کاربران دیگر از طریق وب‌سوکت
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 f'chat_{room_id}',
                 {
-                    'type': 'chat_deleted',
-                    'deleted_by': request.user.username,
-                    'deleted_by_id': request.user.id,
-                    'is_staff': request.user.is_staff
+                    'type': 'chat_deleted_by_user',
+                    'room_id': str(room.id),
+                    'username': request.user.username  # ارسال نام کاربر به جای deleted_by
                 }
             )
-        except Exception as e:
-            print(f"Error sending delete notification: {e}")
 
-        if request.user.is_staff:
-            room.delete()
             return JsonResponse({'success': True})
-        else:
-            DeletedChat.objects.get_or_create(user=request.user, room=room)
-            return JsonResponse({'success': True})
+        except ChatRoom.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'گفتگو یافت نشد'}, status=404)
 
-    except ChatRoom.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'error': 'گفتگوی مورد نظر یافت نشد'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        })
-
-@login_required
-@require_POST
-def close_chat(request, room_id):
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'شما اجازه بستن این چت را ندارید'})
-
-    try:
-        room = ChatRoom.objects.get(id=room_id)
-
-        room.is_active = False
-        room.save()
-
-        ChatMessage.objects.create(
-            room=room,
-            content='این گفتگو توسط پشتیبانی بسته شده است.',
-            message_type='system',
-            sender=request.user
-        )
-
-        try:
-            from channels.layers import get_channel_layer
-            from asgiref.sync import async_to_sync
-
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f'chat_{room_id}',
-                {
-                    'type': 'chat_status_update',
-                    'is_closed': True,
-                    'message': 'این گفتگو توسط پشتیبانی بسته شده است.'
-                }
-            )
-        except ImportError:
-            pass
-
-        return JsonResponse({'success': True})
-
-    except ChatRoom.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'گفتگوی مورد نظر یافت نشد'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-
-
-
-@login_required
-def assign_admin(request, room_id):
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'دسترسی غیرمجاز'})
-
-    try:
-        room = ChatRoom.objects.get(id=room_id)
-        room.admin = request.user
-        room.save()
-
-        room.participants.add(request.user)
-
-        ChatMessage.objects.create(
-            room=room,
-            content=f'این چت به {request.user.get_full_name() or request.user.username} اختصاص یافت.',
-            message_type='system',
-            sender=request.user
-        )
-
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f'chat_{room_id}',
-            {
-                'type': 'user_status_update',
-                'message': f'این چت به {request.user.get_full_name() or request.user.username} اختصاص یافت.'
-            }
-        )
-
-        return JsonResponse({'success': True})
-
-    except ChatRoom.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'چت مورد نظر یافت نشد'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'درخواست نامعتبر'}, status=400)
 
 
 @login_required
 def admin_dashboard(request):
-    if not request.user.is_staff:
+    """
+    داشبورد مدیریت گفتگوها برای پشتیبان‌ها
+    """
+    user = request.user
+
+    # فقط کاربران پشتیبان می‌توانند به این صفحه دسترسی داشته باشند
+    if not user.is_staff:
+        messages.error(request, "شما به این صفحه دسترسی ندارید.")
         return redirect('chat:chat_list')
 
-    active_chats = ChatRoom.objects.filter(is_active=True).count()
-
-    pending_rooms = ChatRoom.objects.filter(
-        is_active=True,
-        admin__isnull=True
+    # گفتگوهای باز بدون پشتیبان
+    unassigned_rooms = ChatRoom.objects.filter(
+        status='open',
+        agent__isnull=True
     ).order_by('-created_at')
 
-    for room in pending_rooms:
-        room.last_message = room.messages.order_by('-created_at').first()
-
-    pending_chats = pending_rooms.count()
-
-    online_users = UserChatStatus.objects.filter(status='online').count()
-
-    admin_active_chats = ChatRoom.objects.filter(
-        is_active=True,
-        admin=request.user
+    # گفتگوهای باز با پشتیبان
+    assigned_rooms = ChatRoom.objects.filter(
+        status='open',
+        agent__isnull=False
     ).order_by('-updated_at')
 
-    for room in admin_active_chats:
-        room.unread_count = room.messages.filter(
-            is_read=False,
-            sender=room.user
-        ).count()
-        room.last_message = room.messages.order_by('-created_at').first()
+    # گفتگوهای بسته شده
+    closed_rooms = ChatRoom.objects.filter(
+        status='closed'
+    ).order_by('-closed_at')
+
+    # گفتگوهای آرشیو شده
+    archived_rooms = ChatRoom.objects.filter(
+        status='archived'
+    ).order_by('-updated_at')
+
+    # گفتگوهای اختصاص داده شده به این پشتیبان
+    my_rooms = ChatRoom.objects.filter(
+        agent=user,
+        status='open',
+        is_deleted_by_agent=False
+    ).annotate(
+        unread_count=Count('messages', filter=Q(messages__is_read=False, messages__sender=F('user')))
+    ).order_by('-updated_at')
 
     context = {
-        'active_chats': active_chats,
-        'pending_chats': pending_chats,
-        'online_users': online_users,
-        'pending_rooms': pending_rooms,
-        'admin_active_chats': admin_active_chats,
+        'unassigned_rooms': unassigned_rooms,
+        'assigned_rooms': assigned_rooms,
+        'closed_rooms': closed_rooms,
+        'archived_rooms': archived_rooms,
+        'my_rooms': my_rooms,
     }
 
     return render(request, 'chat/admin_dashboard.html', context)
 
 
-# @login_required
-# @require_POST
-# def mark_message_read(request, message_id):
-#     """علامت‌گذاری پیام به عنوان خوانده شده"""
-#     try:
-#         message = ChatMessage.objects.get(id=message_id)
-#
-#         # فقط پیام‌هایی که برای کاربر فعلی هستند را علامت‌گذاری کن
-#         if message.room.user == request.user or request.user.is_staff:
-#             if not message.is_read and message.sender != request.user:
-#                 message.is_read = True
-#                 message.save()
-#
-#                 # ارسال وضعیت خوانده شدن به وب‌سوکت
-#                 try:
-#                     from channels.layers import get_channel_layer
-#                     from asgiref.sync import async_to_sync
-#
-#                     channel_layer = get_channel_layer()
-#                     async_to_sync(channel_layer.group_send)(
-#                         f'chat_{message.room.id}',
-#                         {
-#                             'type': 'message_read',
-#                             'message_id': str(message_id),
-#                             'read_by_user_id': request.user.id
-#                         }
-#                     )
-#                 except Exception as e:
-#                     print(f"Error sending to channel: {e}")
-#
-#                 return JsonResponse({'success': True})
-#             else:
-#                 return JsonResponse({'success': True, 'info': 'پیام قبلاً خوانده شده است'})
-#         else:
-#             return JsonResponse({'success': False, 'error': 'شما اجازه دسترسی به این پیام را ندارید'})
-#
-#     except ChatMessage.DoesNotExist:
-#         return JsonResponse({'success': False, 'error': 'پیام مورد نظر یافت نشد'})
-#     except Exception as e:
-#         return JsonResponse({'success': False, 'error': str(e)})
+@login_required
+@require_POST
+def assign_room(request, room_id):
+    """
+    اختصاص دادن گفتگو به پشتیبان
+    """
+    user = request.user
 
+    # فقط کاربران پشتیبان می‌توانند گفتگو را اختصاص دهند
+    if not user.is_staff:
+        return JsonResponse({'success': False, 'error': 'شما به این عملیات دسترسی ندارید.'}, status=403)
 
-def api_pending_chats(request):
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'دسترسی غیرمجاز'})
+    room = get_object_or_404(ChatRoom, id=room_id)
 
-    pending_rooms = ChatRoom.objects.filter(is_active=True, admin=None).order_by('-created_at')
+    # بررسی وضعیت گفتگو
+    if room.status != 'open':
+        return JsonResponse({'success': False, 'error': 'این گفتگو قابل اختصاص نیست.'}, status=400)
 
-    for room in pending_rooms:
-        room.last_message = room.messages.order_by('-created_at').first()
+    # اختصاص دادن گفتگو به پشتیبان
+    room.agent = user
+    room.save(update_fields=['agent'])
 
-    html = render_to_string('chat/partials/pending_chats.html', {'pending_rooms': pending_rooms})
+    # ایجاد پیام سیستمی
+    ChatMessage.objects.create(
+        room=room,
+        content=f"پشتیبان {user.username} به گفتگو پیوست.",
+        message_type='system'
+    )
 
-    return JsonResponse({'success': True, 'html': html})
-
-
-def api_active_chats(request):
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'دسترسی غیرمجاز'})
-
-    admin_active_chats = ChatRoom.objects.filter(is_active=True, admin=request.user).order_by('-updated_at')
-
-    for room in admin_active_chats:
-        room.unread_count = room.messages.filter(is_read=False, sender=room.user).count()
-        room.last_message = room.messages.order_by('-created_at').first()
-
-    # تبدیل به HTML
-    html = render_to_string('chat/partials/active_chats.html', {'admin_active_chats': admin_active_chats})
-
-    return JsonResponse({'success': True, 'html': html})
+    return JsonResponse({
+        'success': True,
+        'redirect_url': reverse('chat:room', args=[room.id])
+    })
 
 
 @login_required
-def notifications(request):
-    user_notifications = Notification.objects.filter(
-        user=request.user
-    ).order_by('-created_at')[:20]
+def notifications_view(request):
+    """
+    نمایش لیست اعلان‌های کاربر
+    """
+    user = request.user
+
+    # دریافت اعلان‌های کاربر
+    notifications = Notification.objects.filter(user=user).order_by('-created_at')
 
     context = {
-        'notifications': user_notifications
+        'notifications': notifications,
     }
+
     return render(request, 'chat/notifications.html', context)
 
 
 @login_required
 @require_POST
-def mark_notification_read(request, notification_id):
-    try:
-        notification = Notification.objects.get(id=notification_id, user=request.user)
-        notification.is_read = True
-        notification.save()
-        return JsonResponse({'success': True})
-    except Notification.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'نوتیفیکیشن یافت نشد'})
+def mark_message_read(request, message_id):
+    """
+    علامت‌گذاری پیام به عنوان خوانده شده
+    """
+    user = request.user
+
+    message = get_object_or_404(ChatMessage, id=message_id)
+
+    # بررسی دسترسی کاربر به پیام
+    room = message.room
+    if user.is_staff:
+        if room.is_deleted_by_agent:
+            return JsonResponse({'success': False, 'error': 'شما به این پیام دسترسی ندارید.'}, status=403)
+    else:
+        if room.user != user or room.is_deleted_by_user:
+            return JsonResponse({'success': False, 'error': 'شما به این پیام دسترسی ندارید.'}, status=403)
+
+    # فقط پیام‌های دریافتی را می‌توان به عنوان خوانده شده علامت‌گذاری کرد
+    if message.sender != user and not message.is_read:
+        message.is_read = True
+        message.read_at = timezone.now()
+        message.save(update_fields=['is_read', 'read_at'])
+
+    return JsonResponse({'success': True})
 
 
 @login_required
-def notification_count(request):
-    count = Notification.objects.filter(user=request.user, is_read=False).count()
+@require_POST
+def close_room(request, room_id):
+    """
+    بستن گفتگو
+    """
+    user = request.user
+
+    room = get_object_or_404(ChatRoom, id=room_id)
+
+    # بررسی دسترسی کاربر به اتاق
+    if user.is_staff:
+        if room.is_deleted_by_agent:
+            return JsonResponse({'success': False, 'error': 'شما به این گفتگو دسترسی ندارید.'}, status=403)
+    else:
+        if room.user != user or room.is_deleted_by_user:
+            return JsonResponse({'success': False, 'error': 'شما به این گفتگو دسترسی ندارید.'}, status=403)
+
+    # بررسی وضعیت اتاق
+    if room.status != 'open':
+        return JsonResponse({'success': False, 'error': 'این گفتگو قبلاً بسته شده است.'}, status=400)
+
+    # بستن اتاق
+    room.close(user)
+
+    return JsonResponse({'success': True})
+
+
+@login_required
+@require_POST
+def reopen_room(request, room_id):
+    """
+    بازگشایی گفتگو
+    """
+    user = request.user
+
+    room = get_object_or_404(ChatRoom, id=room_id)
+
+    # بررسی دسترسی کاربر به اتاق
+    if user.is_staff:
+        if room.is_deleted_by_agent:
+            return JsonResponse({'success': False, 'error': 'شما به این گفتگو دسترسی ندارید.'}, status=403)
+    else:
+        if room.user != user or room.is_deleted_by_user:
+            return JsonResponse({'success': False, 'error': 'شما به این گفتگو دسترسی ندارید.'}, status=403)
+
+    # بررسی وضعیت اتاق
+    if room.status != 'closed':
+        return JsonResponse({'success': False, 'error': 'این گفتگو قابل بازگشایی نیست.'}, status=400)
+
+    # بازگشایی اتاق
+    success = room.reopen(user)
+
+    if not success:
+        return JsonResponse({'success': False, 'error': 'بازگشایی گفتگو با خطا مواجه شد.'}, status=400)
+
+    return JsonResponse({'success': True})
+
+
+@login_required
+@require_POST
+def set_online(request):
+    """تنظیم وضعیت کاربر به آنلاین"""
+    user_status, created = UserStatus.objects.get_or_create(user=request.user)
+    user_status.status = 'online'
+    user_status.save(update_fields=['status', 'last_seen'])
+
+    return JsonResponse({'success': True})
+
+
+@login_required
+@csrf_exempt
+@require_POST
+def set_offline(request):
+    """تنظیم وضعیت کاربر به آفلاین"""
+    user_status, created = UserStatus.objects.get_or_create(user=request.user)
+    user_status.status = 'offline'
+    user_status.save(update_fields=['status', 'last_seen'])
+
+    return HttpResponse(status=204)
+
+
+@login_required
+@require_GET
+def get_unread_count(request):
+    """دریافت تعداد پیام‌های خوانده نشده"""
+    user = request.user
+
+    # محاسبه تعداد پیام‌های خوانده نشده
+    if user.is_staff:
+        # برای کاربران پشتیبان، تعداد پیام‌های خوانده نشده در تمام گفتگوهای باز
+        count = ChatMessage.objects.filter(
+            room__status='open',
+            room__is_deleted_by_agent=False,
+            is_read=False,
+            sender__isnull=False  # پیام‌های سیستمی را نادیده می‌گیریم
+        ).exclude(sender=user).count()
+    else:
+        # برای کاربران عادی، تعداد پیام‌های خوانده نشده در گفتگوهای خودشان
+        count = ChatMessage.objects.filter(
+            room__user=user,
+            room__is_deleted_by_user=False,
+            is_read=False,
+            sender__isnull=False  # پیام‌های سیستمی را نادیده می‌گیریم
+        ).exclude(sender=user).count()
+
     return JsonResponse({'count': count})
 
 
 @login_required
-def create_support_chat(request):
-    if request.user.is_staff:
-        return redirect('chat:admin_dashboard')
+@require_POST
+def upload_temp_file(request):
+    """آپلود فایل موقت"""
+    if 'file' not in request.FILES:
+        return JsonResponse({'success': False, 'error': 'فایلی انتخاب نشده است.'}, status=400)
 
-    existing_active_chat = ChatRoom.objects.filter(
+    file = request.FILES['file']
+
+    # بررسی اندازه فایل (حداکثر 5MB)
+    if file.size > 5 * 1024 * 1024:
+        return JsonResponse({'success': False, 'error': 'حداکثر اندازه فایل 5 مگابایت است.'}, status=400)
+
+    # ذخیره فایل موقت
+    temp_file = TemporaryFile.objects.create(
         user=request.user,
-        is_active=True
-    ).first()
-
-    if existing_active_chat:
-        return redirect('chat:chat_room', room_id=existing_active_chat.id)
-
-    new_chat = ChatRoom.objects.create(
-        user=request.user,
-        is_active=True
+        file=file
     )
-
-    ChatMessage.objects.create(
-        room=new_chat,
-        content="به پشتیبانی زیما خوش آمدید. چگونه می‌توانیم به شما کمک کنیم؟",
-        message_type="system",
-        sender=request.user  # تعیین کاربر فعلی به عنوان فرستنده
-    )
-
-    return redirect('chat:chat_room', room_id=new_chat.id)
-
-
-@login_required
-def reopen_chat(request, room_id):
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'شما اجازه بازگشایی این چت را ندارید'})
-
-    try:
-        room = ChatRoom.objects.get(id=room_id)
-
-        room.is_active = True
-        room.save()
-
-        ChatMessage.objects.create(
-            room=room,
-            content='این چت بازگشایی شده است.',
-            message_type='system',
-            sender=request.user
-        )
-
-        # ارسال پیام به کانال وب‌سوکت
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f'chat_{room_id}',
-            {
-                'type': 'chat_status_update',
-                'is_closed': False,
-                'message': 'این چت توسط ادمین بازگشایی شده است.'
-            }
-        )
-
-        return JsonResponse({'success': True})
-
-    except ChatRoom.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'چت مورد نظر یافت نشد'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-
-def api_unread_counts(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({'success': False, 'error': 'دسترسی غیرمجاز'})
-
-    user_unread_count = 0
-    admin_unread_count = 0
-
-    if request.user.is_staff:
-        admin_unread_count = ChatMessage.objects.filter(
-            room__admin=request.user,
-            is_read=False,
-            sender__is_staff=False
-        ).count()
-
-        pending_count = ChatRoom.objects.filter(
-            is_active=True,
-            admin=None
-        ).count()
-
-        admin_unread_count += pending_count
-    else:
-        user_unread_count = ChatMessage.objects.filter(
-            room__user=request.user,
-            is_read=False
-        ).exclude(sender=request.user).count()
 
     return JsonResponse({
         'success': True,
-        'user_unread_count': user_unread_count,
-        'admin_unread_count': admin_unread_count
+        'file_id': str(temp_file.id),
+        'file_name': file.name,
+        'file_url': temp_file.file.url
     })
 
-
-class SetUserOfflineView(View):
-    @method_decorator(csrf_exempt)
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
-
-    def post(self, request):
-        if not request.user.is_authenticated:
-            return JsonResponse({'success': False, 'error': 'Authentication required'}, status=403)
-
-        try:
-            status, created = UserChatStatus.objects.get_or_create(user=request.user)
-            status.status = 'offline'
-            status.save()
-
-            # اطلاع‌رسانی به اتاق‌های چت
-            from .signals import notify_status_change
-            notify_status_change(request.user, 'offline')
-
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+def get_rooms_for_user(user):
+    """دریافت لیست اتاق‌های گفتگو برای کاربر"""
+    if user.is_staff:
+        # برای کاربران ادمین، اتاق‌های اختصاص داده شده به آنها را برگردان
+        return ChatRoom.objects.filter(agent=user).order_by('-updated_at')
+    else:
+        # برای کاربران عادی، اتاق‌هایی که آنها ایجاد کرده‌اند یا در آنها مشارکت دارند را برگردان
+        # به جز اتاق‌هایی که کاربر آنها را حذف کرده است
+        return ChatRoom.objects.filter(
+            (Q(user=user) | Q(participants=user)) &
+            ~Q(hidden_for_users=user)
+        ).distinct().order_by('-updated_at')
 
 
-def check_online_status():
-    # زمان فعلی منهای 2 دقیقه
-    threshold = timezone.now() - timedelta(minutes=2)
+def admin_dashboard(request):
+    """نمایش داشبورد مدیریت برای پشتیبان‌ها"""
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return redirect('chat:chat_list')
 
-    # کاربرانی که آخرین فعالیت آنها قبل از threshold است را آفلاین کن
-    offline_users = UserChatStatus.objects.filter(
-        status='online',
-        last_activity__lt=threshold
-    )
+    # دریافت پارامتر جستجوی کلی
+    search_query = request.GET.get('q', '')
+    closed_search_query = request.GET.get('closed_q', '')
 
-    for user_status in offline_users:
-        user_status.status = 'offline'
-        user_status.save()
+    # جستجو در تمام گفتگوها
+    search_results = None
+    if search_query:
+        # استفاده از Q objects برای ترکیب شروط جستجو
+        from django.db.models import Q
 
-        # اطلاع‌رسانی به اتاق‌های چت
-        from .signals import notify_status_change
-        notify_status_change(user_status.user, 'offline')
+        search_results = ChatRoom.objects.filter(
+            Q(name__icontains=search_query) |
+            Q(messages__content__icontains=search_query)
+        ).distinct()
 
-class SetUserOnlineView(View):
-    @method_decorator(csrf_exempt)
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        # افزودن پیام‌های منطبق با جستجو به هر گفتگو
+        for room in search_results:
+            matching_messages = room.messages.filter(content__icontains=search_query).order_by('-created_at')
+            if matching_messages.exists():
+                room.matching_message = matching_messages.first()
 
-    def post(self, request):
-        if not request.user.is_authenticated:
-            return JsonResponse({'success': False, 'error': 'Authentication required'}, status=403)
+    # گفتگوهای بدون پشتیبان
+    unassigned_rooms = ChatRoom.objects.filter(agent__isnull=True, status='open')
 
-        try:
-            status, created = UserChatStatus.objects.get_or_create(user=request.user)
-            status.status = 'online'
-            status.last_activity = timezone.now()
-            status.save()
+    # گفتگوهای اختصاص داده شده به این پشتیبان
+    my_rooms = ChatRoom.objects.filter(agent=request.user, status='open')
 
-            # اطلاع‌رسانی به اتاق‌های چت
-            from .signals import notify_status_change
-            notify_status_change(request.user, 'online')
+    # گفتگوهای در حال انجام (اختصاص داده شده به سایر پشتیبان‌ها)
+    assigned_rooms = ChatRoom.objects.filter(agent__isnull=False, status='open').exclude(agent=request.user)
 
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    # گفتگوهای بسته شده با امکان جستجو
+    closed_rooms = ChatRoom.objects.filter(status='closed')
 
-def unread_count(request):
-    """دریافت تعداد پیام‌های خوانده نشده"""
-    if not request.user.is_authenticated:
-        return JsonResponse({'count': 0})
+    if closed_search_query:
+        # استفاده از Q objects برای جستجو در گفتگوهای بسته شده
+        from django.db.models import Q
 
+        closed_rooms = closed_rooms.filter(
+            Q(name__icontains=closed_search_query) |
+            Q(messages__content__icontains=closed_search_query)
+        ).distinct()
+
+    # مرتب‌سازی گفتگوهای بسته شده
+    # اگر فیلد closed_at وجود دارد، از آن استفاده کنید، در غیر این صورت از updated_at استفاده کنید
     try:
-        if request.user.is_staff:
-            # برای ادمین: تعداد کل پیام‌های خوانده نشده در تمام چت‌ها
-            admin_unread_count = ChatMessage.objects.filter(
-                room__admin=request.user,
-                is_read=False,
-                sender__is_staff=False  # فقط پیام‌های کاربران عادی
-            ).count()
+        closed_rooms = closed_rooms.order_by('-closed_at')
+    except:
+        closed_rooms = closed_rooms.order_by('-updated_at')
 
-            # اضافه کردن تعداد چت‌های در انتظار
-            pending_count = ChatRoom.objects.filter(
-                is_active=True,
-                admin=None
-            ).count()
+    context = {
+        'unassigned_rooms': unassigned_rooms,
+        'my_rooms': my_rooms,
+        'assigned_rooms': assigned_rooms,
+        'closed_rooms': closed_rooms,
+        'search_results': search_results,
+    }
 
-            count = admin_unread_count + pending_count
-        else:
-            # برای کاربر عادی: تعداد پیام‌های خوانده نشده در چت‌های خودش
-            count = ChatMessage.objects.filter(
-                room__user=request.user,
-                is_read=False,
-                sender__is_staff=True  # فقط پیام‌های ادمین
-            ).count()
-
-        return JsonResponse({'count': count})
-    except Exception as e:
-        return JsonResponse({'count': 0, 'error': str(e)})
-
-
-@login_required
-def get_user_status(request, user_id):
-    """API برای دریافت وضعیت آنلاین/آفلاین یک کاربر"""
-    try:
-        user = User.objects.get(id=user_id)
-        status_obj = UserChatStatus.objects.filter(user=user).first()
-
-        if status_obj:
-            return JsonResponse({'status': status_obj.status})
-        else:
-            return JsonResponse({'status': 'offline'})
-    except User.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-
-
-
-
-
+    return render(request, 'chat/admin_dashboard.html', context)

@@ -1,42 +1,32 @@
 {% if admin_active_chats %}
     {% for room in admin_active_chats %}
-        <div class="chat-list-item active">
+        <div class="chat-item">
             <div class="chat-header">
-                <div>
-                    <span class="chat-title">{{ room.name }}</span>
-                    <span class="chat-status chat-status-active">فعال</span>
-                    {% if room.unread_count > 0 %}
-                        <span class="badge-unread">{{ room.unread_count }}</span>
-                    {% endif %}
-                </div>
+                <span class="chat-title">{{ room.name|default:"گفتگو" }} فعال</span>
+                {% if room.unread_count > 0 %}
+                    <span class="badge bg-danger">{{ room.unread_count }}</span>
+                {% endif %}
                 <span class="chat-time">{{ room.updated_at|date:"Y/m/d H:i" }}</span>
             </div>
             <div class="chat-user">
-                <i class="fas fa-user"></i>
                 {% if room.user %}
                     {{ room.user.get_full_name|default:room.user.username }}
                 {% else %}
                     کاربر ناشناس
                 {% endif %}
             </div>
-            {% if room.last_message %}
-                <div class="last-message">
-                    <i class="fas fa-comment-dots"></i> {{ room.last_message.content|truncatechars:50 }}
+            {% if room.messages.last %}
+                <div class="chat-preview">
+                    {{ room.messages.last.content|truncatechars:50 }}
                 </div>
             {% endif %}
             <div class="chat-actions">
-                <a href="{% url 'chat:chat_room' room.id %}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-comments"></i> ادامه چت
-                </a>
-                <button class="btn btn-sm btn-danger close-chat-btn" data-id="{{ room.id }}">
-                    <i class="fas fa-times"></i> بستن چت
-                </button>
+                <a href="{% url 'chat:chat_room' room.name %}" class="btn btn-primary">ادامه چت</a>
             </div>
         </div>
     {% endfor %}
 {% else %}
     <div class="empty-state">
-        <i class="fas fa-info-circle text-info"></i>
-        <p>شما هیچ چت فعالی ندارید.</p>
+        شما هیچ چت فعالی ندارید.
     </div>
 {% endif %}

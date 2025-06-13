@@ -1,1143 +1,143 @@
-    {% extends "base/base.html" %}
-    {% load static %}
+{% extends 'base/base.html' %}
+{% load static %}
 
-    {% block title %}گفتگو با پشتیبانی{% endblock %}
+{% block title %}گفتگو با {{ room.name }}{% endblock %}
 
-    {% block extra_css %}
-    <style>
-        .chat-container {
-            max-width: 900px;
-            margin: 0 auto;
-            height: calc(100vh - 250px);
-            min-height: 500px;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-            overflow: hidden;
-        }
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'chat/css/chat.css' %}">
+<style>
+    /* استایل اضافی برای اطمینان از عملکرد صحیح */
+    .chat-actions {
+        min-height: 38px; /* ارتفاع حداقل برای جلوگیری از تغییر اندازه هنگام تغییر دکمه‌ها */
+    }
 
-        .chat-header {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-bottom: 1px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
+    .notification-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+</style>
+{% endblock %}
 
-        .chat-title {
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .chat-status {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            margin-right: 10px;
-        }
-
-        .chat-status-active {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .chat-status-closed {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .chat-status-deleted {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background-color: #f9f9f9;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message {
-            max-width: 70%;
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            border-radius: 15px;
-            position: relative;
-            word-wrap: break-word;
-        }
-
-        .message-user {
-            align-self: flex-end;
-            background-color: #dcf8c6;
-            border-bottom-right-radius: 5px;
-            text-align: right;
-        }
-
-        .message-admin {
-            align-self: flex-start;
-            background-color: #fff;
-            border-bottom-left-radius: 5px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        .message-system {
-            align-self: center;
-            background-color: #f1f1f1;
-            border-radius: 20px;
-            padding: 5px 15px;
-            font-size: 0.85rem;
-            color: #666;
-            margin: 10px 0;
-        }
-
-        .message-time {
-            font-size: 0.7rem;
-            color: #777;
-            margin-top: 5px;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-        }
-
-        .message-time i {
-            margin-right: 3px;
-        }
-
-        .chat-form {
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-top: 1px solid #dee2e6;
-            flex-shrink: 0;
-        }
-
-        .chat-input-group {
-            display: flex;
-            align-items: center;
-        }
-
-        .chat-input {
-            flex-grow: 1;
-            border-radius: 20px;
-            padding: 10px 15px;
-            border: 1px solid #ced4da;
-        }
-
-        .chat-send-btn {
-            margin-right: 10px;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .chat-attachment-btn {
-            background-color: #f8f9fa;
-            border: 1px solid #ced4da;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: 10px;
-            cursor: pointer;
-        }
-
-        .chat-attachment-btn:hover {
-            background-color: #e9ecef;
-        }
-
-        .chat-closed-notice {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 10px 15px;
-            border-radius: 5px;
-            text-align: center;
-        }
-
-        /* نشانگر تایپ کردن */
-        .typing-indicator {
-            background-color: #e6e6e6;
-            border-radius: 15px;
-            padding: 8px 15px;
-            margin-bottom: 15px;
-            max-width: 70%;
-            position: relative;
-        }
-
-        .typing-indicator.admin-typing {
-            align-self: flex-start;
-            background-color: #fff;
-            border-bottom-left-radius: 5px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        .typing-indicator.user-typing {
-            align-self: flex-end;
-            background-color: #dcf8c6;
-            border-bottom-right-radius: 5px;
-        }
-
-        .typing-bubble {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 20px;
-        }
-
-        .dot {
-            height: 8px;
-            width: 8px;
-            background-color: #999;
-            display: inline-block;
-            border-radius: 50%;
-            animation: typing 1.4s infinite both;
-            margin: 0 2px;
-        }
-
-        .dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typing {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-            100% { transform: translateY(0); }
-        }
-
-        /* استایل برای نشانگر خوانده شدن پیام */
-        .message-read-status {
-            margin-right: 5px;
-            color: #777;
-        }
-
-        .message-delivered {
-            color: #777;
-        }
-
-        .message-read {
-            color: #0d6efd;
-        }
-
-        /* استایل برای دکمه برگشت */
-        .back-button {
-            display: flex;
-            align-items: center;
-            margin-left: 15px;
-            margin-right: 15px;
-            font-size: 0.9rem;
-            color: #6c757d;
-            text-decoration: none;
-            cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 5px;
-            background-color: #f0f0f0;
-        }
-
-        .back-button:hover {
-            color: #343a40;
-            background-color: #e0e0e0;
-            text-decoration: none;
-        }
-
-        .back-button i {
-            margin-left: 5px;
-        }
-
-        .chat-title-container {
-            display: flex;
-            align-items: center;
-        }
-
-        .mr-2 {
-            margin-right: 10px;
-        }
-
-        /* استایل برای پیام‌های حاوی فایل */
-        .message-file {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 10px;
-        }
-
-        .file-preview {
-            max-width: 100%;
-            max-height: 200px;
-            margin-bottom: 5px;
-            border-radius: 5px;
-        }
-
-        .file-info {
-            display: flex;
-            align-items: center;
-            padding: 5px 10px;
-            background-color: rgba(0,0,0,0.05);
-            border-radius: 5px;
-            margin-top: 5px;
-        }
-
-        .file-icon {
-            margin-left: 10px;
-            font-size: 1.2rem;
-        }
-
-        .file-name {
-            flex-grow: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            direction: ltr;
-            text-align: left;
-        }
-
-        .file-size {
-            margin-right: 10px;
-            font-size: 0.8rem;
-            color: #666;
-        }
-
-        .file-download {
-            color: #0d6efd;
-            text-decoration: none;
-        }
-
-        .file-download:hover {
-            text-decoration: underline;
-        }
-
-        /* استایل برای نمایش فایل انتخاب شده قبل از ارسال */
-        .selected-file {
-            display: flex;
-            align-items: center;
-            padding: 5px 10px;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-
-        .selected-file-name {
-            flex-grow: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            direction: ltr;
-            text-align: left;
-        }
-
-        .selected-file-remove {
-            color: #dc3545;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-
-        .selected-file-preview {
-            max-width: 100px;
-            max-height: 100px;
-            margin-left: 10px;
-            border-radius: 5px;
-        }
-
-        /* نمایش پیش‌نمایش فایل انتخاب شده */
-        #file-preview-container {
-            margin-bottom: 10px;
-            display: none;
-        }
-
-        /* استایل برای وضعیت آنلاین/آفلاین کاربر */
-        .user-status {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 12px;
-            margin-right: 10px;
-        }
-
-        .user-status.online {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .user-status.offline {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .chat-header-info {
-            display: flex;
-            align-items: center;
-        }
-
-        /* استایل برای پیام های چند خطی */
-        .message-text {
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        /* استایل برای نشانگر تایپ کردن */
-        .typing-indicator {
-            padding: 8px 15px;
-            border-radius: 15px;
-            margin-top: 5px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-    </style>
-    {% endblock %}
-
-    {% block content %}
-    <div class="container mt-4">
-        <div class="chat-container">
-            <div class="chat-header">
-                <div class="chat-title-container">
-                    <a href="{% if user.is_staff %}{% url 'chat:admin_dashboard' %}{% else %}{% url 'chat:chat_list' %}{% endif %}" class="back-button">
-                        <i class="fas fa-arrow-right"></i>
-                        برگشت
-                    </a>
-                    <div class="chat-header-info">
-                        <span class="chat-title mr-2">
-                            {% if is_deleted_by_user %}
-                                گفتگوی حذف شده توسط کاربر
-                            {% else %}
-                                {% if user.is_staff %}
-                                    {{ room.user.username }}
-                                {% else %}
-                                    پشتیبانی
-                                {% endif %}
-                            {% endif %}
-                        </span>
-                        <div id="user-status" class="user-status offline"
-                             data-user-id="{% if user.is_staff %}{{ room.user.id }}{% else %}{% if room.admin %}{{ room.admin.id }}{% else %}0{% endif %}{% endif %}">
-                            آفلاین
-                        </div>
-                    </div>
-                    {% if room.is_active and not is_deleted_by_user %}
-                        <span class="chat-status chat-status-active">فعال</span>
-                    {% elif is_deleted_by_user %}
-                        <span class="chat-status chat-status-deleted">حذف شده</span>
-                    {% else %}
-                        <span class="chat-status chat-status-closed">بسته شده</span>
-                    {% endif %}
-                </div>
-                {% if user.is_staff %}
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="chatActions" data-bs-toggle="dropdown" aria-expanded="false">
-                            عملیات
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="chatActions">
-                            {% if room.is_active and not is_deleted_by_user %}
-                                <li><button class="dropdown-item close-chat-btn" data-id="{{ room.id }}">بستن گفتگو</button></li>
-                            {% elif not is_deleted_by_user %}
-                                <li><button class="dropdown-item reopen-chat-btn" data-id="{{ room.id }}">بازگشایی گفتگو</button></li>
-                            {% endif %}
-                            <li><button class="dropdown-item delete-chat-btn" data-id="{{ room.id }}">حذف گفتگو</button></li>
-                        </ul>
-                    </div>
-                {% else %}
-                    <button class="btn btn-sm btn-outline-danger delete-chat-btn" data-id="{{ room.id }}">حذف گفتگو</button>
-                {% endif %}
+{% block content %}
+<div class="notification-container"></div>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>گفتگو با {{ room.name|cut:"("|cut:")" }}</h2>
+                <a href="{% url 'chat:chat_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right ml-1"></i> بازگشت به لیست گفتگوها
+                </a>
             </div>
 
-            <div class="chat-messages" id="chat-messages">
-                {% for message in chat_messages %}
-                    {% if message.message_type == 'system' %}
-                        <div class="message message-system">
-                            {{ message.content }}
-                        </div>
-                    {% else %}
-                        <div class="message {% if message.sender == request.user %}message-user{% else %}message-admin{% endif %}" id="message-{{ message.id }}" data-message-id="{{ message.id }}">
-                            {% if message.message_type == 'image' %}
-                                <div class="message-file">
-                                    <img src="{{ message.file.url }}" alt="تصویر" class="file-preview">
-                                    {% if message.content %}
-                                        <div>{{ message.content }}</div>
-                                    {% endif %}
-                                    <div class="file-info">
-                                        <i class="fas fa-image file-icon"></i>
-                                        <span class="file-name">{{ message.file_name }}</span>
-                                        <a href="{{ message.file.url }}" class="file-download" download="{{ message.file_name }}">
-                                            <i class="fas fa-download"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            {% elif message.message_type == 'file' %}
-                                <div class="message-file">
-                                    {% if message.content %}
-                                        <div>{{ message.content }}</div>
-                                    {% endif %}
-                                    <div class="file-info">
-                                        <i class="fas fa-file file-icon"></i>
-                                        <span class="file-name">{{ message.file_name }}</span>
-                                        <span class="file-size">{{ message.file_size|filesizeformat }}</span>
-                                        <a href="{{ message.file.url }}" class="file-download" download="{{ message.file_name }}">
-                                            <i class="fas fa-download"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            {% else %}
-                                <div class="message-text">{{ message.content }}</div>
-                            {% endif %}
-                            <div class="message-time">
-                                {{ message.created_at|date:"H:i" }}
-                                {% if message.sender == request.user %}
-                                    <span class="message-read-status">
-                                        {% if message.is_read %}
-                                            <i class="fas fa-check-double message-read" title="خوانده شده"></i>
-                                        {% else %}
-                                            <i class="fas fa-check message-delivered" title="تحویل داده شده"></i>
-                                        {% endif %}
-                                    </span>
-                                {% endif %}
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="d-flex align-items-center">
+                        <h3>{{ room.name|cut:"("|cut:")" }}</h3>
+                        {% if request.user.is_staff %}
+                            <!-- اگر کاربر ادمین است، وضعیت کاربر عادی را نمایش بده -->
+                            <div class="user-status {% if room.user.online_status.status == 'online' %}online{% else %}offline{% endif %}"
+                                 data-user-id="{{ room.user.id }}"
+                                 title="{% if room.user.online_status.status == 'online' %}آنلاین{% else %}آفلاین{% endif %}">
+                                <span class="status-dot {% if room.user.online_status.status == 'online' %}online{% else %}offline{% endif %}"></span>
                             </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+                        {% else %}
+                            <!-- اگر کاربر عادی است، وضعیت ادمین/پشتیبان را نمایش بده (اگر پشتیبان وجود داشته باشد) -->
+                            {% if room.agent %}
+                                <div class="user-status {% if room.agent.online_status.status == 'online' %}online{% else %}offline{% endif %}"
+                                     data-user-id="{{ room.agent.id }}"
+                                     title="{% if room.agent.online_status.status == 'online' %}آنلاین{% else %}آفلاین{% endif %}">
+                                    <span class="status-dot {% if room.agent.online_status.status == 'online' %}online{% else %}offline{% endif %}"></span>
+                                </div>
+                            {% else %}
+                                <div class="user-status offline" title="آفلاین">
+                                    <span class="status-dot offline"></span>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                        <span class="badge {% if room.status == 'open' %}bg-success{% else %}bg-danger{% endif %} mx-2" id="room-status">
+                            {{ room.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="chat-actions">
+                        {% if room.status == 'open' %}
+                            <button id="close-room-button" class="btn btn-danger btn-sm">
+                                <i class="fas fa-times"></i> بستن گفتگو
+                            </button>
+                        {% else %}
+                            {% if request.user.is_staff or not room.closed_by.is_staff %}
+                                <button id="reopen-room-button" class="btn btn-success btn-sm">
+                                    <i class="fas fa-redo"></i> بازگشایی گفتگو
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="chat-body" id="message-container">
+    {% for message in chat_messages %}  <!-- تغییر از messages به chat_messages -->
+        <div id="message-{{ message.id }}" class="message {% if message.message_type == 'system' %}system-message{% elif message.sender == request.user %}sent{% else %}received{% endif %} {% if message.is_read %}read{% endif %}">
+            <div class="message-content">
+                {{ message.content }}
             </div>
 
-            <div class="chat-form">
-                {% if room.is_active and not is_deleted_by_user %}
-                    <form id="chat-form">
-                        <!-- نمایش پیش‌نمایش فایل انتخاب شده -->
-                        <div id="file-preview-container" class="selected-file" style="display: none;">
-                            <img id="selected-file-preview" class="selected-file-preview">
-                            <div class="selected-file-name" id="selected-file-name"></div>
-                            <span class="selected-file-remove" id="remove-file">
-                                <i class="fas fa-times"></i>
-                            </span>
+            {% if message.file %}
+                {% with file_url=message.file.url|lower %}
+                    {% if '.jpg' in file_url or '.jpeg' in file_url or '.png' in file_url or '.gif' in file_url %}
+                        <div class="message-image">
+                            <a href="{{ message.file.url }}" target="_blank">
+                                <img src="{{ message.file.url }}" alt="تصویر پیوست" />
+                            </a>
                         </div>
+                    {% else %}
+                        <div class="message-file">
+                            <a href="{{ message.file.url }}" target="_blank">
+                                <i class="fas fa-file"></i> دانلود فایل
+                            </a>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
 
-                        <div class="chat-input-group">
-                            <input type="file" id="chat-attachment" style="display: none;">
-                            <button type="button" class="chat-attachment-btn" id="attachment-btn">
-                                <i class="fas fa-paperclip"></i>
-                            </button>
-                            <input type="text" id="chat-input" class="form-control chat-input" placeholder="پیام خود را بنویسید...">
-                            <button type="submit" class="btn btn-primary chat-send-btn">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
-                    </form>
-                {% elif is_deleted_by_user %}
-                    <div class="chat-closed-notice">
-                        این گفتگو توسط کاربر حذف شده است و امکان ارسال پیام جدید وجود ندارد.
-                    </div>
-                {% else %}
-                    <div class="chat-closed-notice">
-                        این گفتگو بسته شده است و امکان ارسال پیام جدید وجود ندارد.
-                    </div>
+            <div class="message-info">
+                <span class="message-time">{{ message.created_at|date:"H:i" }} {{ message.created_at|date:"j F" }}</span>
+
+                {% if message.sender == request.user and message.message_type != 'system' %}
+                    <span class="read-indicator" title="{% if message.is_read %}خوانده شده{% else %}ارسال شده{% endif %}">
+                        <i class="fas {% if message.is_read %}fa-check-double{% else %}fa-check{% endif %}"></i>
+                    </span>
                 {% endif %}
             </div>
         </div>
+    {% endfor %}
+</div>
+
+                <div class="typing-indicator" id="typing-indicator"></div>
+
+                <div class="chat-footer">
+                    <textarea id="message-input" placeholder="پیام خود را بنویسید..." {% if room.status != 'open' %}disabled{% endif %}></textarea>
+                    <button id="file-upload-button" class="btn btn-light" type="button" {% if room.status != 'open' %}disabled{% endif %}>
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <button id="send-button" class="btn btn-primary" type="button" {% if room.status != 'open' %}disabled{% endif %}>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                    <input type="file" id="file-input" style="display: none;">
+                </div>
+            </div>
+        </div>
     </div>
-    {% endblock %}
-
-    {% block extra_js %}
-    <script>
-        const roomId = '{{ room.id }}';
-        const currentUser = '{{ request.user.username }}';
-        const currentUserId = {{ request.user.id }};
-        const isStaff = {% if request.user.is_staff %}true{% else %}false{% endif %};
-        const csrftoken = getCookie('csrftoken');
-        let chatSocket;
-        let selectedFile = null;
-        let typingTimeout;
-        let isTyping = false;
-        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM fully loaded");
-
-            // اسکرول به پایین صفحه
-            scrollToBottom();
-            checkOtherUserStatus();
-
-            // اتصال به WebSocket
-            connectWebSocket();
-
-            // فرم ارسال پیام
-            const chatForm = document.getElementById('chat-form');
-            if (chatForm) {
-                console.log("Chat form found");
-                chatForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    sendMessage();
-                });
-            } else {
-                console.log("Chat form not found or chat is closed/deleted");
-            }
-
-            // دکمه حذف چت
-            const deleteBtn = document.querySelector('.delete-chat-btn');
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', function() {
-                    const chatId = this.getAttribute('data-id');
-                    if (confirm('آیا از حذف این گفتگو اطمینان دارید؟')) {
-                        deleteChat(chatId);
-                    }
-                });
-            }
-
-            // دکمه بستن چت
-            const closeBtn = document.querySelector('.close-chat-btn');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', function() {
-                    const chatId = this.getAttribute('data-id');
-                    if (confirm('آیا از بستن این گفتگو اطمینان دارید؟')) {
-                        closeChat(chatId);
-                    }
-                });
-            }
-
-            // دکمه بازگشایی چت
-            const reopenBtn = document.querySelector('.reopen-chat-btn');
-            if (reopenBtn) {
-                reopenBtn.addEventListener('click', function() {
-                    const chatId = this.getAttribute('data-id');
-                    if (confirm('آیا از بازگشایی این گفتگو اطمینان دارید؟')) {
-                        reopenChat(chatId);
-                    }
-                });
-            }
-
-            // نمایش نشانگر تایپ کردن
-            const chatInput = document.getElementById('chat-input');
-            if (chatInput) {
-                chatInput.addEventListener('input', function() {
-                    if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-                        if (!isTyping) {
-                            isTyping = true;
-                            chatSocket.send(JSON.stringify({
-                                'type': 'typing',
-                                'is_typing': true
-                            }));
-                        }
-
-                        // تنظیم مجدد تایمر
-                        clearTimeout(typingTimeout);
-
-                        // پس از 2 ثانیه، وضعیت تایپ کردن را متوقف کن
-                        typingTimeout = setTimeout(() => {
-                            isTyping = false;
-                            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-                                chatSocket.send(JSON.stringify({
-                                    'type': 'typing',
-                                    'is_typing': false
-                                }));
-                            }
-                        }, 2000);
-                    }
-                });
-            }
-
-            // مدیریت انتخاب فایل
-            const fileInput = document.getElementById('chat-attachment');
-            const fileButton = document.getElementById('attachment-btn');
-            const filePreviewContainer = document.getElementById('file-preview-container');
-            const selectedFilePreview = document.getElementById('selected-file-preview');
-            const selectedFileName = document.getElementById('selected-file-name');
-            const removeFileBtn = document.getElementById('remove-file');
-
-            // اضافه کردن رویداد کلیک به دکمه انتخاب فایل
-            if (fileButton && fileInput) {
-                fileButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    fileInput.click();
-                });
-            }
-
-            if (fileInput) {
-                fileInput.addEventListener('change', function(e) {
-                    if (this.files && this.files[0]) {
-                        selectedFile = this.files[0];
-
-                        // بررسی سایز فایل
-                        if (selectedFile.size > MAX_FILE_SIZE) {
-                            alert(`حجم فایل انتخاب شده بیش از حد مجاز است (حداکثر ${formatFileSize(MAX_FILE_SIZE)})`);
-                            this.value = '';
-                            selectedFile = null;
-                            return;
-                        }
-
-                        selectedFileName.textContent = selectedFile.name;
-
-                        // نمایش پیش‌نمایش برای تصاویر
-                        if (selectedFile.type.startsWith('image/')) {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                selectedFilePreview.src = e.target.result;
-                                selectedFilePreview.style.display = 'block';
-                            }
-                            reader.readAsDataURL(selectedFile);
-                        } else {
-                            selectedFilePreview.style.display = 'none';
-                        }
-
-                        filePreviewContainer.style.display = 'flex';
-                    }
-                });
-            }
-
-            if (removeFileBtn) {
-                removeFileBtn.addEventListener('click', function() {
-                    selectedFile = null;
-                    if (fileInput) fileInput.value = '';
-                    filePreviewContainer.style.display = 'none';
-                });
-            }
-
-            // علامت‌گذاری پیام‌های خوانده نشده با تأخیر
-            setTimeout(markMessagesAsRead, 1000);
-        });
-
-        // اتصال به WebSocket
-        function connectWebSocket() {
-            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${wsProtocol}//${window.location.host}/ws/chat/${roomId}/`;
-            console.log("Connecting to WebSocket:", wsUrl);
-
-            try {
-                chatSocket = new WebSocket(wsUrl);
-
-                chatSocket.onopen = function(e) {
-                    console.log('WebSocket connection established');
-                };
-
-                chatSocket.onmessage = function(e) {
-                    const data = JSON.parse(e.data);
-                    console.log("Received message:", data);
-
-                    if (data.type === 'chat_message') {
-                        // افزودن پیام به صفحه چت
-                        addMessage(data);
-
-                        // اگر پیام از طرف مقابل است، علامت‌گذاری به عنوان خوانده شده
-                        if (data.user_id !== currentUserId) {
-                            setTimeout(() => markMessageAsRead(data.message_id), 500);
-                        }
-
-                        // حذف نشانگر تایپ کردن
-                        removeTypingIndicator();
-
-                        // اسکرول به پایین
-                        scrollToBottom();
-                    } else if (data.type === 'typing') {
-                        // نمایش یا حذف نشانگر تایپ کردن
-                        if (data.user_id !== currentUserId) {
-                            if (data.is_typing) {
-                                showTypingIndicator(data.is_staff);
-                            } else {
-                                removeTypingIndicator();
-                            }
-                        }
-                    } else if (data.type === 'user_status_update') {
-                        // بروزرسانی وضعیت کاربر
-                        updateUserStatus(data.status);
-                    } else if (data.type === 'message_read') {
-                        // بروزرسانی وضعیت خوانده شدن پیام
-                        updateMessageReadStatus(data.message_id);
-                    } else if (data.type === 'chat_deleted') {
-                        // چت حذف شده است
-                        if (confirm('این گفتگو توسط طرف مقابل حذف شده است. صفحه بارگذاری مجدد خواهد شد.')) {
-                            location.reload();
-                        }
-                    } else if (data.type === 'chat_status_update') {
-                        // وضعیت چت تغییر کرده است
-                        if (confirm('وضعیت گفتگو تغییر کرده است. صفحه بارگذاری مجدد خواهد شد.')) {
-                            location.reload();
-                        }
-                    }
-                };
-
-                chatSocket.onclose = function(e) {
-                    console.log('WebSocket connection closed');
-                    // تلاش مجدد برای اتصال پس از 5 ثانیه
-                    setTimeout(connectWebSocket, 5000);
-                };
-
-                chatSocket.onerror = function(e) {
-                    console.error("WebSocket error:", e);
-                };
-            } catch (error) {
-                console.error("Error creating WebSocket:", error);
-            }
-        }
-
-        // نمایش نشانگر تایپ کردن
-        function showTypingIndicator(isAdmin) {
-            // حذف نشانگر قبلی اگر وجود دارد
-            removeTypingIndicator();
-
-            const messagesContainer = document.getElementById('chat-messages');
-            const typingIndicator = document.createElement('div');
-
-            typingIndicator.id = 'typing-indicator';
-            typingIndicator.className = isAdmin ?
-                'typing-indicator admin-typing' :
-                'typing-indicator user-typing';
-
-            typingIndicator.innerHTML = `
-                <div class="typing-bubble">
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                </div>
-            `;
-
-            messagesContainer.appendChild(typingIndicator);
-            scrollToBottom();
-        }
-
-        // حذف نشانگر تایپ کردن
-        function removeTypingIndicator() {
-            const typingIndicator = document.getElementById('typing-indicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
-        }
-
-
-        // بروزرسانی وضعیت آنلاین/آفلاین کاربر
-        function updateUserStatus(status) {
-        const userStatus = document.getElementById('user-status');
-        if (userStatus) {
-            userStatus.className = `user-status ${status}`;
-            userStatus.textContent = status === 'online' ? 'آنلاین' : 'آفلاین';
-            console.log(`User status updated to: ${status}`);
-        }
-    }
-
-        // ارسال پیام
-        function sendMessage() {
-            const messageInput = document.getElementById('chat-input');
-            const message = messageInput.value.trim();
-
-            // اگر نه پیام داریم و نه فایل، کاری انجام نده
-            if (!message && !selectedFile) {
-                return;
-            }
-
-            if (selectedFile) {
-                // ارسال پیام با فایل
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const fileData = {
-                            info: {
-                                name: selectedFile.name,
-                                type: selectedFile.type,
-                                size: selectedFile.size
-                            },
-                            content: e.target.result
-                        };
-
-                        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-                            chatSocket.send(JSON.stringify({
-                                'type': 'chat_message',
-                                'message': message,
-                                'file': fileData
-                            }));
-
-                            // پاک کردن فیلدها
-                            messageInput.value = '';
-                            selectedFile = null;
-                            document.getElementById('chat-attachment').value = '';
-                            document.getElementById('file-preview-container').style.display = 'none';
-                        } else {
-                            alert("خطا در ارتباط با سرور. لطفا صفحه را رفرش کنید.");
-                        }
-                    } catch (error) {
-                        console.error("Error sending file:", error);
-                        alert("خطا در ارسال فایل: " + error.message);
-                    }
-                };
-
-                reader.onerror = function(e) {
-                    console.error("Error reading file:", e);
-                    alert("خطا در خواندن فایل");
-                };
-
-                try {
-                    reader.readAsDataURL(selectedFile);
-                } catch (error) {
-                    console.error("Error starting file read:", error);
-                    alert("خطا در خواندن فایل: " + error.message);
-                }
-            } else {
-                // ارسال پیام متنی
-                if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-                    chatSocket.send(JSON.stringify({
-                        'type': 'chat_message',
-                        'message': message
-                    }));
-
-                    messageInput.value = '';
-                } else {
-                    alert("خطا در ارتباط با سرور. لطفا صفحه را رفرش کنید.");
-                }
-            }
-        }
-
-        // افزودن پیام به لیست پیام‌ها
-        function addMessage(data) {
-            const messageContainer = document.getElementById('chat-messages');
-            const messageDiv = document.createElement('div');
-
-            // تنظیم کلاس‌ها بر اساس فرستنده پیام
-            const isOwnMessage = data.user_id === currentUserId;
-            messageDiv.className = isOwnMessage ? 'message message-user' : 'message message-admin';
-            messageDiv.id = `message-${data.message_id}`;
-            messageDiv.setAttribute('data-message-id', data.message_id);
-
-            // تنظیم محتوای پیام بر اساس نوع آن
-            let messageContent = '';
-
-            if (data.message_type === 'image') {
-                messageContent = `
-                    <div class="message-file">
-                        <img src="${data.file_url}" alt="تصویر" class="file-preview">
-                        ${data.message ? `<div class="message-text">${data.message}</div>` : ''}
-                        <div class="file-info">
-                            <i class="fas fa-image file-icon"></i>
-                            <span class="file-name">${data.file_name}</span>
-                            <a href="${data.file_url}" class="file-download" download="${data.file_name}">
-                                <i class="fas fa-download"></i>
-                            </a>
-                        </div>
-                    </div>
-                `;
-            } else if (data.message_type === 'file') {
-                messageContent = `
-                    <div class="message-file">
-                        ${data.message ? `<div class="message-text">${data.message}</div>` : ''}
-                        <div class="file-info">
-                            <i class="fas fa-file file-icon"></i>
-                            <span class="file-name">${data.file_name}</span>
-                            <a href="${data.file_url}" class="file-download" download="${data.file_name}">
-                                <i class="fas fa-download"></i>
-                            </a>
-                        </div>
-                    </div>
-                `;
-            } else {
-                messageContent = `<div class="message-text">${data.message}</div>`;
-            }
-
-            // افزودن زمان و وضعیت خوانده شدن
-            messageContent += `
-                <div class="message-time">
-                    ${formatTime(data.timestamp)}
-                    ${isOwnMessage ? '<span class="message-read-status"><i class="fas fa-check message-delivered" title="تحویل داده شده"></i></span>' : ''}
-                </div>
-            `;
-
-            messageDiv.innerHTML = messageContent;
-            messageContainer.appendChild(messageDiv);
-
-            // اسکرول به پایین
-            scrollToBottom();
-        }
-
-        // فرمت‌بندی زمان
-        function formatTime(timestamp) {
-            if (!timestamp) return '';
-
-            const date = new Date(timestamp);
-            const hours = date.getHours().toString().padStart(2, '0');
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-
-            return `${hours}:${minutes}`;
-        }
-
-        // اسکرول به پایین صفحه
-        function scrollToBottom() {
-            const messagesContainer = document.getElementById('chat-messages');
-            if (messagesContainer) {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-        }
-
-        // علامت‌گذاری پیام‌ها به عنوان خوانده شده
-        function markMessagesAsRead() {
-            // فقط پیام‌های دریافتی را علامت‌گذاری کن
-            const unreadMessages = document.querySelectorAll(isStaff ? '.message-user' : '.message-admin');
-
-            if (unreadMessages.length > 0) {
-                unreadMessages.forEach(msg => {
-                    const messageId = msg.getAttribute('data-message-id');
-                    if (messageId) {
-                        markMessageAsRead(messageId);
-                    }
-                });
-            }
-        }
-
-        // علامت‌گذاری یک پیام به عنوان خوانده شده
-        function markMessageAsRead(messageId) {
-            fetch(`/chat/mark-read/${messageId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // بروزرسانی وضعیت خوانده شدن در رابط کاربری
-                    updateMessageReadStatus(messageId);
-                }
-            })
-            .catch(error => console.error('Error marking message as read:', error));
-        }
-
-        // بروزرسانی نشانگر خوانده شدن پیام در رابط کاربری
-        function updateMessageReadStatus(messageId) {
-            const message = document.querySelector(`[data-message-id="${messageId}"]`);
-            if (message) {
-                const statusIcon = message.querySelector('.message-read-status i');
-                if (statusIcon) {
-                    statusIcon.className = 'fas fa-check-double message-read';
-                    statusIcon.setAttribute('title', 'خوانده شده');
-                }
-            }
-        }
-
-        // حذف چت
-        function deleteChat(chatId) {
-            fetch(`/chat/delete/${chatId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // هدایت به لیست چت‌ها یا دشبورد ادمین
-                    if (isStaff) {
-                        window.location.href = "{% url 'chat:admin_dashboard' %}";
-                    } else {
-                        window.location.href = "{% url 'chat:chat_list' %}";
-                    }
-                } else {
-                    alert('خطا در حذف گفتگو: ' + (data.error || 'خطای نامشخص'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('خطا در ارتباط با سرور');
-            });
-        }
-
-        // بستن چت
-        function closeChat(chatId) {
-            fetch(`/chat/close/${chatId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // بارگذاری مجدد صفحه
-                    location.reload();
-                } else {
-                    alert('خطا در بستن گفتگو: ' + (data.error || 'خطای نامشخص'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('خطا در ارتباط با سرور');
-            });
-        }
-
-        // بازگشایی چت
-        function reopenChat(chatId) {
-            fetch(`/chat/reopen/${chatId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // بارگذاری مجدد صفحه
-                    location.reload();
-                } else {
-                    alert('خطا در بازگشایی گفتگو: ' + (data.error || 'خطای نامشخص'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('خطا در ارتباط با سرور');
-            });
-        }
-
-        // تبدیل سایز فایل به فرمت خوانا
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 بایت';
-
-            const k = 1024;
-            const sizes = ['بایت', 'کیلوبایت', 'مگابایت', 'گیگابایت'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-        }
-        function checkOtherUserStatus() {
-            const otherUserId = document.getElementById('user-status').getAttribute('data-user-id');
-
-            if (!otherUserId || otherUserId === '') {
-                console.log('No other user ID found');
-                return;
-            }
-
-            fetch(`/chat/user-status/${otherUserId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status) {
-                        updateUserStatus(data.status);
-                    }
-                })
-                .catch(error => console.error('Error fetching user status:', error));
-        }
-        setInterval(checkOtherUserStatus, 30000);
-
-        // دریافت توکن CSR  F از کوکی‌ها
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-    </script>
-    {% endblock %}
+</div>
+
+<!-- فیلدهای مخفی برای استفاده در JavaScript -->
+<input type="hidden" id="room-id" value="{{ room.id }}">
+<input type="hidden" id="user-id" value="{{ request.user.id }}">
+<input type="hidden" id="is-staff" value="{{ request.user.is_staff|yesno:'True,False' }}">
+<audio id="notification-sound" src="{% static 'chat/sounds/notification.mp3' %}" preload="auto"></audio>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'chat/js/chat.js' %}"></script>
+{% endblock %}

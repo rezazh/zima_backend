@@ -1,39 +1,29 @@
 {% if pending_rooms %}
     {% for room in pending_rooms %}
-        <div class="chat-list-item pending">
+        <div class="chat-item">
             <div class="chat-header">
-                <div>
-                    <span class="chat-title">{{ room.name }}</span>
-                    <span class="chat-status chat-status-pending">در انتظار</span>
-                </div>
+                <span class="chat-title">{{ room.name|default:"گفتگو" }} در انتظار</span>
                 <span class="chat-time">{{ room.created_at|date:"Y/m/d H:i" }}</span>
             </div>
             <div class="chat-user">
-                <i class="fas fa-user"></i>
                 {% if room.user %}
                     {{ room.user.get_full_name|default:room.user.username }}
                 {% else %}
                     کاربر ناشناس
                 {% endif %}
             </div>
-            {% if room.last_message %}
-                <div class="last-message">
-                    <i class="fas fa-comment-dots"></i> {{ room.last_message.content|truncatechars:50 }}
+            {% if room.messages.last %}
+                <div class="chat-preview">
+                    {{ room.messages.last.content|truncatechars:50 }}
                 </div>
             {% endif %}
             <div class="chat-actions">
-                <a href="{% url 'chat:chat_room' room.id %}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-reply"></i> پاسخ
-                </a>
-                <button class="btn btn-sm btn-success assign-admin-btn" data-id="{{ room.id }}">
-                    <i class="fas fa-user-check"></i> اختصاص به من
-                </button>
+                <a href="{% url 'chat:chat_room' room.name %}" class="btn btn-primary">پاسخ</a>
             </div>
         </div>
     {% endfor %}
 {% else %}
     <div class="empty-state">
-        <i class="fas fa-check-circle text-success"></i>
-        <p>چت در انتظاری وجود ندارد.</p>
+        چت در انتظاری وجود ندارد.
     </div>
 {% endif %}

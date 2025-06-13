@@ -1,36 +1,31 @@
-# chat/urls.py
 from django.urls import path
 from . import views
-from .views import SetUserOfflineView, SetUserOnlineView
 
 app_name = 'chat'
 
 urlpatterns = [
+    # صفحات اصلی چت
     path('', views.chat_list, name='chat_list'),
-    path('start/', views.start_chat, name='start_chat'),
-    path('room/<uuid:room_id>/', views.chat_room, name='chat_room'),
-    path('support/create/', views.create_support_chat, name='create_support_chat'),
+    path('room/<uuid:room_id>/', views.chat_room, name='room'),
+    path('start/', views.start_chat, name='start'),
 
-    # اصلاح مسیر notifications
-    path('notifications/', views.notifications, name='notifications'),
-    path('notifications/<uuid:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
-    path('notifications/count/', views.notification_count, name='notification_count'),
-
+    # صفحات مدیریت
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('assign-admin/<uuid:room_id>/', views.assign_admin, name='assign_admin'),
-    path('close/<uuid:room_id>/', views.close_chat, name='close_chat'),
-    path('reopen/<uuid:room_id>/', views.reopen_chat, name='reopen_chat'),
-    path('delete/<uuid:room_id>/', views.delete_chat, name='delete_chat'),
-    path('mark-read/<int:message_id>/', views.mark_message_as_read, name='mark_message_as_read'),
+    path('admin/assign/<uuid:room_id>/', views.assign_room, name='assign_room'),
 
-    path('api/pending-chats/', views.api_pending_chats, name='api_pending_chats'),
-    path('api/active-chats/', views.api_active_chats, name='api_active_chats'),
-    path('api/unread-counts/', views.api_unread_counts, name='api_unread_counts'),
-    path('set-online/', views.SetUserOnlineView.as_view(), name='set_online_status'),
-    path('set-offline/', views.SetUserOfflineView.as_view(), name='set_offline_status'),
-    path('unread-count/', views.unread_count, name='unread_count'),
-    path('user-status/<int:user_id>/', views.get_user_status, name='get_user_status'),
+    # اعلان‌ها
+    path('notifications/', views.notifications_view, name='notifications'),
 
+    # API‌های چت
+    path('api/mark-read/<uuid:message_id>/', views.mark_message_read, name='mark_read'),
+    path('api/close-room/<uuid:room_id>/', views.close_room, name='close_room'),
+    path('api/reopen-room/<uuid:room_id>/', views.reopen_room, name='reopen_room'),
+    path('api/upload-file/', views.upload_temp_file, name='upload_file'),
 
+    # API‌های وضعیت آنلاین
+    path('set-online/', views.set_online, name='set_online'),
+    path('set-offline/', views.set_offline, name='set_offline'),
+    path('unread-count/', views.get_unread_count, name='unread_count'),
+    path('hide-room/<uuid:room_id>/', views.hide_room, name='hide_room'),
 
 ]

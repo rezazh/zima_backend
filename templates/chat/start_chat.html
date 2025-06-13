@@ -1,26 +1,38 @@
-{% extends "base/base.html" %}
+{% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}شروع چت جدید{% endblock %}
+{% block title %}شروع گفتگوی جدید{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">شروع گفتگو با پشتیبانی</h4>
+                    <h3 class="mb-0">شروع گفتگوی جدید</h3>
                 </div>
                 <div class="card-body">
-                    <p class="lead">برای شروع گفتگو با پشتیبانی زیما، لطفاً روی دکمه زیر کلیک کنید.</p>
-                    <p>کارشناسان ما آماده پاسخگویی به سوالات شما هستند.</p>
-                    
-                    <form method="post" action="{% url 'chat:start_chat' %}">
+                    <form method="post">
                         {% csrf_token %}
-                        <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-comments me-2"></i>
-                                شروع گفتگو
+
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">موضوع</label>
+                            <input type="text" class="form-control" id="subject" name="subject" required>
+                            <div class="form-text">موضوع گفتگو را به صورت مختصر بنویسید.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="message" class="form-label">پیام</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                            <div class="form-text">توضیحات خود را بنویسید. پشتیبان‌های ما در اسرع وقت به شما پاسخ خواهند داد.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'chat:chat_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-right ml-1"></i> انصراف
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane ml-1"></i> ارسال
                             </button>
                         </div>
                     </form>
