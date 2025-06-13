@@ -1,208 +1,67 @@
-{% extends "base/base.html" %}
+{% extends 'base/base.html' %}
 {% load static %}
 
 {% block title %}اعلان‌های من{% endblock %}
 
 {% block extra_css %}
-<style>
-    .notifications-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .notification-item {
-        background-color: #fff;
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-        position: relative;
-    }
-
-    .notification-item:hover {
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        transform: translateY(-2px);
-    }
-
-    .notification-unread {
-        border-right: 4px solid #007bff;
-    }
-
-    .notification-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-
-    .notification-title {
-        font-weight: bold;
-        font-size: 1.1rem;
-    }
-
-    .notification-time {
-        color: #777;
-        font-size: 0.8rem;
-    }
-
-    .notification-content {
-        color: #555;
-    }
-
-    .notification-type {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 15px;
-        font-size: 0.8rem;
-        margin-right: 10px;
-    }
-
-    .notification-type-chat {
-        background-color: #d4edda;
-        color: #155724;
-    }
-
-    .notification-type-order {
-        background-color: #cce5ff;
-        color: #004085;
-    }
-
-    .notification-type-product {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-
-    .notification-type-system {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-
-    .notification-mark-read {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        color: #6c757d;
-        cursor: pointer;
-        transition: color 0.3s ease;
-    }
-
-    .notification-mark-read:hover {
-        color: #007bff;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 40px 20px;
-        background-color: #f9f9f9;
-        border-radius: 10px;
-        color: #666;
-    }
-
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 15px;
-        color: #ccc;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'chat/css/notifications.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <div class="notifications-container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3>اعلان‌های من</h3>
-        </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="notification-header">
+                <h2>اعلان‌های من</h2>
+                <button id="mark-all-read" class="btn btn-outline-primary">
+                    <i class="fas fa-check-double ml-1"></i> علامت‌گذاری همه به عنوان خوانده شده
+                </button>
+            </div>
 
-        {% if notifications %}
-            <div class="notifications-list">
-                {% for notification in notifications %}
-                    <div class="notification-item {% if not notification.is_read %}notification-unread{% endif %}" id="notification-{{ notification.id }}">
-                        <div class="notification-header">
-                            <div>
-                                <span class="notification-title">{{ notification.title }}</span>
-                                <span class="notification-type notification-type-{{ notification.notification_type }}">
-                                    {% if notification.notification_type == 'chat' %}
-                                        <i class="fas fa-comment"></i> پیام چت
-                                    {% elif notification.notification_type == 'order' %}
-                                        <i class="fas fa-shopping-cart"></i> سفارش
-                                    {% elif notification.notification_type == 'product' %}
-                                        <i class="fas fa-box"></i> محصول
-                                    {% else %}
-                                        <i class="fas fa-bell"></i> سیستم
+            <div class="notification-container">
+                <div id="notification-list">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                            <div class="notification-item {% if not notification.is_read %}unread{% endif %}" id="notification-{{ notification.id }}">
+                                <div class="notification-header">
+                                    <h5>{{ notification.title }}</h5>
+                                    <span class="notification-time">{{ notification.created_at|date:"j F Y H:i" }}</span>
+                                </div>
+                                <div class="notification-body">
+                                    <p>{{ notification.message }}</p>
+                                </div>
+                                <div class="notification-footer">
+                                    {% if notification.notification_type == 'chat' and notification.data.room_id %}
+                                        <a href="{% url 'chat:room' room_id=notification.data.room_id %}" class="btn btn-sm btn-primary">
+                                            مشاهده گفتگو
+                                        </a>
                                     {% endif %}
-                                </span>
+
+                                    {% if not notification.is_read %}
+                                        <button class="btn btn-sm btn-secondary mark-read" data-id="{{ notification.id }}">
+                                            علامت‌گذاری به عنوان خوانده شده
+                                        </button>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <span class="notification-time">{{ notification.created_at|date:"Y/m/d H:i" }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                            <p>هیچ اعلانی یافت نشد.</p>
                         </div>
-                        <div class="notification-content">
-                            {{ notification.message }}
-                        </div>
-                        {% if not notification.is_read %}
-                            <div class="notification-mark-read" data-id="{{ notification.id }}" title="علامت‌گذاری به عنوان خوانده شده">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+                    {% endif %}
+                </div>
             </div>
-        {% else %}
-            <div class="empty-state">
-                <i class="fas fa-bell-slash"></i>
-                <h4>هیچ اعلانی ندارید</h4>
-                <p>اعلان‌های جدید در اینجا نمایش داده می‌شوند.</p>
-            </div>
-        {% endif %}
+        </div>
     </div>
 </div>
+
+<input type="hidden" id="user-id" value="{{ request.user.id }}">
+<audio id="notification-sound" src="{% static 'chat/sounds/notification.mp3' %}" preload="auto"></audio>
+
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // علامت‌گذاری اعلان به عنوان خوانده شده
-    document.querySelectorAll('.notification-mark-read').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const notificationId = this.getAttribute('data-id');
-            markNotificationAsRead(notificationId);
-        });
-    });
-
-    function markNotificationAsRead(notificationId) {
-        fetch(`/chat/notifications/${notificationId}/read/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const notification = document.getElementById(`notification-${notificationId}`);
-                notification.classList.remove('notification-unread');
-                const markReadBtn = notification.querySelector('.notification-mark-read');
-                if (markReadBtn) {
-                    markReadBtn.remove();
-                }
-            }
-        });
-    }
-
-    // دریافت توکن CSRF از کوکی‌ها
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-</script>
+<script src="{% static 'chat/js/notifications.js' %}"></script>
 {% endblock %}

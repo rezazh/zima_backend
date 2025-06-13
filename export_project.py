@@ -49,12 +49,13 @@ import os
 # مسیرهایی که می‌خواهی در فایل نهایی باشند
 INCLUDED_PATHS = [
     # 'myapp/models.py', #فایل
-    'docker-compose.yml', #فایل
-    'Dockerfile', #فایل
-    'chat/consumers.py',
-    'templates',
-    'zima',
-    'config',
+    # 'docker-compose.yml', #فایل
+    # 'Dockerfile', #فایل
+    # 'chat/consumers.py',
+    'templates/chat',
+    'templates/base/base.html',
+    # 'zima',
+    # 'config',
     'chat',  # پوشه
 ]
 

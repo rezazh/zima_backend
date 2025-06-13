@@ -1,109 +1,6 @@
-# chat/utils.py
+from django.utils import timezone
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-import json
-from django.utils import timezone
-
-
-def notify_chat_closed_by_user(room):
-    """
-    ارسال اطلاع‌رسانی به ادمین مبنی بر بسته شدن چت توسط کاربر
-    """
-    if not room.admin:
-        return
-
-    channel_layer = get_channel_layer()
-
-    # ارسال پیام به گروه چت
-    async_to_sync(channel_layer.group_send)(
-        f"chat_{room.id}",
-        {
-            "type": "chat_system_message",
-            "event_type": "chat_closed_by_user",
-            "message": "این گفتگو توسط کاربر بسته شده است.",
-            "timestamp": timezone.now().isoformat(),
-        }
-    )
-
-    # ارسال اطلاع‌رسانی به ادمین
-    async_to_sync(channel_layer.group_send)(
-        f"notifications_{room.admin.id}",
-        {
-            "type": "notification_message",
-            "message": f"گفتگو با {room.user.username} توسط کاربر بسته شده است.",
-            "title": "بستن گفتگو",
-            "data": {
-                "chat_id": str(room.id),
-                "event_type": "chat_closed_by_user",
-            }
-        }
-    )
-
-
-def notify_chat_closed_by_admin(room):
-    """
-    ارسال اطلاع‌رسانی به کاربر مبنی بر بسته شدن چت توسط ادمین
-    """
-    channel_layer = get_channel_layer()
-
-    # ارسال پیام به گروه چت
-    async_to_sync(channel_layer.group_send)(
-        f"chat_{room.id}",
-        {
-            "type": "chat_system_message",
-            "event_type": "chat_closed_by_admin",
-            "message": "این گفتگو توسط پشتیبانی بسته شده است.",
-            "timestamp": timezone.now().isoformat(),
-        }
-    )
-
-    # ارسال اطلاع‌رسانی به کاربر
-    if room.user:
-        async_to_sync(channel_layer.group_send)(
-            f"notifications_{room.user.id}",
-            {
-                "type": "notification_message",
-                "message": "گفتگوی شما با پشتیبانی بسته شده است.",
-                "title": "بستن گفتگو",
-                "data": {
-                    "chat_id": str(room.id),
-                    "event_type": "chat_closed_by_admin",
-                }
-            }
-        )
-
-
-def notify_chat_reopened(room):
-    """
-    ارسال اطلاع‌رسانی به کاربر مبنی بر بازگشایی چت
-    """
-    channel_layer = get_channel_layer()
-
-    # ارسال پیام به گروه چت
-    async_to_sync(channel_layer.group_send)(
-        f"chat_{room.id}",
-        {
-            "type": "chat_system_message",
-            "event_type": "chat_reopened",
-            "message": "این گفتگو بازگشایی شده است.",
-            "timestamp": timezone.now().isoformat(),
-        }
-    )
-
-    # ارسال اطلاع‌رسانی به کاربر
-    if room.user:
-        async_to_sync(channel_layer.group_send)(
-            f"notifications_{room.user.id}",
-            {
-                "type": "notification_message",
-                "message": "گفتگوی شما با پشتیبانی بازگشایی شده است.",
-                "title": "بازگشایی گفتگو",
-                "data": {
-                    "chat_id": str(room.id),
-                    "event_type": "chat_reopened",
-                }
-            }
-        )
 
 
 def create_system_message(room, content):
@@ -112,25 +9,153 @@ def create_system_message(room, content):
     """
     from .models import ChatMessage
 
-    # تعیین فرستنده برای پیام سیستمی - ترجیحاً از ادمین استفاده می‌کنیم
-    # اگر ادمین وجود نداشت از کاربر استفاده می‌کنیم
-    sender = room.admin if room.admin else room.user
-
-    # اگر هیچ کاربری وجود نداشت، از سوپر یوزر استفاده می‌کنیم
-    if not sender:
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        sender = User.objects.filter(is_superuser=True).first()
-
-        # اگر حتی سوپر یوزر هم وجود نداشت، خطا می‌دهیم
-        if not sender:
-            raise ValueError("هیچ کاربری برای ارسال پیام سیستمی یافت نشد.")
-
+    # ایجاد پیام سیستمی بدون فرستنده
     message = ChatMessage.objects.create(
         room=room,
         content=content,
         message_type='system',
-        is_read=True,  # پیام‌های سیستمی همیشه خوانده شده محسوب می‌شوند
-        sender=sender   # تعیین فرستنده برای پیام سیستمی
+        sender=None,  # پیام سیستمی بدون فرستنده
+        is_read=True  # پیام‌های سیستمی همیشه خوانده شده محسوب می‌شوند
     )
+
+    # ارسال رویداد به کانال
+    try:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'chat_{room.id}',
+            {
+                'type': 'chat_message',
+                'message': {
+                    'id': str(message.id),
+                    'content': message.content,
+                    'message_type': message.message_type,
+                    'created_at': message.created_at.isoformat(),
+                    'is_system': True
+                }
+            }
+        )
+    except Exception as e:
+        print(f"Error sending system message to channel: {e}")
+
     return message
+
+
+def notify_chat_closed_by_user(room):
+    """
+    اطلاع‌رسانی به ادمین درباره بسته شدن چت توسط کاربر
+    """
+    if room.admin:
+        from .models import Notification
+
+        # ایجاد نوتیفیکیشن برای ادمین
+        Notification.objects.create(
+            user=room.admin,
+            title="بستن چت",
+            message=f"کاربر {room.user.username} چت را بسته است.",
+            notification_type="chat",
+            data={
+                'room_id': str(room.id),
+                'action': 'closed_by_user'
+            },
+            is_read=False
+        )
+
+        # ارسال نوتیفیکیشن از طریق وب‌سوکت
+        try:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'notifications_{room.admin.id}',
+                {
+                    'type': 'notification_message',
+                    'title': "بستن چت",
+                    'message': f"کاربر {room.user.username} چت را بسته است.",
+                    'data': {
+                        'room_id': str(room.id),
+                        'action': 'closed_by_user'
+                    }
+                }
+            )
+        except Exception as e:
+            print(f"Error sending notification to admin: {e}")
+
+
+def notify_chat_closed_by_admin(room):
+    """
+    اطلاع‌رسانی به کاربر درباره بسته شدن چت توسط ادمین
+    """
+    if room.user:
+        from .models import Notification
+
+        admin_name = room.admin.get_full_name() if room.admin and room.admin.get_full_name() else "پشتیبانی"
+
+        # ایجاد نوتیفیکیشن برای کاربر
+        Notification.objects.create(
+            user=room.user,
+            title="بستن چت",
+            message=f"{admin_name} چت را بسته است.",
+            notification_type="chat",
+            data={
+                'room_id': str(room.id),
+                'action': 'closed_by_admin'
+            },
+            is_read=False
+        )
+
+        # ارسال نوتیفیکیشن از طریق وب‌سوکت
+        try:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'notifications_{room.user.id}',
+                {
+                    'type': 'notification_message',
+                    'title': "بستن چت",
+                    'message': f"{admin_name} چت را بسته است.",
+                    'data': {
+                        'room_id': str(room.id),
+                        'action': 'closed_by_admin'
+                    }
+                }
+            )
+        except Exception as e:
+            print(f"Error sending notification to user: {e}")
+
+
+def notify_chat_reopened(room):
+    """
+    اطلاع‌رسانی به کاربر درباره بازگشایی چت
+    """
+    if room.user:
+        from .models import Notification
+
+        admin_name = room.admin.get_full_name() if room.admin and room.admin.get_full_name() else "پشتیبانی"
+
+        # ایجاد نوتیفیکیشن برای کاربر
+        Notification.objects.create(
+            user=room.user,
+            title="بازگشایی چت",
+            message=f"{admin_name} چت را بازگشایی کرده است.",
+            notification_type="chat",
+            data={
+                'room_id': str(room.id),
+                'action': 'reopened'
+            },
+            is_read=False
+        )
+
+        # ارسال نوتیفیکیشن از طریق وب‌سوکت
+        try:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'notifications_{room.user.id}',
+                {
+                    'type': 'notification_message',
+                    'title': "بازگشایی چت",
+                    'message': f"{admin_name} چت را بازگشایی کرده است.",
+                    'data': {
+                        'room_id': str(room.id),
+                        'action': 'reopened'
+                    }
+                }
+            )
+        except Exception as e:
+            print(f"Error sending notification to user: {e}")
