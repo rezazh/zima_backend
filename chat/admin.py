@@ -42,6 +42,8 @@ class UserStatusAdmin(admin.ModelAdmin):
     date_hierarchy = 'last_seen'
 
 
+
+
 @admin.register(TemporaryFile)
 class TemporaryFileAdmin(admin.ModelAdmin):
     list_display = ('user', 'file', 'created_at')
