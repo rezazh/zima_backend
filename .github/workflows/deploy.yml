@@ -5,119 +5,265 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-    - name: Deploy to server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        command_timeout: 30m
-        script: |
-          #!/bin/bash
-          set -e
-          
-          echo "===== Starting deployment at $(date) ====="
-          
-          # مرحله 1: آماده‌سازی
-          echo "===== Stage 1: Preparing ====="
-          cd /var/www/zimabestshop/zima_backend
-          git reset --hard
-          git clean -fd
-          
-          # مرحله 2: دریافت تغییرات
-          echo "===== Stage 2: Pulling changes ====="
-          git pull origin main
-          
-          # مرحله 3: ایجاد پشتیبان از دیتابیس
-          echo "===== Stage 3: Database backup ====="
-          BACKUP_DIR="/var/www/zimabestshop/backups"
-          mkdir -p $BACKUP_DIR
-          BACKUP_FILE="$BACKUP_DIR/db_backup_$(date +%Y%m%d_%H%M%S).sql"
-          
-          # استخراج اطلاعات دیتابیس از فایل docker-compose.yml
-          DB_CONTAINER=$(docker-compose ps -q postgres || echo "zima_postgres")
-          if docker inspect $DB_CONTAINER &>/dev/null; then
-            echo "Creating database backup..."
-            docker exec $DB_CONTAINER pg_dumpall -U postgres > $BACKUP_FILE
-            echo "Backup saved to $BACKUP_FILE"
-          else
-            echo "Database container not running, skipping backup"
-          fi
-          
-          # مرحله 4: توقف کانتینرها
-          echo "===== Stage 4: Stopping containers ====="
-          docker-compose down --timeout 60 || echo "Stop failed, continuing..."
-          
-          # مرحله 5: بررسی و پاکسازی تصاویر قدیمی
-          echo "===== Stage 5: Cleaning up old images ====="
-          docker image prune -af --filter "until=24h" || echo "Image cleanup failed, continuing..."
-          
-          # مرحله 6: بیلد و راه‌اندازی کانتینرها
-          echo "===== Stage 6: Building and starting containers ====="
-          # پیش‌کش تصاویر مورد نیاز برای جلوگیری از خطای TLS handshake timeout
-          echo "Pre-pulling required images..."
-          docker pull python:3.11-alpine || echo "Failed to pull python:3.11-alpine, continuing..."
-          docker pull python:3.11-slim || echo "Failed to pull python:3.11-slim, continuing..."
-          docker pull postgres:15-alpine || echo "Failed to pull postgres:15-alpine, continuing..."
-          
-          # ساخت و راه‌اندازی کانتینرها
-          docker-compose up -d --build
-          
-          # مرحله 7: اجرای مایگریشن‌ها
-          echo "===== Stage 7: Running migrations ====="
-          # انتظار برای آماده شدن دیتابیس
-          sleep 15
-          
-          # شناسایی کانتینر جنگو
-          DJANGO_CONTAINER=$(docker-compose ps -q web || docker-compose ps -q django || docker-compose ps -q app || docker-compose ps -q gunicorn || echo "")
-          
-          if [ -n "$DJANGO_CONTAINER" ]; then
-            echo "Running migrations..."
-            docker exec $DJANGO_CONTAINER python manage.py migrate --noinput || echo "Migration failed, continuing..."
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 30m
+          debug: true
+          script: |
+            #!/bin/bash
+            set -e
             
-            # جمع‌آوری فایل‌های استاتیک
-            echo "Collecting static files..."
-            docker exec $DJANGO_CONTAINER python manage.py collectstatic --noinput || echo "Static collection failed, continuing..."
-          else
-            echo "Django container not found, skipping migrations"
-          fi
-          
-          # مرحله 8: بررسی وضعیت سلامت
-          echo "===== Stage 8: Health check ====="
-          sleep 15
-          docker-compose ps
-          
-          # بررسی وضعیت سرویس‌ها
-          echo "Checking service health..."
-          for service in $(docker-compose config --services); do
-            echo "Service: $service - $(docker-compose ps $service | grep -q "Up" && echo "UP" || echo "DOWN")"
-          done
-          
-          # مرحله 9: پاکسازی کش و فایل‌های موقت
-          echo "===== Stage 9: Cleanup ====="
-          if [ -n "$DJANGO_CONTAINER" ]; then
-            # پاکسازی کش و فایل‌های موقت قدیمی
-            docker exec $DJANGO_CONTAINER find /tmp -type f -name "*.py[co]" -delete 2>/dev/null || echo "Cache cleanup failed, continuing..."
-            docker exec $DJANGO_CONTAINER find /tmp -type d -name "__pycache__" -delete 2>/dev/null || echo "Cache cleanup failed, continuing..."
-          fi
-          
-          # حذف بکاپ‌های قدیمی‌تر از 7 روز
-          find $BACKUP_DIR -name "db_backup_*.sql" -type f -mtime +7 -delete
-          
-          echo "===== Deployment completed at $(date) ====="
-          
-          # مرحله 10: نمایش لاگ‌های اخیر
-          echo "===== Stage 10: Recent logs ====="
-          docker-compose logs --tail=50
+            echo "===== Starting deployment at $(date) ====="
+            
+            # مرحله 1: آماده‌سازی
+            echo "===== Stage 1: Preparing ====="
+            cd /var/www/zimabestshop/zima_backend
+            
+            # ذخیره هش کامیت فعلی قبل از pull
+            OLD_COMMIT=$(git rev-parse HEAD)
+            
+            git reset --hard
+            git clean -fd
+            
+            # مرحله 2: دریافت تغییرات
+            echo "===== Stage 2: Pulling changes ====="
+            git pull origin main
+            
+            # ذخیره هش کامیت جدید بعد از pull
+            NEW_COMMIT=$(git rev-parse HEAD)
+            
+            # بررسی فایل‌های تغییر یافته بین دو کامیت
+            echo "Checking changed files between $OLD_COMMIT and $NEW_COMMIT"
+            CHANGED_FILES=$(git diff --name-only $OLD_COMMIT $NEW_COMMIT)
+            
+            # بررسی آیا فایل‌های مرتبط با داکر یا کد پایتون تغییر کرده‌اند
+            DOCKER_CHANGES=$(echo "$CHANGED_FILES" | grep -E 'Dockerfile|docker-compose.yml|requirements.txt')
+            CODE_CHANGES=$(echo "$CHANGED_FILES" | grep -E '\.py$|\.js$|\.html$|\.css$|\.scss$|migrations/')
+            
+            # تعیین استراتژی بازسازی
+            REBUILD_NEEDED=false
+            if [ -n "$DOCKER_CHANGES" ]; then
+              echo "Docker-related files changed. Full rebuild needed."
+              REBUILD_NEEDED=true
+            elif [ -n "$CODE_CHANGES" ]; then
+              echo "Code files changed. Containers need restart but may not need full rebuild."
+            fi
+            
+            # مرحله 3: ایجاد پشتیبان از دیتابیس
+            echo "===== Stage 3: Database backup ====="
+            BACKUP_DIR="/var/www/zimabestshop/backups"
+            mkdir -p $BACKUP_DIR
+            BACKUP_FILE="$BACKUP_DIR/db_backup_$(date +%Y%m%d_%H%M%S).sql"
+            
+            # استخراج اطلاعات دیتابیس از فایل docker-compose.yml
+            DB_CONTAINER=$(docker-compose ps -q postgres || echo "zima_postgres")
+            if docker inspect $DB_CONTAINER &>/dev/null; then
+              echo "Creating database backup..."
+              docker exec $DB_CONTAINER pg_dumpall -U postgres > $BACKUP_FILE
+              echo "Backup saved to $BACKUP_FILE"
+            else
+              echo "Database container not running, skipping backup"
+            fi
+            
+            # مرحله 4: بررسی تصاویر داکر موجود
+            echo "===== Stage 4: Checking Docker images ====="
+            if [ "$REBUILD_NEEDED" = true ]; then
+              echo "Pre-pulling required images with retry mechanism..."
+              
+              # لیست تصاویر مورد نیاز
+              REQUIRED_IMAGES=(
+                "python:3.11-alpine"
+                "python:3.11-slim"
+                "postgres:15-alpine"
+                "redis:latest"
+                "nginx:alpine"
+                # اضافه کردن سایر تصاویر مورد نیاز
+              )
+              
+              # تلاش برای دانلود تصاویر با مکانیزم retry
+              for IMG in "${REQUIRED_IMAGES[@]}"; do
+                echo "Checking/pulling image: $IMG"
+                if ! docker image inspect "$IMG" &>/dev/null; then
+                  echo "Image $IMG not found locally, pulling..."
+                  for ATTEMPT in {1..3}; do
+                    echo "Pull attempt $ATTEMPT for $IMG"
+                    if docker pull "$IMG"; then
+                      echo "✅ Successfully pulled $IMG"
+                      break
+                    else
+                      echo "⚠️ Pull attempt $ATTEMPT failed for $IMG"
+                      if [ $ATTEMPT -eq 3 ]; then
+                        echo "❌ All attempts to pull $IMG failed, but continuing with deployment"
+                      fi
+                      sleep 5
+                    fi
+                  done
+                else
+                  echo "✅ Image $IMG already exists locally"
+                fi
+              done
+            fi
+            
+            # مرحله 5: توقف کانتینرها
+            echo "===== Stage 5: Stopping containers ====="
+            docker-compose down --timeout 60 || echo "Stop failed, continuing..."
+            
+            # مرحله 6: پاکسازی تصاویر قدیمی (فقط اگر فضای دیسک کمتر از 20% باشد)
+            echo "===== Stage 6: Checking disk space and cleaning if necessary ====="
+            DISK_SPACE=$(df -h / | tail -1 | awk '{print $5}' | sed 's/%//')
+            if [ $DISK_SPACE -gt 80 ]; then
+              echo "Disk space is low ($DISK_SPACE%), cleaning up old images..."
+              docker image prune -af --filter "until=24h" || echo "Image cleanup failed, continuing..."
+            else
+              echo "Disk space is sufficient ($DISK_SPACE%), skipping cleanup"
+            fi
+            
+            # مرحله 7: بیلد و راه‌اندازی کانتینرها با استراتژی مناسب
+            echo "===== Stage 7: Building and starting containers ====="
+            if [ "$REBUILD_NEEDED" = true ]; then
+              echo "Performing full rebuild..."
+              # تلاش مجدد برای docker-compose up
+              for ATTEMPT in {1..3}; do
+                echo "Attempt $ATTEMPT to build and start containers..."
+                if docker-compose up -d --build; then
+                  echo "✅ Containers built and started successfully"
+                  break
+                else
+                  echo "⚠️ Attempt $ATTEMPT failed"
+                  if [ $ATTEMPT -eq 3 ]; then
+                    echo "❌ All attempts failed"
+                    exit 1
+                  fi
+                  sleep 10
+                fi
+              done
+            else
+              echo "No Docker-related changes detected, using existing images..."
+              # تلاش مجدد برای docker-compose up بدون بیلد مجدد
+              for ATTEMPT in {1..3}; do
+                echo "Attempt $ATTEMPT to start containers..."
+                if docker-compose up -d; then
+                  echo "✅ Containers started successfully"
+                  break
+                else
+                  echo "⚠️ Attempt $ATTEMPT failed"
+                  if [ $ATTEMPT -eq 3 ]; then
+                    echo "❌ All attempts failed"
+                    exit 1
+                  fi
+                  sleep 10
+                fi
+              done
+            fi
+            
+            # مرحله 8: اجرای مایگریشن‌ها
+            echo "===== Stage 8: Running migrations ====="
+            # انتظار برای آماده شدن دیتابیس
+            echo "Waiting for database to be ready..."
+            for i in {1..30}; do
+              if docker-compose exec -T postgres pg_isready -U postgres 2>/dev/null; then
+                echo "✅ Database is ready"
+                break
+              fi
+              echo "Waiting for database... ($i/30)"
+              sleep 2
+              if [ $i -eq 30 ]; then
+                echo "⚠️ Database did not become ready in time, but continuing..."
+              fi
+            done
+            
+            # شناسایی کانتینر جنگو با روش‌های مختلف
+            DJANGO_CONTAINER=""
+            for SERVICE in web django app gunicorn; do
+              CONTAINER_ID=$(docker-compose ps -q $SERVICE 2>/dev/null)
+              if [ -n "$CONTAINER_ID" ]; then
+                DJANGO_CONTAINER=$CONTAINER_ID
+                echo "Found Django container: $SERVICE ($DJANGO_CONTAINER)"
+                break
+              fi
+            done
+            
+            if [ -n "$DJANGO_CONTAINER" ]; then
+              echo "Running migrations..."
+              if docker exec $DJANGO_CONTAINER python manage.py migrate --noinput; then
+                echo "✅ Migrations completed successfully"
+              else
+                echo "⚠️ Migration failed, but continuing deployment"
+              fi
+              
+              # جمع‌آوری فایل‌های استاتیک
+              echo "Collecting static files..."
+              if docker exec $DJANGO_CONTAINER python manage.py collectstatic --noinput; then
+                echo "✅ Static files collected successfully"
+              else
+                echo "⚠️ Static collection failed, but continuing deployment"
+              fi
+            else
+              echo "❌ Django container not found, skipping migrations"
+            fi
+            
+            # مرحله 9: بررسی وضعیت سلامت
+            echo "===== Stage 9: Health check ====="
+            echo "Waiting for services to stabilize..."
+            sleep 15
+            
+            echo "Current containers:"
+            docker-compose ps
+            
+            # بررسی وضعیت سرویس‌ها
+            echo "Checking service health..."
+            HEALTHY=true
+            for service in $(docker-compose config --services); do
+              STATUS=$(docker-compose ps $service | grep -q "Up" && echo "UP" || echo "DOWN")
+              echo "Service: $service - $STATUS"
+              if [ "$STATUS" = "DOWN" ]; then
+                HEALTHY=false
+              fi
+            done
+            
+            if [ "$HEALTHY" = false ]; then
+              echo "⚠️ Some services are not running properly"
+            else
+              echo "✅ All services are up and running"
+            fi
+            
+            # مرحله 10: پاکسازی کش و فایل‌های موقت
+            echo "===== Stage 10: Cleanup ====="
+            if [ -n "$DJANGO_CONTAINER" ]; then
+              # پاکسازی کش و فایل‌های موقت قدیمی
+              docker exec $DJANGO_CONTAINER find /tmp -type f -name "*.py[co]" -delete 2>/dev/null || echo "Cache cleanup failed, continuing..."
+              docker exec $DJANGO_CONTAINER find /tmp -type d -name "__pycache__" -delete 2>/dev/null || echo "Cache cleanup failed, continuing..."
+            fi
+            
+            # حذف بکاپ‌های قدیمی‌تر از 7 روز
+            echo "Removing backups older than 7 days..."
+            find $BACKUP_DIR -name "db_backup_*.sql" -type f -mtime +7 -delete
+            
+            # مرحله 11: نمایش لاگ‌های اخیر
+            echo "===== Stage 11: Recent logs ====="
+            docker-compose logs --tail=50
+            
+            echo "===== Deployment completed successfully at $(date) ====="
+            
+            # ارسال وضعیت دیپلوی
+            echo "Deployment of commit $NEW_COMMIT completed."
+            if [ "$OLD_COMMIT" != "$NEW_COMMIT" ]; then
+              echo "Changes deployed: $(git log --oneline $OLD_COMMIT..$NEW_COMMIT | wc -l) commit(s)"
+            else
+              echo "No new changes were deployed."
+            fi
