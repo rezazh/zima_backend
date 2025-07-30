@@ -1,0 +1,46 @@
+name: Test Server Permissions
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-permissions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check server permissions
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          debug: true
+          script: |
+            echo "===== User and permissions check ====="
+            echo "Current user: $(whoami)"
+            echo "User groups: $(groups)"
+            echo "Home directory: $HOME"
+            
+            echo "===== Project directory check ====="
+            # بررسی وجود و دسترسی به مسیر پروژه
+            cd /var/www/zimabestshop/zima_backend 2>/dev/null || { echo "❌ Project directory not accessible"; exit 1; }
+            echo "✅ Project directory exists and is accessible"
+            echo "Directory permissions: $(ls -la | head -n 2)"
+            
+            echo "===== Git permissions check ====="
+            # بررسی دسترسی git
+            git status 2>/dev/null || { echo "❌ Git not initialized or permission denied"; exit 1; }
+            echo "✅ Git repository accessible"
+            
+            echo "===== Docker permissions check ====="
+            # بررسی دسترسی docker
+            docker ps 2>/dev/null || { echo "❌ Docker not accessible"; exit 1; }
+            echo "✅ Docker accessible"
+            
+            echo "===== Docker Compose check ====="
+            # بررسی وجود docker-compose
+            if [ -f "docker-compose.yml" ]; then
+              echo "✅ docker-compose.yml exists"
+            else
+              echo "❌ docker-compose.yml not found"
+            fi

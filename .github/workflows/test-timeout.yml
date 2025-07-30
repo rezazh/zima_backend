@@ -1,0 +1,25 @@
+name: Test SSH Timeout
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy with extended timeout
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: "30m"
+          script_stop: true
+          debug: true
+          script: |
+            echo "Testing extended timeout"
+            sleep 60
+            echo "If you see this, timeout is not the issue"
+            # اجرای یک دستور ساده مرتبط با پروژه
+            cd /var/www/zimabestshop/zima_backend || echo "Directory not found"
+            ls -la

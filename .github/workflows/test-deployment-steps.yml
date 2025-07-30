@@ -1,0 +1,83 @@
+name: Test Deployment Steps
+
+on:
+  workflow_dispatch:
+    inputs:
+      step:
+        description: 'Step to test (1-4)'
+        required: true
+        default: '1'
+
+jobs:
+  test-deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test deployment step 1 - Basic commands
+        if: ${{ github.event.inputs.step == '1' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: "10m"
+          script_stop: true
+          debug: true
+          script: |
+            echo "===== STEP 1: Basic navigation ====="
+            cd /var/www/zimabestshop/zima_backend
+            pwd
+            ls -la
+            echo "Step 1 completed successfully"
+
+      - name: Test deployment step 2 - Git operations
+        if: ${{ github.event.inputs.step == '2' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: "10m"
+          script_stop: true
+          debug: true
+          script: |
+            echo "===== STEP 2: Git operations ====="
+            cd /var/www/zimabestshop/zima_backend
+            git status
+            git reset --hard
+            git clean -fd
+            git pull origin main
+            echo "Step 2 completed successfully"
+
+      - name: Test deployment step 3 - Docker down
+        if: ${{ github.event.inputs.step == '3' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: "10m"
+          script_stop: true
+          debug: true
+          script: |
+            echo "===== STEP 3: Docker down ====="
+            cd /var/www/zimabestshop/zima_backend
+            docker-compose down --timeout 60 || echo "Docker down failed, but continuing..."
+            docker ps
+            echo "Step 3 completed successfully"
+
+      - name: Test deployment step 4 - Docker up
+        if: ${{ github.event.inputs.step == '4' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: "15m"
+          script_stop: true
+          debug: true
+          script: |
+            echo "===== STEP 4: Docker up ====="
+            cd /var/www/zimabestshop/zima_backend
+            docker-compose up -d --build
+            docker ps
+            echo "Step 4 completed successfully"
