@@ -1,0 +1,16 @@
+name: Test SSH Connection
+
+on:
+  workflow_dispatch:  # اجرای دستی از طریق رابط GitHub
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check SSH connection
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: echo "SSH connection successful" && whoami && pwd
