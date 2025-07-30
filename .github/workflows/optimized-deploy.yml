@@ -1,0 +1,51 @@
+name: Optimized Deployment
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Deploy to production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: "30m"
+          script_stop: true
+          debug: true
+          script: |
+            echo "===== Starting deployment at $(date) ====="
+            
+            # مرحله 1: آماده‌سازی
+            echo "===== Stage 1: Preparing ====="
+            cd /var/www/zimabestshop/zima_backend || { echo "❌ Failed to access project directory"; exit 1; }
+            
+            # مرحله 2: دریافت تغییرات
+            echo "===== Stage 2: Pulling changes ====="
+            git reset --hard || { echo "❌ Git reset failed"; exit 1; }
+            git clean -fd
+            git pull origin main || { echo "❌ Git pull failed"; exit 1; }
+            
+            # مرحله 3: توقف کانتینرها
+            echo "===== Stage 3: Stopping containers ====="
+            docker-compose down --timeout 60 || echo "⚠️ Docker down failed, continuing..."
+            
+            # مرحله 4: بیلد و راه‌اندازی کانتینرها
+            echo "===== Stage 4: Building and starting containers ====="
+            docker-compose up -d --build || { echo "❌ Docker up failed"; exit 1; }
+            
+            # مرحله 5: بررسی وضعیت نهایی
+            echo "===== Stage 5: Verifying deployment ====="
+            docker ps | grep zima
+            
+            echo "===== Deployment completed successfully at $(date) ====="
