@@ -11,15 +11,16 @@ class UserStatus(models.Model):
         on_delete=models.CASCADE,
         related_name='online_status'
     )
+    is_online = models.BooleanField(default=False)
+    last_activity = models.DateTimeField(null=True, blank=True)
+    typing_in_room = models.CharField(max_length=255, null=True, blank=True)
+
     status = models.CharField(
         max_length=10,
         choices=[('online', 'Online'), ('offline', 'Offline')],
         default='offline'
     )
     last_seen = models.DateTimeField(default=timezone.now)
-    typing_in_room = models.CharField(max_length=255, null=True, blank=True)
-    is_online = models.BooleanField(default=False)
-    last_activity = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         verbose_name = "وضعیت آنلاین کاربر"

@@ -1,4 +1,7 @@
 # chat/middleware.py
+import json
+
+from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 from .models import UserStatus
 from channels.middleware import BaseMiddleware
