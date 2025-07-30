@@ -17,6 +17,9 @@ class UserStatus(models.Model):
         default='offline'
     )
     last_seen = models.DateTimeField(default=timezone.now)
+    typing_in_room = models.CharField(max_length=255, null=True, blank=True)
+    is_online = models.BooleanField(default=False)
+    last_activity = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         verbose_name = "وضعیت آنلاین کاربر"
@@ -26,12 +29,20 @@ class UserStatus(models.Model):
         return f"{self.user.username}: {self.get_status_display()}"
 
     @property
-    def is_online(self):
+    def is_user_online(self):
         # کاربر در 5 دقیقه گذشته فعالیت داشته باشد، آنلاین در نظر گرفته می‌شود
         if self.status == 'online':
             threshold = timezone.now() - timezone.timedelta(minutes=5)
             return self.last_seen >= threshold
         return False
+
+    def update_status(self):
+        """بروزرسانی وضعیت آنلاین بودن کاربر"""
+        # بروزرسانی فیلدهای قدیمی برای سازگاری
+        self.is_online = self.is_user_online
+        self.last_activity = self.last_seen
+        self.save(update_fields=['is_online', 'last_activity'])
+
 
 class ChatRoom(models.Model):
     """
