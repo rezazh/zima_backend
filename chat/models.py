@@ -15,6 +15,7 @@ class UserStatus(models.Model):
     last_activity = models.DateTimeField(null=True, blank=True)
     typing_in_room = models.CharField(max_length=255, null=True, blank=True)
 
+
     status = models.CharField(
         max_length=10,
         choices=[('online', 'Online'), ('offline', 'Offline')],
