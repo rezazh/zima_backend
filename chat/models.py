@@ -20,6 +20,7 @@ class UserStatus(models.Model):
         choices=[('online', 'Online'), ('offline', 'Offline')],
         default='offline'
     )
+
     last_seen = models.DateTimeField(default=timezone.now)
 
     class Meta:
