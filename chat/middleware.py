@@ -116,11 +116,20 @@ class UserStatusMiddleware:
 
         # بروزرسانی وضعیت کاربر فقط برای کاربران احراز هویت شده
         if request.user.is_authenticated:
-            # استفاده از get_or_create برای ایجاد وضعیت کاربر اگر وجود نداشته باشد
-            user_status, created = UserStatus.objects.get_or_create(user=request.user)
+            try:
+                # استفاده از get_or_create برای ایجاد وضعیت کاربر اگر وجود نداشته باشد
+                user_status, created = UserStatus.objects.get_or_create(user=request.user)
 
-            # بروزرسانی زمان آخرین بازدید و تنظیم وضعیت به آنلاین
-            user_status.status = 'online'
-            user_status.save(update_fields=['status', 'last_seen'])  # last_seen با auto_now=True خودکار بروز می‌شود
+                # بروزرسانی فیلدها
+                user_status.status = 'online'
+                user_status.last_seen = timezone.now()
+                user_status.is_online = True
+                if hasattr(user_status, 'last_activity'):
+                    user_status.last_activity = timezone.now()
 
-        return response
+                user_status.save()
+            except Exception as e:
+                # ثبت خطا بدون متوقف کردن درخواست
+                print(f"Error updating user status: {e}")
+
+            return response
