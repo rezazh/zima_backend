@@ -29,6 +29,7 @@ services:
       retries: 3
     restart: unless-stopped
 
+
   django:
     build:
       context: .
