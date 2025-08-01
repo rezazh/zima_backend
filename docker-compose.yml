@@ -49,8 +49,8 @@ services:
       - USE_FILE_LOGGING=false
     volumes:
       - .:/app
-      - ./staticfiles:/app/staticfiles
-      - ./media:/app/media
+      - static_volume:/app/staticfiles  # تغییر از مسیر محلی به volume
+      - media_volume:/app/media
     networks:
       - zima_network
     restart: unless-stopped
