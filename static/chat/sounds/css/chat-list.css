@@ -1,0 +1,288 @@
+/* chat-list.css - استایل‌های صفحه لیست گفتگوها */
+
+.chat-list-container {
+    max-width: 1000px;
+    margin: 20px auto;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.chat-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.chat-list-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.chat-list-tabs {
+    padding: 0;
+}
+
+.nav-tabs {
+    border-bottom: 1px solid #e0e0e0;
+    padding: 0 20px;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #6c757d;
+    font-weight: 500;
+    padding: 15px 20px;
+    transition: color 0.3s, border-color 0.3s;
+}
+
+.nav-tabs .nav-link.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+    background-color: transparent;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: transparent;
+    color: #007bff;
+}
+
+.nav-tabs .badge {
+    margin-right: 5px;
+}
+
+.tab-content {
+    padding: 0;
+}
+
+.chat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.chat-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f1f3f4;
+    transition: background-color 0.3s;
+    text-decoration: none;
+    color: inherit;
+}
+
+.chat-item:hover {
+    background-color: #f8f9fa;
+}
+
+.chat-item-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-left: 15px;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-item-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    font-size: 24px;
+    font-weight: bold;
+    color: #6c757d;
+}
+
+.chat-item-content {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.chat-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.chat-item-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-item-time {
+    font-size: 12px;
+    color: #6c757d;
+    white-space: nowrap;
+}
+
+.chat-item-message {
+    font-size: 14px;
+    color: #6c757d;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.system-message-preview {
+    font-style: italic;
+    color: #6c757d;
+}
+
+.no-message {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.chat-item-badge {
+    margin-right: 10px;
+}
+
+.chat-item-badge .badge {
+    font-size: 12px;
+    padding: 5px 8px;
+}
+
+.chat-item-status {
+    margin-right: 10px;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-badge.closed {
+    background-color: #f1f3f4;
+    color: #6c757d;
+}
+
+.empty-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 20px;
+    text-align: center;
+}
+
+.empty-list i {
+    font-size: 48px;
+    color: #e0e0e0;
+    margin-bottom: 15px;
+}
+
+.empty-list p {
+    font-size: 16px;
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+/* استایل‌های اضافی برای کانتینر اعلان‌ها */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+}
+
+/* استایل‌های دکمه حذف گفتگو */
+.delete-chat {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 5px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.delete-chat:hover {
+    opacity: 1;
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* اصلاح استایل وضعیت آنلاین/آفلاین */
+.user-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    position: relative;
+    background-color: transparent;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+}
+
+.status-dot.online {
+    background-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    animation: pulse 2s infinite;
+}
+
+.status-dot.offline {
+    background-color: #9e9e9e;
+    box-shadow: 0 0 0 2px rgba(158, 158, 158, 0.2);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(76, 175, 80, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+}
+
+/* تنظیمات واکنش‌گرایی */
+@media (max-width: 768px) {
+    .chat-list-container {
+        margin: 10px;
+        border-radius: 5px;
+    }
+
+    .chat-list-header h1 {
+        font-size: 20px;
+    }
+
+    .chat-item-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .chat-item-header h3 {
+        font-size: 14px;
+    }
+}
