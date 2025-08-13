@@ -111,6 +111,16 @@ class UserStatusMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
+    def __call__(self, request):
+        response = self.get_response(request)
+
+        # بروزرسانی وضعیت کاربر فقط برای کاربران احراز هویت شده
+        if request.user.is_authenticated:
+            user_status, created = UserStatus.objects.get_or_create(user=request.user)
+            user_status.last_seen = timezone.now()  # فقط به‌روزرسانی زمان
+            user_status.save(update_fields=['last_seen'])
+
+        return response
 
 
 
