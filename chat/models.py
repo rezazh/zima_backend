@@ -49,191 +49,67 @@ class UserStatus(models.Model):
 
 
 class ChatRoom(models.Model):
-    """
-    مدل اتاق گفتگو بین کاربر و پشتیبان
-    """
-    ROOM_TYPES = [
-        ('support', 'پشتیبانی'),
-        ('general', 'عمومی'),
-    ]
-
-    STATUS_CHOICES = [
-        ('open', 'باز'),
-        ('closed', 'بسته شده'),
-        ('archived', 'آرشیو شده'),
-    ]
-
+    ROOM_TYPES = [('support', 'Support'), ('general', 'General')]
+    STATUS_CHOICES = [('open', 'Open'), ('closed', 'Closed'), ('archived', 'Archived')]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=255, verbose_name="نام گفتگو")
+    name = models.CharField(max_length=255)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="user_chats",
-        verbose_name="کاربر"
-    )
+        on_delete=models.CASCADE,related_name="user_chats")
     agent = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="agent_chats",
-        verbose_name="پشتیبان"
+        related_name="agent_chats"
     )
-    room_type = models.CharField(
-        max_length=20,
-        choices=ROOM_TYPES,
-        default='support',
-        verbose_name="نوع گفتگو"
-    )
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='open',
-        verbose_name="وضعیت"
-    )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="زمان ایجاد")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="آخرین بروزرسانی")
-    closed_at = models.DateTimeField(null=True, blank=True, verbose_name="زمان بسته شدن")
-    closed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="closed_chats",
-        verbose_name="بسته شده توسط"
-    )
-    is_deleted_by_user = models.BooleanField(default=False, verbose_name="حذف شده توسط کاربر")
-    is_deleted_by_agent = models.BooleanField(default=False, verbose_name="حذف شده توسط پشتیبان")
+    room_type = models.CharField(max_length=20, choices=ROOM_TYPES, default='support')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    closed_by = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.SET_NULL,null=True,blank=True,related_name="closed_chats")
+    is_deleted_by_user = models.BooleanField(default=False)
+    is_deleted_by_agent = models.BooleanField(default=False)
     hidden_for_users = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='hidden_chat_rooms',
-        blank=True,
-        help_text='کاربرانی که این گفتگو را حذف کرده‌اند و دیگر نمی‌بینند'
+        blank=True
     )
     class Meta:
-        verbose_name = "اتاق گفتگو"
-        verbose_name_plural = "اتاق‌های گفتگو"
         ordering = ['-updated_at']
 
     def __str__(self):
         return f"{self.name} - {self.user.username}"
 
-    def close(self, user):
-        """بستن گفتگو"""
-        self.status = 'closed'
-        self.closed_at = timezone.now()
-        self.closed_by = user
-        self.save()
-
-        return True
-
-    def reopen(self, user):
-        """بازگشایی گفتگو"""
-        if self.status == 'closed':
-            self.status = 'open'
-            self.closed_at = None
-            self.closed_by = None
-            self.save()
-
-            return True
-        return False
-
-    def archive(self):
-        """آرشیو کردن گفتگو"""
-        if self.status == 'closed':
-            self.status = 'archived'
-            self.save()
-            return True
-        return False
-
-    def mark_deleted_by_user(self):
-        """علامت‌گذاری به عنوان حذف شده توسط کاربر"""
-        self.is_deleted_by_user = True
-        self.save()
-        return True
-
-    def mark_deleted_by_agent(self):
-        """علامت‌گذاری به عنوان حذف شده توسط پشتیبان"""
-        self.is_deleted_by_agent = True
-        self.save()
-        return True
-
-    @property
-    def is_open(self):
-        """آیا گفتگو باز است؟"""
-        return self.status == 'open'
-
-    @property
-    def is_closed(self):
-        """آیا گفتگو بسته شده است؟"""
-        return self.status == 'closed'
-
-    @property
-    def is_archived(self):
-        """آیا گفتگو آرشیو شده است؟"""
-        return self.status == 'archived'
-
-    @property
-    def unread_count_for_user(self):
-        """تعداد پیام‌های خوانده نشده برای کاربر"""
-        return self.messages.filter(is_read=False, sender=self.agent).count()
-
-    @property
-    def unread_count_for_agent(self):
-        """تعداد پیام‌های خوانده نشده برای پشتیبان"""
-        return self.messages.filter(is_read=False, sender=self.user).count()
 
 
 class ChatMessage(models.Model):
-    """
-    مدل پیام گفتگو
-    """
-    MESSAGE_TYPES = [
-        ('text', 'متن'),
-        ('image', 'تصویر'),
-        ('file', 'فایل'),
-        ('system', 'سیستمی'),
-    ]
+    MESSAGE_TYPES = [('text', 'Text'), ('image', 'Image'), ('file', 'File'), ('system', 'System')]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="messages", verbose_name="اتاق گفتگو")
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="messages")
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="sent_messages",
-        verbose_name="فرستنده"
+        related_name="sent_messages"
     )
-    content = models.TextField(verbose_name="متن پیام")
-    file = models.FileField(upload_to='chat_files/%Y/%m/%d/', null=True, blank=True, verbose_name="فایل پیوست")
-    message_type = models.CharField(
-        max_length=10,
-        choices=MESSAGE_TYPES,
-        default='text',
-        verbose_name="نوع پیام"
-    )
-    is_read = models.BooleanField(default=False, verbose_name="خوانده شده")
-    read_at = models.DateTimeField(null=True, blank=True, verbose_name="زمان خوانده شدن")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="زمان ارسال")
+    content = models.TextField()
+    file = models.FileField(upload_to='chat_files/%Y/%m/%d/', null=True, blank=True)
+    message_type = models.CharField(max_length=10, choices=MESSAGE_TYPES, default='text')
+    is_read = models.BooleanField(default=False)
+    read_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "پیام گفتگو"
-        verbose_name_plural = "پیام‌های گفتگو"
         ordering = ['created_at']
 
     def __str__(self):
-        sender_name = self.sender.username if self.sender else "سیستم"
+        sender_name = self.sender.username if self.sender else "System"
         return f"{sender_name}: {self.content[:50]}"
 
-    def mark_as_read(self):
-        """علامت‌گذاری پیام به عنوان خوانده شده"""
-        if not self.is_read:
-            self.is_read = True
-            self.read_at = timezone.now()
-            self.save(update_fields=['is_read', 'read_at'])
-            return True
-        return False
 
 
 class Notification(models.Model):
