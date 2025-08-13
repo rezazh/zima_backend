@@ -9,6 +9,8 @@ websocket_urlpatterns = [
     re_path(r'ws/chat/(?P<room_id>[^/]+)/$', consumers.ChatConsumer.as_asgi()),
     re_path(r'ws/online-status/$', consumers.OnlineStatusConsumer.as_asgi()),
     re_path(r'ws/notifications/$', consumers.NotificationConsumer.as_asgi()),
+    re_path(r'ws/admin/dashboard/$', consumers.AdminDashboardConsumer.as_asgi()),
+
 ]
 
 

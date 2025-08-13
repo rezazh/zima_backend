@@ -1,43 +1,32 @@
-// static/chat/js/online-handler.js
 (function() {
     'use strict';
 
-    // جلوگیری از اجرای مکرر
-    if (window.ZimaOnlineHandler) {
-        console.log('Online handler already initialized');
-        return;
-    }
+    if (window.ZimaOnlineHandler) return;
 
     window.ZimaOnlineHandler = {
         socket: null,
         isConnected: false,
         isConnecting: false,
-        lastActivity: Date.now(),
         heartbeatInterval: null,
+        heartbeatDelay: 60000,
+        reconnectDelay: 3000,
 
         init: function() {
-            console.log('Initializing online handler');
             this.setupBeforeUnload();
-
-            // فقط یک اتصال WebSocket برای وضعیت آنلاین
-            setTimeout(() => this.connect(), 3000);
+            this.setupActivityListeners();
+            setTimeout(() => this.connect(), this.reconnectDelay);
         },
 
         connect: function() {
-            if (this.isConnecting || this.isConnected) {
-                return;
-            }
+            if (this.isConnecting || this.isConnected) return;
 
             this.isConnecting = true;
-
             try {
                 const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 const wsUrl = `${wsProtocol}//${window.location.host}/ws/online-status/`;
-
                 this.socket = new WebSocket(wsUrl);
 
                 this.socket.onopen = () => {
-                    console.log('Online status connected');
                     this.isConnected = true;
                     this.isConnecting = false;
                     this.sendOnlineStatus();
@@ -45,30 +34,30 @@
                 };
 
                 this.socket.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'status_update') {
-                        this.updateUserStatus(data.user_id, data.status);
-                    } else if (data.type === 'all_statuses') {
-                        for (const userId in data.statuses) {
-                            this.updateUserStatus(userId, data.statuses[userId]);
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'online_status_update') {
+                            this.updateUserStatus(data.user_id, data.status);
+                        } else if (data.type === 'all_statuses') {
+                            for (const uid in data.statuses) {
+                                this.updateUserStatus(uid, data.statuses[uid]);
+                            }
                         }
-                    }
+                    } catch (err) {}
                 };
 
                 this.socket.onclose = () => {
-                    console.log('Online status disconnected');
                     this.isConnected = false;
                     this.isConnecting = false;
                     this.stopHeartbeat();
+                    setTimeout(() => this.connect(), this.reconnectDelay);
                 };
 
-                this.socket.onerror = (error) => {
-                    console.error('Online status error:', error);
+                this.socket.onerror = () => {
                     this.isConnecting = false;
                 };
 
             } catch (error) {
-                console.error('Error creating online status socket:', error);
                 this.isConnecting = false;
             }
         },
@@ -77,6 +66,11 @@
             window.addEventListener('beforeunload', () => {
                 this.sendOfflineStatus();
             });
+        },
+
+        setupActivityListeners: function() {
+            document.addEventListener('mousemove', () => this.sendHeartbeatNow());
+            document.addEventListener('keydown', () => this.sendHeartbeatNow());
         },
 
         sendOnlineStatus: function() {
@@ -89,26 +83,18 @@
         },
 
         sendOfflineStatus: function() {
-            if (this.isConnected && this.socket) {
+            if (this.isConnected && this.socket && this.socket.readyState === WebSocket.OPEN) {
                 try {
-                    this.socket.send(JSON.stringify({
-                        type: 'offline'
-                    }));
-                } catch (e) {
-                    console.error('Error sending offline status:', e);
-                }
+                    this.socket.send(JSON.stringify({ type: 'offline' }));
+                } catch {}
             }
         },
 
         startHeartbeat: function() {
             this.stopHeartbeat();
             this.heartbeatInterval = setInterval(() => {
-                if (this.isConnected && this.socket) {
-                    this.socket.send(JSON.stringify({
-                        type: 'heartbeat'
-                    }));
-                }
-            }, 120000); // 2 دقیقه
+                this.sendHeartbeatNow();
+            }, this.heartbeatDelay);
         },
 
         stopHeartbeat: function() {
@@ -118,23 +104,27 @@
             }
         },
 
+        sendHeartbeatNow: function() {
+            if (this.isConnected && this.socket && this.socket.readyState === WebSocket.OPEN) {
+                this.socket.send(JSON.stringify({ type: 'heartbeat' }));
+            }
+        },
+
         updateUserStatus: function(userId, status) {
             const elements = document.querySelectorAll(`.user-status[data-user-id="${userId}"]`);
             elements.forEach(element => {
                 element.classList.remove('online', 'offline');
                 element.classList.add(status);
                 element.setAttribute('title', status === 'online' ? 'آنلاین' : 'آفلاین');
-
-                const statusDot = element.querySelector('.status-dot');
-                if (statusDot) {
-                    statusDot.classList.remove('online', 'offline');
-                    statusDot.classList.add(status);
+                const dot = element.querySelector('.status-dot');
+                if (dot) {
+                    dot.classList.remove('online', 'offline');
+                    dot.classList.add(status);
                 }
             });
         }
     };
 
-    // شروع فقط یک بار
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             window.ZimaOnlineHandler.init();
@@ -142,5 +132,4 @@
     } else {
         window.ZimaOnlineHandler.init();
     }
-
 })();

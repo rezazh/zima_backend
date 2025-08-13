@@ -100,11 +100,14 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                {% if room.unread_count > 0 %}
-                                    <div class="chat-item-badge">
-                                        <div class="badge bg-primary">{{ room.unread_count }}</div>
+
+                                <div class="chat-item-badge">
+                                    <div class="badge bg-primary unread-room-badge"
+                                         data-room-id="{{ room.id }}"
+                                         {% if room.unread_count == 0 %}style="display:none;"{% endif %}>
+                                        {{ room.unread_count }}
                                     </div>
-                                {% endif %}
+                                </div>
                             </a>
                             <!-- دکمه حذف گفتگو فقط برای کاربران عادی و گفتگوهای بسته شده -->
                             {% if not request.user.is_staff and room.status == 'closed' %}
@@ -157,20 +160,15 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // فعال‌سازی تولتیپ‌ها (اگر از Bootstrap 5 استفاده می‌کنید)
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // متغیر برای نگهداری شناسه اتاق انتخاب شده برای حذف
     let selectedRoomId = null;
-
-    // مودال حذف گفتگو
     const deleteModalElement = document.getElementById('deleteChatModal');
     const deleteModal = new bootstrap.Modal(deleteModalElement);
 
-    // دکمه‌های حذف
     const deleteButtons = document.querySelectorAll('.delete-chat');
     deleteButtons.forEach(button => {
         button.addEventListener('click', function(e) {
@@ -181,10 +179,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // دکمه تایید حذف در مودال
     document.getElementById('confirmDelete').addEventListener('click', function() {
         if (selectedRoomId) {
-            // ارسال درخواست حذف
             fetch(`/chat/hide-room/${selectedRoomId}/`, {
                 method: 'POST',
                 headers: {
@@ -192,51 +188,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('خطا در ارتباط با سرور');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // حذف المان از DOM
                     const chatItem = document.querySelector(`.delete-chat[data-room-id="${selectedRoomId}"]`).closest('.chat-item');
-                    chatItem.style.height = chatItem.offsetHeight + 'px';
-                    chatItem.style.overflow = 'hidden';
-
-                    setTimeout(() => {
-                        chatItem.style.height = '0';
-                        chatItem.style.padding = '0';
-                        chatItem.style.margin = '0';
-                        chatItem.style.opacity = '0';
-
-                        setTimeout(() => {
-                            chatItem.remove();
-
-                            // بررسی آیا لیست خالی شده است
-                            const remainingItems = document.querySelectorAll('.chat-item');
-                            if (remainingItems.length === 0) {
-                                const tabPane = document.querySelector('.tab-pane.active');
-                                tabPane.innerHTML = `
-                                    <div class="empty-list">
-                                        <i class="fas fa-comments"></i>
-                                        <p>هیچ گفتگویی یافت نشد.</p>
-                                        {% if not request.user.is_staff %}
-                                        <a href="/chat/start/" class="btn btn-primary">
-                                            <i class="fas fa-plus ml-1"></i> شروع گفتگوی جدید
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                `;
-                            }
-                        }, 300);
-                    }, 10);
-
-                    // نمایش پیام موفقیت
+                    chatItem.remove();
                     showNotification('گفتگو با موفقیت حذف شد.', 'success');
                 } else {
-                    // نمایش خطا
                     showNotification(data.error || 'خطا در حذف گفتگو.', 'danger');
                 }
                 deleteModal.hide();
@@ -249,9 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // نمایش اعلان
     function showNotification(message, type) {
-        // بررسی وجود کانتینر اعلان
         let notificationContainer = document.querySelector('.notification-container');
         if (!notificationContainer) {
             notificationContainer = document.createElement('div');
@@ -265,7 +221,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.appendChild(notificationContainer);
         }
 
-        // ایجاد اعلان
         const notification = document.createElement('div');
         notification.className = `alert alert-${type} alert-dismissible fade show`;
         notification.role = 'alert';
@@ -274,10 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
 
-        // افزودن اعلان به کانتینر
         notificationContainer.appendChild(notification);
-
-        // حذف خودکار اعلان بعد از 5 ثانیه
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => {
@@ -286,7 +238,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
-    // دریافت مقدار کوکی CSRF
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -303,4 +254,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<script src="{% static 'chat/js/notifications.js' %}"></script>
 {% endblock %}

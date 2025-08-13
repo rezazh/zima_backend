@@ -355,3 +355,30 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 SECURE_HSTS_PRELOAD = False
 
 print("Django settings overridden for Docker deployment")
+
+if DJANGO_ENV == 'production':
+    # در داکر / سرور
+    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://guest:guest@rabbitmq:5672//')
+else:
+    # در محیط لوکال
+    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
+
+CELERY_RESULT_BACKEND = 'rpc://'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = USE_TZ
+
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+     'cleanup-inactive-users': {
+        'task': 'chat.tasks.cleanup_stale_online_statuses',
+        'schedule': 60.0,
+    },
+    # هر ۱ دقیقه
+    'force-offline-disconnected-users': {
+        'task': 'chat.tasks.force_offline_disconnected_users',
+        'schedule': 60.0,
+    },
+}

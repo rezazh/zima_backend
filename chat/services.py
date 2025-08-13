@@ -67,12 +67,9 @@ class UserStatusService:
 
     @staticmethod
     def get_all_online_users():
-        """دریافت لیست تمام کاربران آنلاین"""
+        """دریافت لیست تمام کاربران آنلاین طی ۵ دقیقه اخیر"""
         threshold = timezone.now() - timezone.timedelta(minutes=5)
-        return UserStatus.objects.filter(
-            status='online',
-            last_seen__gte=threshold
-        ).select_related('user')
+        return UserStatus.objects.filter(last_seen__gte=threshold).select_related('user')
 
 class ChatService:
     @staticmethod

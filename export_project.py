@@ -54,6 +54,7 @@ INCLUDED_PATHS = [
     # 'chat/consumers.py',
     'templates/chat',
     'templates/base/base.html',
+    'static/chat',
     # 'zima',
     # 'config',
     'chat',  # پوشه

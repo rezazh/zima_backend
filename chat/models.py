@@ -23,6 +23,7 @@ class UserStatus(models.Model):
     )
 
     last_seen = models.DateTimeField(default=timezone.now)
+    last_heartbeat = models.DateTimeField(default=timezone.now)
 
     class Meta:
         verbose_name = "وضعیت آنلاین کاربر"
