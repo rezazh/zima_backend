@@ -1,0 +1,766 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}سفارش‌های من | زیما{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-section {
+        min-height: 100vh;
+        background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+        padding: 140px 0 60px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "images/patterns/subtle-pattern.png" %}') repeat;
+        opacity: 0.03;
+        pointer-events: none;
+    }
+
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .profile-wrapper {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 40px;
+        align-items: flex-start;
+    }
+
+    /* Sidebar Styles */
+    .profile-sidebar {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        position: sticky;
+        top: 160px;
+    }
+
+    .sidebar-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 30px 25px;
+        text-align: center;
+        position: relative;
+    }
+
+    .sidebar-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+        opacity: 0.1;
+    }
+
+    .user-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        color: var(--primary-color);
+        font-size: 2rem;
+        font-weight: 600;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        position: relative;
+        z-index: 2;
+    }
+
+    .user-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .user-status {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 2;
+    }
+
+    .sidebar-nav {
+        padding: 0;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 18px 25px;
+        color: var(--text-color-dark);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+        border-bottom: 1px solid var(--zima-pearl);
+    }
+
+    .nav-link::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--primary-color);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        background: var(--zima-blush);
+        color: var(--primary-color);
+        transform: translateX(5px);
+    }
+
+    .nav-link:hover::before,
+    .nav-link.active::before {
+        transform: scaleY(1);
+    }
+
+    .nav-link.logout {
+        color: #dc3545;
+        border-bottom: none;
+    }
+
+    .nav-link.logout:hover {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .nav-icon {
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    /* Main Content Styles */
+    .profile-content {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .content-header {
+        background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+        padding: 30px 40px;
+        border-bottom: 1px solid var(--zima-pearl);
+    }
+
+    .content-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-color-dark);
+        margin: 0;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .content-subtitle {
+        color: var(--text-color-medium);
+        margin: 5px 0 0;
+        font-size: 1rem;
+    }
+
+    .content-body {
+        padding: 40px;
+    }
+
+    .orders-list {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .order-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        border: 2px solid var(--zima-pearl);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .order-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        border-color: var(--primary-color);
+    }
+
+    .order-header {
+        background: var(--zima-blush);
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .order-info {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .order-number {
+        font-weight: 600;
+        color: var(--text-color-dark);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .order-date {
+        color: var(--text-color-medium);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .order-status {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: white;
+    }
+
+    .status-pending {
+        background: #ffc107;
+    }
+
+    .status-processing {
+        background: #17a2b8;
+    }
+
+    .status-shipped {
+        background: #007bff;
+    }
+
+    .status-delivered {
+        background: #28a745;
+    }
+
+    .status-cancelled {
+        background: #dc3545;
+    }
+
+    .order-body {
+        padding: 25px;
+    }
+
+    .order-items {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .order-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: var(--zima-blush);
+        border-radius: 12px;
+    }
+
+    .item-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .item-details {
+        flex: 1;
+    }
+
+    .item-name {
+        font-weight: 600;
+        color: var(--text-color-dark);
+        margin-bottom: 5px;
+        font-size: 0.95rem;
+    }
+
+    .item-variant {
+        color: var(--text-color-medium);
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+
+    .item-quantity {
+        color: var(--text-color-medium);
+        font-size: 0.85rem;
+    }
+
+    .item-price {
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 1rem;
+    }
+
+    .order-summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        padding-top: 20px;
+        border-top: 1px solid var(--zima-pearl);
+    }
+
+    .order-total {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-color-dark);
+    }
+
+    .order-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-view {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-view:hover {
+        background: var(--secondary-color);
+        transform: translateY(-1px);
+        color: white;
+    }
+
+    .btn-track {
+        background: #17a2b8;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-track:hover {
+        background: #138496;
+        transform: translateY(-1px);
+        color: white;
+    }
+
+    .btn-cancel {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-cancel:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 40px;
+        color: var(--text-color-medium);
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        color: var(--zima-pearl);
+        margin-bottom: 25px;
+    }
+
+    .empty-title {
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: var(--text-color-dark);
+    }
+
+    .empty-text {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 30px;
+    }
+
+    .btn-shop {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-shop:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        color: white;
+    }
+
+    .alert {
+        padding: 15px 20px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-size: 0.95rem;
+        border: none;
+    }
+
+    .alert-success {
+        background: rgba(40, 167, 69, 0.1);
+        color: #155724;
+    }
+
+    .alert-info {
+        background: rgba(23, 162, 184, 0.1);
+        color: #0c5460;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .profile-wrapper {
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        .profile-sidebar {
+            position: relative;
+            top: auto;
+        }
+
+        .order-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .order-info {
+            width: 100%;
+        }
+
+        .order-summary {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .profile-section {
+            padding: 120px 0 40px;
+        }
+
+        .profile-container {
+            padding: 0 15px;
+        }
+
+        .content-header {
+            padding: 25px 20px;
+        }
+
+        .content-title {
+            font-size: 1.5rem;
+        }
+
+        .content-body {
+            padding: 25px 20px;
+        }
+
+        .order-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .order-actions {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+    <div class="profile-container">
+        <div class="profile-wrapper">
+            <!-- Sidebar -->
+            <aside class="profile-sidebar">
+                <div class="sidebar-header">
+                    <div class="user-avatar">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                    <h3 class="user-name">{{ user.get_full_name|default:user.username }}</h3>
+                    <p class="user-status">عضو زیما</p>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <a href="{% url 'users:profile' %}" class="nav-link">
+                        <i class="nav-icon fas fa-user"></i>
+                        <span>اطلاعات حساب کاربری</span>
+                    </a>
+                    <a href="{% url 'users:addresses' %}" class="nav-link">
+                        <i class="nav-icon fas fa-map-marker-alt"></i>
+                        <span>آدرس‌ها</span>
+                    </a>
+                    <a href="{% url 'orders:list' %}" class="nav-link active">
+                        <i class="nav-icon fas fa-shopping-bag"></i>
+                        <span>سفارش‌ها</span>
+                    </a>
+                    <a href="{% url 'users:change_password' %}" class="nav-link">
+                        <i class="nav-icon fas fa-key"></i>
+                        <span>تغییر رمز عبور</span>
+                    </a>
+                    <a href="{% url 'users:favorites' %}" class="nav-link">
+                        <i class="nav-icon fas fa-heart"></i>
+                        <span>علاقه‌مندی‌ها</span>
+                    </a>
+                    <a href="{% url 'users:logout' %}" class="nav-link logout">
+                        <i class="nav-icon fas fa-sign-out-alt"></i>
+                        <span>خروج از حساب کاربری</span>
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="profile-content">
+                <div class="content-header">
+                    <h1 class="content-title">سفارش‌های من</h1>
+                    <p class="content-subtitle">تاریخچه و وضعیت سفارش‌های شما</p>
+                </div>
+
+                <div class="content-body">
+                    <!-- Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Orders List -->
+                    {% if orders %}
+                        <div class="orders-list">
+                            {% for order in orders %}
+                                <div class="order-card">
+                                    <div class="order-header">
+                                        <div class="order-info">
+                                            <div class="order-number">
+                                                <i class="fas fa-receipt"></i>
+                                                سفارش #{{ order.id }}
+                                            </div>
+                                            <div class="order-date">
+                                                <i class="fas fa-calendar"></i>
+                                                {{ order.created_at|date:"Y/m/d H:i" }}
+                                            </div>
+                                        </div>
+                                        <div class="order-status status-{{ order.status }}">
+                                            {{ order.get_status_display }}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="order-body">
+                                        <div class="order-items">
+                                            {% for item in order.items.all %}
+                                                <div class="order-item">
+                                                    <div class="item-image">
+                                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                                    </div>
+                                                    <div class="item-details">
+                                                        <div class="item-name">{{ item.product.name }}</div>
+                                                        {% if item.color or item.size %}
+                                                            <div class="item-variant">
+                                                                {% if item.color %}رنگ: {{ item.color }}{% endif %}
+                                                                {% if item.size %} - سایز: {{ item.size }}{% endif %}
+                                                            </div>
+                                                        {% endif %}
+                                                        <div class="item-quantity">تعداد: {{ item.quantity }}</div>
+                                                    </div>
+                                                    <div class="item-price">
+                                                        {{ item.price|floatformat:0 }} تومان
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        
+                                        <div class="order-summary">
+                                            <div class="order-total">
+                                                مجموع: {{ order.total_amount|floatformat:0 }} تومان
+                                            </div>
+                                            <div class="order-actions">
+                                                <a href="{% url 'orders:detail' order.id %}" class="btn-view">
+                                                    <i class="fas fa-eye"></i>
+                                                    جزئیات
+                                                </a>
+                                                {% if order.status != 'cancelled' and order.status != 'delivered' %}
+                                                    <a href="{% url 'orders:track' order.id %}" class="btn-track">
+                                                        <i class="fas fa-truck"></i>
+                                                        پیگیری
+                                                    </a>
+                                                {% endif %}
+                                                {% if order.status == 'pending' %}
+                                                    <button class="btn-cancel" onclick="cancelOrder({{ order.id }})">
+                                                        <i class="fas fa-times"></i>
+                                                        لغو
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                            <h3 class="empty-title">هنوز سفارشی ثبت نکرده‌اید</h3>
+                            <p class="empty-text">از مجموعه زیبای محصولات زیما دیدن کنید و اولین سفارش خود را ثبت کنید</p>
+                            <a href="{% url 'products:list' %}" class="btn-shop">
+                                <i class="fas fa-shopping-cart"></i>
+                                شروع خرید
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </main>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cancel order function
+        window.cancelOrder = function(orderId) {
+            if (confirm('آیا از لغو این سفارش اطمینان دارید؟')) {
+                fetch(`/orders/cancel/${orderId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'خطا در لغو سفارش');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('خطا در برقراری ارتباط با سرور');
+                });
+            }
+        };
+
+        // Auto-hide alerts
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-10px)';
+                setTimeout(() => alert.remove(), 300);
+            }, 5000);
+        });
+
+        // Add loading states to buttons
+        const actionButtons = document.querySelectorAll('.btn-view, .btn-track');
+        actionButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال بارگذاری...';
+                
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+    });
+</script>
+{% endblock %}

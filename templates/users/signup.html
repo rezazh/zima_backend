@@ -3,15 +3,474 @@
 
 {% block title %}ثبت نام | زیما{% endblock %}
 
+{% block extra_css %}
+<style>
+    .auth-section {
+        min-height: 100vh;
+        background: linear-gradient(135deg, var(--zima-champagne), var(--zima-blush));
+        display: flex;
+        align-items: center;
+        padding: 140px 0 60px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "images/patterns/floral-pattern.png" %}') repeat;
+        opacity: 0.05;
+        pointer-events: none;
+    }
+
+    .auth-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .auth-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 80px;
+        align-items: center;
+        background: white;
+        border-radius: 30px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .auth-visual {
+        background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+        padding: 80px 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        color: white;
+        position: relative;
+        order: 2;
+    }
+
+    .auth-visual::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+        opacity: 0.1;
+    }
+
+    .visual-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .welcome-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .welcome-subtitle {
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+        opacity: 0.9;
+        line-height: 1.6;
+    }
+
+    .signup-benefits {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .signup-benefits li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+        font-size: 0.95rem;
+        opacity: 0.9;
+    }
+
+    .signup-benefits i {
+        color: var(--zima-champagne);
+        font-size: 1.1rem;
+        width: 20px;
+    }
+
+    .auth-form-section {
+        padding: 80px 60px;
+        order: 1;
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .form-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-color-dark);
+        margin-bottom: 10px;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .form-subtitle {
+        color: var(--text-color-medium);
+        font-size: 1rem;
+    }
+
+    .auth-form {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-color-dark);
+        font-size: 0.9rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 15px 20px;
+        border: 2px solid var(--zima-pearl);
+        border-radius: 15px;
+        font-size: 1rem;
+        font-family: 'Vazir', sans-serif;
+        transition: all 0.3s ease;
+        background: white;
+        outline: none;
+    }
+
+    .form-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+    }
+
+    .form-input.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+
+    .form-input.is-valid {
+        border-color: #28a745;
+        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-color-medium);
+        font-size: 1.1rem;
+    }
+
+    .form-input:focus + .input-icon {
+        color: var(--primary-color);
+    }
+
+    .password-toggle {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-color-medium);
+        cursor: pointer;
+        font-size: 1.1rem;
+        transition: color 0.3s ease;
+    }
+
+    .password-toggle:hover {
+        color: var(--primary-color);
+    }
+
+    .password-strength {
+        margin-top: 8px;
+        font-size: 0.8rem;
+    }
+
+    .strength-bar {
+        height: 4px;
+        border-radius: 2px;
+        background: #eee;
+        margin: 5px 0;
+        overflow: hidden;
+    }
+
+    .strength-fill {
+        height: 100%;
+        transition: all 0.3s ease;
+        border-radius: 2px;
+    }
+
+    .strength-weak { background: #dc3545; width: 25%; }
+    .strength-fair { background: #ffc107; width: 50%; }
+    .strength-good { background: #17a2b8; width: 75%; }
+    .strength-strong { background: #28a745; width: 100%; }
+
+    .form-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--zima-pearl);
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .form-check-input:checked {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .form-check-label {
+        font-size: 0.9rem;
+        color: var(--text-color-medium);
+        cursor: pointer;
+        line-height: 1.4;
+    }
+
+    .form-check-label a {
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+
+    .form-check-label a:hover {
+        text-decoration: underline;
+    }
+
+    .invalid-feedback {
+        display: block;
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 5px;
+    }
+
+    .alert {
+        padding: 15px 20px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-size: 0.9rem;
+    }
+
+    .alert-danger {
+        background: rgba(220, 53, 69, 0.1);
+        color: #721c24;
+        border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+
+    .alert-success {
+        background: rgba(40, 167, 69, 0.1);
+        color: #155724;
+        border: 1px solid rgba(40, 167, 69, 0.2);
+    }
+
+    .btn-auth {
+        width: 100%;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+    }
+
+    .btn-auth:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+    }
+
+    .btn-auth:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .form-divider {
+        position: relative;
+        text-align: center;
+        margin: 30px 0;
+    }
+
+    .form-divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--zima-pearl);
+    }
+
+    .form-divider span {
+        background: white;
+        padding: 0 20px;
+        color: var(--text-color-medium);
+        font-size: 0.9rem;
+    }
+
+    .auth-switch {
+        text-align: center;
+        padding: 25px;
+        background: var(--zima-blush);
+        border-radius: 15px;
+    }
+
+    .auth-switch-text {
+        color: var(--text-color-medium);
+        margin-bottom: 15px;
+        font-size: 0.95rem;
+    }
+
+    .btn-switch {
+        background: white;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+        padding: 12px 30px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+    .btn-switch:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .auth-wrapper {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .auth-visual {
+            order: 1;
+            padding: 60px 40px;
+        }
+
+        .auth-form-section {
+            order: 2;
+            padding: 60px 40px;
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .auth-section {
+            padding: 120px 0 40px;
+        }
+
+        .auth-container {
+            padding: 0 15px;
+        }
+
+        .auth-visual,
+        .auth-form-section {
+            padding: 40px 30px;
+        }
+
+        .welcome-title {
+            font-size: 1.8rem;
+        }
+
+        .form-title {
+            font-size: 1.6rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .auth-visual,
+        .auth-form-section {
+            padding: 30px 20px;
+        }
+
+        .welcome-title {
+            font-size: 1.5rem;
+        }
+
+        .form-title {
+            font-size: 1.4rem;
+        }
+
+        .form-input {
+            padding: 12px 16px;
+        }
+
+        .btn-auth {
+            padding: 12px 16px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white text-center py-3">
-                    <h4 class="mb-0">ثبت نام در زیما</h4>
+<section class="auth-section">
+    <div class="auth-container">
+        <div class="auth-wrapper">
+            <!-- Form Section -->
+            <div class="auth-form-section">
+                <div class="form-header">
+                    <h2 class="form-title">عضویت در زیما</h2>
+                    <p class="form-subtitle">اطلاعات خود را برای شروع وارد کنید</p>
                 </div>
-                <div class="card-body p-4">
+
+                <form class="auth-form" method="post" action="{% url 'users:signup' %}">
+                    {% csrf_token %}
+
                     {% if messages %}
                         {% for message in messages %}
                             <div class="alert alert-{{ message.tags }}">
@@ -20,86 +479,309 @@
                         {% endfor %}
                     {% endif %}
 
-                    <form method="post" action="{% url 'users:signup' %}">
-                        {% csrf_token %}
-
-                        <div class="mb-3">
-                            <label for="id_username" class="form-label">نام کاربری</label>
-                            <input type="text" name="username" id="id_username" class="form-control {% if form.username.errors %}is-invalid{% endif %}" value="{{ form.username.value|default:'' }}" required>
-                            {% if form.username.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.username.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                    <div class="form-group">
+                        <label for="id_username" class="form-label">نام کاربری</label>
+                        <div style="position: relative;">
+                            <input type="text"
+                                name="username"
+                                id="id_username"
+                                class="form-input {% if form.username.errors %}is-invalid{% endif %}"
+                                value="{{ form.username.value|default:'' }}"
+                                placeholder="نام کاربری خود را انتخاب کنید"
+                                required>
+                            <i class="fas fa-user input-icon"></i>
                         </div>
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="id_email" class="form-label">ایمیل</label>
-                            <input type="email" name="email" id="id_email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" value="{{ form.email.value|default:'' }}" required>
-                            {% if form.email.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.email.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                    <div class="form-group">
+                        <label for="id_email" class="form-label">ایمیل</label>
+                        <div style="position: relative;">
+                            <input type="email"
+                                name="email"
+                                id="id_email"
+                                class="form-input {% if form.email.errors %}is-invalid{% endif %}"
+                                value="{{ form.email.value|default:'' }}"
+                                placeholder="ایمیل خود را وارد کنید"
+                                required>
+                            <i class="fas fa-envelope input-icon"></i>
                         </div>
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="id_phone_number" class="form-label">شماره موبایل</label>
-                            <input type="text" name="phone_number" id="id_phone_number" class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}" value="{{ form.phone_number.value|default:'' }}" required>
-                            {% if form.phone_number.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.phone_number.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                    <div class="form-group">
+                        <label for="id_phone_number" class="form-label">شماره موبایل</label>
+                        <div style="position: relative;">
+                            <input type="text"
+                                name="phone_number"
+                                id="id_phone_number"
+                                class="form-input {% if form.phone_number.errors %}is-invalid{% endif %}"
+                                value="{{ form.phone_number.value|default:'' }}"
+                                placeholder="09xxxxxxxxx"
+                                required>
+                            <i class="fas fa-mobile-alt input-icon"></i>
                         </div>
+                        {% if form.phone_number.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.phone_number.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
 
-                        <!-- تغییر نام فیلد از password به password1 -->
-                        <div class="mb-3">
-                            <label for="id_password1" class="form-label">رمز عبور</label>
-                            <input type="password" name="password1" id="id_password1" class="form-control {% if form.password1.errors %}is-invalid{% endif %}" required>
-                            {% if form.password1.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.password1.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                    <div class="form-group">
+                        <label for="id_password1" class="form-label">رمز عبور</label>
+                        <div style="position: relative;">
+                            <input type="password"
+                                name="password1"
+                                id="id_password1"
+                                class="form-input {% if form.password1.errors %}is-invalid{% endif %}"
+                                placeholder="رمز عبور قوی انتخاب کنید"
+                                required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('id_password1')">
+                                <i class="fas fa-eye" id="id_password1_icon"></i>
+                            </button>
                         </div>
+                        <div class="password-strength" id="password1Strength" style="display: none;">
+                            <div class="strength-bar">
+                                <div class="strength-fill" id="strengthFill1"></div>
+                            </div>
+                            <span id="strengthText1"></span>
+                        </div>
+                        {% if form.password1.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.password1.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
 
-                        <!-- اطمینان از نام صحیح فیلد password2 -->
-                        <div class="mb-3">
-                            <label for="id_password2" class="form-label">تکرار رمز عبور</label>
-                            <input type="password" name="password2" id="id_password2" class="form-control {% if form.password2.errors %}is-invalid{% endif %}" required>
-                            {% if form.password2.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.password2.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                    <div class="form-group">
+                        <label for="id_password2" class="form-label">تکرار رمز عبور</label>
+                        <div style="position: relative;">
+                            <input type="password"
+                                name="password2"
+                                id="id_password2"
+                                class="form-input {% if form.password2.errors %}is-invalid{% endif %}"
+                                placeholder="رمز عبور را دوباره وارد کنید"
+                                required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('id_password2')">
+                                <i class="fas fa-eye" id="id_password2_icon"></i>
+                            </button>
                         </div>
+                        {% if form.password2.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.password2.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
 
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" name="terms" id="id_terms" class="form-check-input" required>
-                            <label for="id_terms" class="form-check-label">قوانین و مقررات را می‌پذیرم</label>
-                        </div>
+                    <div class="form-check">
+                        <input type="checkbox" name="terms" id="id_terms" class="form-check-input" required>
+                        <label for="id_terms" class="form-check-label">
+                            قوانین و مقررات را می‌پذیرم
+                        </label>
+                    </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">ثبت نام</button>
-                        </div>
-                    </form>
-                </div>
-                <div class="card-footer text-center">
-                    <p class="mb-0">قبلاً ثبت نام کرده‌اید؟ <a href="{% url 'users:login' %}">ورود</a></p>
+                    <button type="submit" class="btn-auth" id="submitBtn">عضویت در زیما</button>
+
+                    <div class="form-divider">
+                        <span>یا</span>
+                    </div>
+
+                    <div class="auth-switch">
+                        <p class="auth-switch-text">قبلاً عضو شده‌اید؟</p>
+                        <a href="{% url 'users:login' %}" class="btn-switch">ورود به حساب</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Visual Section -->
+            <div class="auth-visual">
+                <div class="visual-content">
+                    <h1 class="welcome-title">به زیما خوش آمدید</h1>
+                    <p class="welcome-subtitle">دنیای زیبایی و راحتی را کشف کنید. عضویت در زیما تجربه‌ای منحصربه‌فرد از خرید آنلاین است.</p>
+
+                    <ul class="signup-benefits">
+                        <li>
+                            <i class="fas fa-gem"></i>
+                            <span>دسترسی به کالکشن‌های ویژه</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-percentage"></i>
+                            <span>تخفیف‌های اختصاصی اعضا</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-shipping-fast"></i>
+                            <span>ارسال سریع و رایگان</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-heart"></i>
+                            <span>ذخیره محصولات موردعلاقه</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-headset"></i>
+                            <span>پشتیبانی اختصاصی ۲۴/۷</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password toggle functionality
+    window.togglePassword = function(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(inputId + '_icon');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    };
+
+    // Password strength checker
+    const password1Input = document.getElementById('id_password1');
+    const strengthDiv = document.getElementById('password1Strength');
+    const strengthFill = document.getElementById('strengthFill1');
+    const strengthText = document.getElementById('strengthText1');
+
+    password1Input.addEventListener('input', function() {
+        const password = this.value;
+        const strength = checkPasswordStrength(password);
+
+        if (password.length > 0) {
+            strengthDiv.style.display = 'block';
+            strengthFill.className = 'strength-fill strength-' + strength.level;
+            strengthText.textContent = strength.text;
+        } else {
+            strengthDiv.style.display = 'none';
+        }
+    });
+
+    function checkPasswordStrength(password) {
+        let score = 0;
+        let feedback = [];
+
+        if (password.length >= 8) score++;
+        else feedback.push('حداقل ۸ کاراکتر');
+
+        if (/[a-z]/.test(password)) score++;
+        else feedback.push('حروف کوچک');
+
+        if (/[A-Z]/.test(password)) score++;
+        else feedback.push('حروف بزرگ');
+
+        if (/[0-9]/.test(password)) score++;
+        else feedback.push('اعداد');
+
+        if (/[^A-Za-z0-9]/.test(password)) score++;
+        else feedback.push('کاراکترهای خاص');
+
+        const levels = ['weak', 'fair', 'good', 'strong'];
+        const texts = ['ضعیف', 'متوسط', 'خوب', 'قوی'];
+
+        let level, text;
+        if (score <= 1) {
+            level = 'weak';
+            text = 'ضعیف - ' + feedback.slice(0, 2).join(', ');
+        } else if (score <= 2) {
+            level = 'fair';
+            text = 'متوسط - ' + feedback.slice(0, 1).join(', ');
+        } else if (score <= 3) {
+            level = 'good';
+            text = 'خوب';
+        } else {
+            level = 'strong';
+            text = 'قوی';
+        }
+
+        return { level, text };
+    }
+
+    // Password confirmation check
+    const password2Input = document.getElementById('id_password2');
+    password2Input.addEventListener('input', function() {
+        if (this.value && this.value !== password1Input.value) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+        } else if (this.value) {
+            this.classList.add('is-valid');
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    // Input validation and styling
+    const inputs = document.querySelectorAll('.form-input');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else {
+                this.classList.remove('is-valid', 'is-invalid');
+            }
+        });
+
+        input.addEventListener('blur', function() {
+            if (this.hasAttribute('required') && !this.value.trim()) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            }
+        });
+    });
+
+    // Phone number formatting
+    const phoneInput = document.getElementById('id_phone_number');
+    phoneInput.addEventListener('input', function() {
+        let value = this.value.replace(/\D/g, '');
+        if (value.startsWith('98')) {
+            value = value.substring(2);
+        }
+        if (value.startsWith('0')) {
+            value = value.substring(1);
+        }
+        if (value.length > 0) {
+            value = '09' + value.substring(1, 10);
+        }
+        this.value = value;
+    });
+
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+    });
+});
+</script>
 {% endblock %}

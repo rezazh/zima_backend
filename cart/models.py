@@ -35,6 +35,22 @@ class CartItem(models.Model):
         """قیمت کل اصلی (بدون تخفیف)"""
         return self.product.price * self.quantity
 
+    def get_color_object(self):
+        """بازگرداندن object رنگ برای نمایش hex_code"""
+        try:
+            from products.models import Color
+            return Color.objects.get(name=self.color)
+        except:
+            return None
+
+    def get_size_object(self):
+        """بازگرداندن object سایز"""
+        try:
+            from products.models import Size
+            return Size.objects.get(name=self.size)
+        except:
+            return None
+
     def get_product_discount_amount(self):
         """مبلغ تخفیف محصول"""
         if self.product.has_discount():

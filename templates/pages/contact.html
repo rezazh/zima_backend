@@ -1,0 +1,1125 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}تماس با ما | زیما - ارتباط مستقیم با ما{% endblock %}
+
+{% block extra_css %}
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #feca57;
+            --text-color-dark: #2c3e50;
+            --text-color-medium: #5a6c7d;
+            --text-color-light: #95a5a6;
+            --zima-blush: #fff5f5;
+            --zima-pearl: #f8f9fa;
+            --zima-champagne: #fef9e7;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+
+        .contact-page {
+            padding: 140px 0 60px;
+            background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact-page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+            opacity: 0.02;
+            pointer-events: none;
+        }
+
+        .contact-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 80px;
+            position: relative;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-color-dark);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-color-medium);
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            color: var(--text-color-medium);
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Contact Methods Section */
+        .contact-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 80px;
+        }
+
+        .contact-method {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--zima-pearl);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact-method::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 107, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .contact-method:hover::before {
+            left: 100%;
+        }
+
+        .contact-method:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary-color);
+        }
+
+        .contact-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .contact-method.phone .contact-icon {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .contact-method.email .contact-icon {
+            background: linear-gradient(135deg, #007bff, #6f42c1);
+        }
+
+        .contact-method.telegram .contact-icon {
+            background: linear-gradient(135deg, #0088cc, #229ed9);
+        }
+
+        .contact-method.whatsapp .contact-icon {
+            background: linear-gradient(135deg, #25d366, #128c7e);
+        }
+
+        .contact-method.instagram .contact-icon {
+            background: linear-gradient(135deg, #e4405f, #f77737);
+        }
+
+        .contact-method.address .contact-icon {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+        }
+
+        .contact-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-color-dark);
+            margin-bottom: 15px;
+        }
+
+        .contact-info {
+            color: var(--text-color-medium);
+            line-height: 1.6;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .contact-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .contact-link:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        /* Contact Form Section */
+        .contact-form-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 80px;
+            align-items: start;
+        }
+
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            border: 3px solid var(--zima-pearl);
+            position: relative;
+        }
+
+        .form-container::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 30px;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        .form-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-color-dark);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .form-description {
+            font-size: 1.1rem;
+            color: var(--text-color-medium);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-color-dark);
+            font-size: 1rem;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: 15px;
+            border: 2px solid var(--zima-pearl);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: var(--zima-pearl);
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-submit {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .form-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        /* Info Panel */
+        .info-panel {
+            background: linear-gradient(135deg, white, var(--zima-blush));
+            padding: 40px;
+            border-radius: 25px;
+            border: 2px solid var(--zima-pearl);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+        }
+
+        .info-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-color-dark);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .info-content h4 {
+            color: var(--text-color-dark);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+
+        .info-content p {
+            color: var(--text-color-medium);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        /* Working Hours */
+        .working-hours {
+            background: white;
+            border-radius: 25px;
+            padding: 50px;
+            margin-bottom: 80px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            border: 3px solid var(--zima-pearl);
+        }
+
+        .hours-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-color-dark);
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .hours-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+        }
+
+        .hours-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .hours-card {
+            background: var(--zima-blush);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid var(--zima-pearl);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hours-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .hours-card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-color-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .hours-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .hours-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 107, 107, 0.1);
+            color: var(--text-color-medium);
+        }
+
+        .hours-list li:last-child {
+            border-bottom: none;
+        }
+
+        .day {
+            font-weight: 600;
+        }
+
+        .time {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            margin-bottom: 80px;
+        }
+
+        .faq-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-color-dark);
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .faq-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--zima-pearl);
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 25px;
+            background: var(--zima-blush);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-color-dark);
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .faq-question.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .faq-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-question.active .faq-icon {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            padding: 0 25px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-answer.active {
+            padding: 25px;
+            max-height: 200px;
+        }
+
+        .faq-answer p {
+            color: var(--text-color-medium);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Social Media Section */
+        .social-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 25px;
+            padding: 60px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .social-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+            opacity: 0.1;
+        }
+
+        .social-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .social-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .social-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .social-link:hover {
+            background: white;
+            color: var(--primary-color);
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .contact-container {
+                padding: 0 15px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .contact-page {
+                padding: 120px 0 40px;
+            }
+            
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .contact-methods {
+                grid-template-columns: 1fr;
+            }
+            
+            .contact-form-section {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            
+            .form-container,
+            .info-panel,
+            .working-hours {
+                padding: 30px;
+            }
+            
+            .hours-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .social-section {
+                padding: 40px 30px;
+            }
+            
+            .social-title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 1.8rem;
+            }
+            
+            .form-container,
+            .info-panel,
+            .working-hours {
+                padding: 20px;
+            }
+            
+            .contact-method {
+                padding: 25px;
+            }
+            
+            .social-section {
+                padding: 30px 20px;
+            }
+            
+            .social-links {
+                gap: 15px;
+            }
+            
+            .social-link {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <section class="contact-page">
+        <div class="contact-container">
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <h1 class="hero-title">تماس با ما</h1>
+                <p class="hero-subtitle">ما همیشه در خدمت شما هستیم</p>
+                <p class="hero-description">
+                    تیم پشتیبانی زیما آماده پاسخگویی به تمامی سوالات و درخواست‌های شما است. 
+                    از طریق هر یک از راه‌های ارتباطی زیر می‌توانید با ما در تماس باشید.
+                </p>
+            </div>
+
+            <!-- Contact Methods -->
+            <div class="contact-methods">
+                <div class="contact-method phone">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <h3 class="contact-title">تماس تلفنی</h3>
+                    <p class="contact-info">
+                        برای مشاوره و سفارش تلفنی با ما تماس بگیرید
+                    </p>
+                    <a href="tel:+989123456789" class="contact-link">
+                        <i class="fas fa-phone"></i>
+                        ۰۹۱۲-۳۴۵-۶۷۸۹
+                    </a>
+                </div>
+
+                <div class="contact-method email">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h3 class="contact-title">ایمیل</h3>
+                    <p class="contact-info">
+                        برای پیگیری سفارشات و ارسال پیشنهادات
+                    </p>
+                    <a href="mailto:info@zima-shop.ir" class="contact-link">
+                        <i class="fas fa-envelope"></i>
+                        info@zima-shop.ir
+                    </a>
+                </div>
+
+                <div class="contact-method telegram">
+                    <div class="contact-icon">
+                        <i class="fab fa-telegram"></i>
+                    </div>
+                    <h3 class="contact-title">تلگرام</h3>
+                    <p class="contact-info">
+                        پشتیبانی سریع و آنلاین از طریق تلگرام
+                    </p>
+                    <a href="https://t.me/zima_support" class="contact-link" target="_blank">
+                        <i class="fab fa-telegram"></i>
+                        @zima_support
+                    </a>
+                </div>
+
+                <div class="contact-method whatsapp">
+                    <div class="contact-icon">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <h3 class="contact-title">واتساپ</h3>
+                    <p class="contact-info">
+                        چت مستقیم و ارسال تصاویر محصولات
+                    </p>
+                    <a href="https://wa.me/989123456789" class="contact-link" target="_blank">
+                        <i class="fab fa-whatsapp"></i>
+                        ۰۹۱۲-۳۴۵-۶۷۸۹
+                    </a>
+                </div>
+
+                <div class="contact-method instagram">
+                    <div class="contact-icon">
+                        <i class="fab fa-instagram"></i>
+                    </div>
+                    <h3 class="contact-title">اینستاگرام</h3>
+                    <p class="contact-info">
+                        دنبال کردن محصولات جدید و تخفیف‌ها
+                    </p>
+                    <a href="https://instagram.com/zima.official" class="contact-link" target="_blank">
+                        <i class="fab fa-instagram"></i>
+                        @zima.official
+                    </a>
+                </div>
+
+                <div class="contact-method address">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3 class="contact-title">آدرس فروشگاه</h3>
+                    <p class="contact-info">
+                        مراجعه حضوری برای مشاهده محصولات
+                    </p>
+                    <a href="#" class="contact-link">
+                        <i class="fas fa-map-marker-alt"></i>
+                        مشهد، خیابان امام رضا
+                    </a>
+                </div>
+            </div>
+
+            <!-- Contact Form Section -->
+            <div class="contact-form-section">
+                <div class="form-container">
+                    <h2 class="form-title">
+                        <i class="fas fa-paper-plane"></i>
+                        ارسال پیام
+                    </h2>
+                    <p class="form-description">
+                        فرم زیر را پر کنید تا در اسرع وقت با شما تماس بگیریم. تمامی پیام‌ها در کمتر از 24 ساعت پاسخ داده می‌شوند.
+                    </p>
+                    
+                    <form class="contact-form" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="name" class="form-label">نام و نام خانوادگی *</label>
+                            <input type="text" id="name" name="name" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone" class="form-label">شماره تماس *</label>
+                            <input type="tel" id="phone" name="phone" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" class="form-label">ایمیل</label>
+                            <input type="email" id="email" name="email" class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject" class="form-label">موضوع پیام *</label>
+                            <select id="subject" name="subject" class="form-select" required>
+                                <option value="">انتخاب کنید</option>
+                                <option value="order">سفارش و خرید</option>
+                                <option value="support">پشتیبانی</option>
+                                <option value="complaint">شکایت</option>
+                                <option value="suggestion">پیشنهاد</option>
+                                <option value="cooperation">همکاری</option>
+                                <option value="other">سایر موارد</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message" class="form-label">پیام شما *</label>
+                            <textarea id="message" name="message" class="form-textarea" required placeholder="پیام خود را اینجا بنویسید..."></textarea>
+                        </div>
+
+                        <button type="submit" class="form-submit">
+                            <i class="fas fa-paper-plane"></i>
+                            ارسال پیام
+                        </button>
+                    </form>
+                </div>
+
+                <div class="info-panel">
+                    <h2 class="info-title">
+                        <i class="fas fa-info-circle"></i>
+                        اطلاعات تماس
+                    </h2>
+                    
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="info-content">
+                            <h4>ساعات پاسخگویی</h4>
+                            <p>شنبه تا پنج‌شنبه: ۹:۰۰ تا ۲۱:۰۰<br>جمعه: ۱۴:۰۰ تا ۲۱:۰۰</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-shipping-fast"></i>
+                        </div>
+                        <div class="info-content">
+                            <h4>ارسال سفارشات</h4>
+                            <p>ارسال رایگان برای خرید بالای ۳۰۰ هزار تومان<br>ارسال به تمام نقاط کشور</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-undo"></i>
+                        </div>
+                        <div class="info-content">
+                            <h4>ضمانت بازگشت</h4>
+                            <p>۷ روز ضمانت بازگشت کالا<br>بدون هیچ‌گونه هزینه اضافی</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <div class="info-content">
+                            <h4>کیفیت تضمینی</h4>
+                            <p>۱۰۰٪ اصالت محصولات<br>کنترل کیفیت دقیق</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Working Hours -->
+            <div class="working-hours">
+                <h2 class="hours-title">ساعات کاری</h2>
+                <div class="hours-grid">
+                    <div class="hours-card">
+                        <h3 class="hours-card-title">
+                            <i class="fas fa-phone"></i>
+                            پشتیبانی تلفنی
+                        </h3>
+                        <ul class="hours-list">
+                            <li><span class="day">شنبه تا چهارشنبه</span> <span class="time">۹:۰۰ - ۲۱:۰۰</span></li>
+                            <li><span class="day">پنج‌شنبه</span> <span class="time">۹:۰۰ - ۱۸:۰۰</span></li>
+                            <li><span class="day">جمعه</span> <span class="time">۱۴:۰۰ - ۲۱:۰۰</span></li>
+                        </ul>
+                    </div>
+
+                    <div class="hours-card">
+                        <h3 class="hours-card-title">
+                            <i class="fas fa-comments"></i>
+                            پشتیبانی آنلاین
+                        </h3>
+                        <ul class="hours-list">
+                            <li><span class="day">تلگرام</span> <span class="time">۲۴ ساعته</span></li>
+                            <li><span class="day">واتساپ</span> <span class="time">۸:۰۰ - ۲۳:۰۰</span></li>
+                            <li><span class="day">اینستاگرام</span> <span class="time">۹:۰۰ - ۲۲:۰۰</span></li>
+                        </ul>
+                    </div>
+
+                    <div class="hours-card">
+                        <h3 class="hours-card-title">
+                            <i class="fas fa-store"></i>
+                            فروشگاه حضوری
+                        </h3>
+                        <ul class="hours-list">
+                            <li><span class="day">شنبه تا چهارشنبه</span> <span class="time">۱۰:۰۰ - ۲۰:۰۰</span></li>
+                            <li><span class="day">پنج‌شنبه</span> <span class="time">۱۰:۰۰ - ۱۷:۰۰</span></li>
+                            <li><span class="day">جمعه</span> <span class="time">تعطیل</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="faq-section">
+                <h2 class="faq-title">سوالات متداول</h2>
+                <div class="faq-container">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>چگونه می‌توانم سفارش دهم؟</span>
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>شما می‌توانید از طریق سایت، تماس تلفنی یا پیام در شبکه‌های اجتماعی سفارش خود را ثبت کنید. تمامی محصولات با عکس و توضیحات کامل در سایت موجود است.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>زمان ارسال سفارشات چقدر است؟</span>
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>برای شهر مشهد ۱-۲ روز کاری و برای سایر شهرها ۲-۵ روز کاری. سفارشات روز شنبه تا چهارشنبه تا ساعت ۱۶ همان روز آماده ارسال می‌شود.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>آیا امکان تعویض یا بازگشت کالا وجود دارد؟</span>
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>بله، تا ۷ روز پس از دریافت کالا امکان بازگشت یا تعویض وجود دارد. کالا باید در شرایط اولیه و با بسته‌بندی سالم باشد.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>هزینه ارسال چقدر است؟</span>
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>برای خرید بالای ۳۰۰ هزار تومان ارسال رایگان است. برای مبالغ کمتر، هزینه ارسال ۳۰ هزار تومان محاسبه می‌شود.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social Media Section -->
+            <div class="social-section">
+                <div class="social-content">
+                    <h2 class="social-title">ما را دنبال کنید</h2>
+                    <p class="social-subtitle">از آخرین محصولات و تخفیف‌های ویژه مطلع شوید</p>
+                    <div class="social-links">
+                        <a href="https://t.me/zima_channel" class="social-link" target="_blank" title="کانال تلگرام">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                        <a href="https://wa.me/989123456789" class="social-link" target="_blank" title="واتساپ">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="https://instagram.com/zima.official" class="social-link" target="_blank" title="اینستاگرام">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="tel:+989123456789" class="social-link" title="تماس تلفنی">
+                            <i class="fas fa-phone"></i>
+                        </a>
+                        <a href="mailto:info@zima-shop.ir" class="social-link" title="ایمیل">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // FAQ Toggle
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', function() {
+                    const faqItem = this.parentNode;
+                    const answer = faqItem.querySelector('.faq-answer');
+                    const isActive = this.classList.contains('active');
+                    
+                    // Close all other FAQ items
+                    faqQuestions.forEach(q => {
+                        q.classList.remove('active');
+                        q.parentNode.querySelector('.faq-answer').classList.remove('active');
+                    });
+                    
+                    // Toggle current item
+                    if (!isActive) {
+                        this.classList.add('active');
+                        answer.classList.add('active');
+                    }
+                });
+            });
+
+            // Form Submission
+            const contactForm = document.querySelector('.contact-form');
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Get form data
+                    const formData = new FormData(this);
+                    const submitBtn = this.querySelector('.form-submit');
+                    const originalText = submitBtn.innerHTML;
+                    
+                    // Show loading state
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ارسال...';
+                    submitBtn.disabled = true;
+                    
+                    // Simulate form submission (replace with actual AJAX call)
+                    setTimeout(() => {
+                        // Show success message
+                        alert('پیام شما با موفقیت ارسال شد. به زودی با شما تماس می‌گیریم.');
+                        
+                        // Reset form
+                        this.reset();
+                        
+                        // Reset button
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }, 2000);
+                });
+            }
+
+            // Intersection Observer for animations
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            // Observe elements for animation
+            document.querySelectorAll('.contact-method, .info-item, .hours-card, .faq-item').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'all 0.6s ease';
+                observer.observe(el);
+            });
+
+            // Phone number formatting
+            const phoneInputs = document.querySelectorAll('input[type="tel"]');
+            phoneInputs.forEach(input => {
+                input.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 11) {
+                        value = value.substring(0, 11);
+                    }
+                    e.target.value = value;
+                });
+            });
+
+            // Add parallax effect to hero section
+            window.addEventListener('scroll', () => {
+                const scrolled = window.pageYOffset;
+                const hero = document.querySelector('.hero-section');
+                if (hero) {
+                    hero.style.transform = `translateY(${scrolled * 0.1}px)`;
+                }
+            });
+        });
+    </script>
+{% endblock %}

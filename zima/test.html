@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>زیما | زیبایی خصوصی شما</title>
+ <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&family=Vazir:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+ <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+ <style>
+ :root {
+ --soft-pink: #FFB6C1;
+ --rose-gold: #E8B4B8;
+ --cream: #FFF8DC;
+ --blush: #FFC0CB;
+ --lavender: #E6E6FA;
+ --pearl-white: #F8F6F0;
+ --champagne: #F7E7CE;
+ --nude: #F5DEB3;
+ --coral: #FF7F7F;
+ --powder-blue: #B0E0E6;
+ --mint: #F0FFFF;
+ --warm-gray: #8B8680;
+ --charcoal: #36454F;
+ --gold-accent: #D4AF37;
+ }
+
+ * {
+ margin: 0;
+ padding: 0;
+ box-sizing: border-box;
+ }
+
+ body {
+ font-family: 'Vazir', sans-serif;
+ background: linear-gradient(135deg, var(--pearl-white) 0%, var(--cream) 100%);
+ color: var(--charcoal);
+ overflow-x: hidden;
+ cursor: none;
+ line-height: 1.6;
+ }
+
+ /* Elegant Custom Cursor */
+ .cursor {
+ width: 20px;
+ height: 20px;
+ border: 2px solid var(--rose-gold);
+ border-radius: 50%;
+ position: fixed;
+ pointer-events: none;
+ z-index: 9999;
+ transition: all 0.3s ease;
+ backdrop-filter: blur(5px);
+ }
+
+ .cursor-dot {
+ width: 4px;
+ height: 4px;
+ background: var(--coral);
+ border-radius: 50%;
+ position: fixed;
+ pointer-events: none;
+ z-index: 10000;
+ transition: all 0.1s ease;
+ }
+
+ .cursor.hover {
+ transform: scale(2);
+ background: rgba(255, 182, 193, 0.1);
+ border-color: var(--coral);
+ }
+
+ /* Floating Hearts */
+ .floating-heart {
+ position: fixed;
+ color: var(--soft-pink);
+ font-size: 20px;
+ pointer-events: none;
+ z-index: 1;
+ animation: floatHeart 6s ease-in-out infinite;
+ opacity: 0.3;
+ }
+
+ @keyframes floatHeart {
+ 0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+ 25% { transform: translateY(-20px) rotate(90deg); opacity: 0.6; }
+ 50% { transform: translateY(-10px) rotate(180deg); opacity: 0.4; }
+ 75% { transform: translateY(-30px) rotate(270deg); opacity: 0.7; }
+ }
+
+ /* Romantic Loading Screen */
+ .loader {
+ position: fixed;
+ top: 0;
+ left: 0;
+ width: 100%;
+ height: 100%;
+ background: linear-gradient(45deg, var(--cream), var(--blush));
+ z-index: 10001;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ transition: opacity 0.8s ease, visibility 0.8s ease;
+ }
+
+ .loader.hidden {
+ opacity: 0;
+ visibility: hidden;
+ }
+
+ .loader-content {
+ text-align: center;
+ }
+
+ .loader-logo {
+ font-size: 4rem;
+ font-weight: 700;
+ color: var(--rose-gold);
+ font-family: 'Dancing Script', cursive;
+ margin-bottom: 30px;
+ animation: pulse 2s ease-in-out infinite;
+ }
+
+ @keyframes pulse {
+ 0%, 100% { transform: scale(1); }
+ 50% { transform: scale(1.05); }
+ }
+
+ .loader-text {
+ color: var(--warm-gray);
+ font-size: 1.1rem;
+ letter-spacing: 2px;
+ }
+
+ /* Elegant Navigation */
+ .nav-container {
+ position: fixed;
+ top: 0;
+ left: 0;
+ right: 0;
+ z-index: 1000;
+ background: rgba(248, 246, 240, 0.95);
+ backdrop-filter: blur(20px);
+ border-bottom: 1px solid rgba(232, 180, 184, 0.3);
+ transition: all 0.3s ease;
+ }
+
+ .nav-container.scrolled {
+ background: rgba(248, 246, 240, 0.98);
+ box-shadow: 0 5px 30px rgba(232, 180, 184, 0.1);
+ }
+
+ .navbar {
+ max-width: 1400px;
+ margin: 0 auto;
+ padding: 20px 40px;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ }
+
+ .logo {
+ font-size: 2.8rem;
+ font-weight: 700;
+ color: var(--rose-gold);
+ text-decoration: none;
+ font-family: 'Dancing Script', cursive;
+ position: relative;
+ }
+
+ .logo::after {
+ content: '♡';
+ position: absolute;
+ top: -5px;
+ right: -25px;
+ font-size: 1.2rem;
+ color: var(--coral);
+ animation: heartbeat 2s ease-in-out infinite;
+ }
+
+ @keyframes heartbeat {
+ 0%, 100% { transform: scale(1); }
+ 50% { transform: scale(1.2); }
+ }
+
+ .nav-menu {
+ display: flex;
+ list-style: none;
+ gap: 40px;
+ align-items: center;
+ }
+
+ .nav-link {
+ color: var(--charcoal);
+ text-decoration: none;
+ font-weight: 500;
+ font-size: 1rem;
+ position: relative;
+ transition: all 0.3s ease;
+ padding: 8px 0;
+ }
+
+ .nav-link::after {
+ content: '';
+ position: absolute;
+ bottom: 0;
+ left: 50%;
+ width: 0;
+ height: 2px;
+ background: var(--coral);
+ transition: all 0.3s ease;
+ transform: translateX(-50%);
+ }
+
+ .nav-link:hover {
+ color: var(--coral);
+ }
+
+ .nav-link:hover::after {
+ width: 100%;
+ }
+
+ .nav-icons {
+ display: flex;
+ gap: 25px;
+ align-items: center;
+ }
+
+ .nav-icon {
+ color: var(--charcoal);
+ font-size: 1.3rem;
+ cursor: pointer;
+ transition: all 0.3s ease;
+ position: relative;
+ }
+
+ .nav-icon:hover {
+ color: var(--coral);
+ transform: translateY(-2px);
+ }
+
+ .cart-count {
+ position: absolute;
+ top: -8px;
+ right: -8px;
+ width: 20px;
+ height: 20px;
+ background: var(--coral);
+ color: white;
+ border-radius: 50%;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 0.75rem;
+ font-weight: 600;
+ }
+
+ /* Hero Section */
+ .hero {
+ min-height: 100vh;
+ position: relative;
+ display: flex;
+ align-items: center;
+ overflow: hidden;
+ background: linear-gradient(135deg, var(--mint) 0%, var(--lavender) 50%, var(--blush) 100%);
+ }
+
+ .hero-shapes {
+ position: absolute;
+ width: 100%;
+ height: 100%;
+ overflow: hidden;
+ }
+
+ .shape {
+ position: absolute;
+ border-radius: 50%;
+ opacity: 0.1;
+ animation: float 20s ease-in-out infinite;
+ }
+
+ .shape:nth-child(1) {
+ width: 300px;
+ height: 300px;
+ background: var(--soft-pink);
+ top: 10%;
+ left: 10%;
+ animation-delay: 0s;
+ }
+
+ .shape:nth-child(2) {
+ width: 200px;
+ height: 200px;
+ background: var(--coral);
+ top: 60%;
+ right: 15%;
+ animation-delay: 5s;
+ }
+
+ .shape:nth-child(3) {
+ width: 150px;
+ height: 150px;
+ background: var(--rose-gold);
+ bottom: 20%;
+ left: 20%;
+ animation-delay: 10s;
+ }
+
+ @keyframes float {
+ 0%, 100% { transform: translateY(0) scale(1); }
+ 33% { transform: translateY(-30px) scale(1.1); }
+ 66% { transform: translateY(20px) scale(0.9); }
+ }
+
+ .hero-container {
+ max-width: 1400px;
+ margin: 0 auto;
+ padding: 0 40px;
+ display: grid;
+ grid-template-columns: 1fr 1fr;
+ align-items: center;
+ gap: 80px;
+ position: relative;
+ z-index: 2;
+ }
+
+ .hero-content {
+ animation: slideInRight 1s ease-out;
+ }
+
+ @keyframes slideInRight {
+ from { opacity: 0; transform: translateX(50px); }
+ to { opacity: 1; transform: translateX(0); }
+ }
+
+ .hero-badge {
+ display: inline-flex;
+ align-items: center;
+ gap: 10px;
+ background: rgba(255, 255, 255, 0.8);
+ padding: 12px 24px;
+ border-radius: 30px;
+ font-size: 0.9rem;
+ color: var(--coral);
+ font-weight: 600;
+ margin-bottom: 30px;
+ backdrop-filter: blur(10px);
+ border: 1px solid rgba(232, 180, 184, 0.3);
+ }
+
+ .hero-title {
+ font-size: clamp(3rem, 6vw, 5rem);
+ font-weight: 700;
+ line-height: 1.1;
+ margin-bottom: 25px;
+ color: var(--charcoal);
+ }
+
+ .hero-title .highlight {
+ color: var(--coral);
+ font-family: 'Dancing Script', cursive;
+ font-weight: 600;
+ }
+
+ .hero-description {
+ font-size: 1.3rem;
+ color: var(--warm-gray);
+ margin-bottom: 40px;
+ line-height: 1.8;
+ }
+
+ .hero-cta {
+ display: flex;
+ gap: 20px;
+ align-items: center;
+ }
+
+ .btn {
+ padding: 18px 40px;
+ font-size: 1rem;
+ font-weight: 600;
+ border: none;
+ border-radius: 50px;
+ text-decoration: none;
+ display: inline-flex;
+ align-items: center;
+ gap: 10px;
+ transition: all 0.4s ease;
+ cursor: pointer;
+ position: relative;
+ overflow: hidden;
+ }
+
+ .btn::before {
+ content: '';
+ position: absolute;
+ top: 0;
+ left: -100%;
+ width: 100%;
+ height: 100%;
+ background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+ transition: left 0.6s ease;
+ }
+
+ .btn:hover::before {
+ left: 100%;
+ }
+
+ .btn-primary {
+ background: linear-gradient(135deg, var(--coral), var(--soft-pink));
+ color: white;
+ box-shadow: 0 10px 30px rgba(255, 127, 127, 0.3);
+ }
+
+ .btn-primary:hover {
+ transform: translateY(-3px);
+ box-shadow: 0 15px 40px rgba(255, 127, 127, 0.4);
+ }
+
+ .btn-secondary {
+ background: transparent;
+ color: var(--charcoal);
+ border: 2px solid var(--rose-gold);
+ }
+
+ .btn-secondary:hover {
+ background: var(--rose-gold);
+ color: white;
+ }
+
+ .hero-image {
+ position: relative;
+ animation: slideInLeft 1s ease-out;
+ }
+
+ @keyframes slideInLeft {
+ from { opacity: 0; transform: translateX(-50px); }
+ to { opacity: 1; transform: translateX(0); }
+ }
+
+ .hero-img {
+ width: 100%;
+ height: 600px;
+ object-fit: cover;
+ border-radius: 30px;
+ box-shadow: 0 30px 60px rgba(232, 180, 184, 0.3);
+ }
+
+ .floating-elements {
+ position: absolute;
+ width: 100%;
+ height: 100%;
+ }
+
+ .floating-element {
+ position: absolute;
+ animation: gentleFloat 8s ease-in-out infinite;
+ }
+
+ .floating-element:nth-child(1) {
+ top: 10%;
+ right: 10%;
+ animation-delay: 0s;
+ }
+
+ .floating-element:nth-child(2) {
+ bottom: 20%;
+ right: 20%;
+ animation-delay: 4s;
+ }
+
+ @keyframes gentleFloat {
+ 0%, 100% { transform: translateY(0) rotate(0deg); }
+ 50% { transform: translateY(-20px) rotate(180deg); }
+ }
+
+ /* Collections Section */
+ .collections {
+ padding: 120px 0;
+ background: var(--pearl-white);
+ }
+
+ .section-header {
+ text-align: center;
+ max-width: 800px;
+ margin: 0 auto 80px;
+ }
+
+ .section-badge {
+ display: inline-block;
+ background: var(--champagne);
+ color: var(--coral);
+ padding: 8px 20px;
+ border-radius: 20px;
+ font-size: 0.9rem;
+ font-weight: 600;
+ margin-bottom: 20px;
+ }
+
+ .section-title {
+ font-size: 3.5rem;
+ font-weight: 700;
+ margin-bottom: 25px;
+ color: var(--charcoal);
+ }
+
+ .section-title .script {
+ font-family: 'Dancing Script', cursive;
+ color: var(--coral);
+ font-weight: 600;
+ }
+
+ .section-description {
+ font-size: 1.2rem;
+ color: var(--warm-gray);
+ line-height: 1.8;
+ }
+
+ .collections-grid {
+ max-width: 1400px;
+ margin: 0 auto;
+ padding: 0 40px;
+ display: grid;
+ grid-template-columns: repeat(3, 1fr);
+ gap: 40px;
+ }
+
+ .collection-card {
+ background: white;
+ border-radius: 25px;
+ overflow: hidden;
+ box-shadow: 0 15px 40px rgba(232, 180, 184, 0.1);
+ transition: all 0.4s ease;
+ cursor: pointer;
+ position: relative;
+ }
+
+ .collection-card::before {
+ content: '';
+ position: absolute;
+ top: 0;
+ left: 0;
+ right: 0;
+ bottom: 0;
+ background: linear-gradient(135deg, var(--soft-pink), var(--coral));
+ opacity: 0;
+ transition: opacity 0.4s ease;
+ z-index: 1;
+ border-radius: 25px;
+ }
+
+ .collection-card:hover::before {
+ opacity: 0.05;
+ }
+
+ .collection-card:hover {
+ transform: translateY(-10px);
+ box-shadow: 0 25px 60px rgba(232, 180, 184, 0.2);
+ }
+
+ .collection-image {
+ width: 100%;
+ height: 300px;
+ object-fit: cover;
+ transition: transform 0.4s ease;
+ }
+
+ .collection-card:hover .collection-image {
+ transform: scale(1.05);
+ }
+
+ .collection-content {
+ padding: 30px;
+ position: relative;
+ z-index: 2;
+ }
+
+ .collection-title {
+ font-size: 1.8rem;
+ font-weight: 600;
+ margin-bottom: 15px;
+ color: var(--charcoal);
+ }
+
+ .collection-description {
+ color: var(--warm-gray);
+ margin-bottom: 25px;
+ line-height: 1.6;
+ }
+
+ .collection-link {
+ color: var(--coral);
+ text-decoration: none;
+ font-weight: 600;
+ display: inline-flex;
+ align-items: center;
+ gap: 8px;
+ transition: gap 0.3s ease;
+ }
+
+ .collection-link:hover {
+ gap: 15px;
+ }
+
+ /* Featured Products */
+ .featured {
+ padding: 120px 0;
+ background: linear-gradient(135deg, var(--cream) 0%, var(--champagne) 100%);
+ }
+
+ .products-container {
+ max-width: 1400px;
+ margin: 0 auto;
+ padding: 0 40px;
+ }
+
+ .products-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+ gap: 30px;
+ margin-top: 60px;
+ }
+
+ .product-card {
+ background: white;
+ border-radius: 20px;
+ overflow: hidden;
+ transition: all 0.4s ease;
+ cursor: pointer;
+ position: relative;
+ box-shadow: 0 10px 30px rgba(232, 180, 184, 0.1);
+ }
+
+ .product-card:hover {
+ transform: translateY(-8px);
+ box-shadow: 0 20px 50px rgba(232, 180, 184, 0.2);
+ }
+
+ .product-image-container {
+ position: relative;
+ height: 350px;
+ background: linear-gradient(135deg, var(--mint), var(--lavender));
+ overflow: hidden;
+ }
+
+ .product-badge {
+ position: absolute;
+ top: 15px;
+ left: 15px;
+ background: var(--coral);
+ color: white;
+ padding: 6px 15px;
+ border-radius: 15px;
+ font-size: 0.8rem;
+ font-weight: 600;
+ z-index: 2;
+ }
+
+ .product-favorite {
+ position: absolute;
+ top: 15px;
+ right: 15px;
+ width: 40px;
+ height: 40px;
+ background: rgba(255, 255, 255, 0.9);
+ border-radius: 50%;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ cursor: pointer;
+ transition: all 0.3s ease;
+ z-index: 2;
+ }
+
+ .product-favorite:hover {
+ background: var(--coral);
+ color: white;
+ }
+
+ .product-image {
+ width: 100%;
+ height: 100%;
+ object-fit: cover;
+ transition: transform 0.4s ease;
+ }
+
+ .product-card:hover .product-image {
+ transform: scale(1.1);
+ }
+
+ .product-info {
+ padding: 25px;
+ }
+
+ .product-brand {
+ font-size: 0.85rem;
+ color: var(--coral);
+ font-weight: 600;
+ margin-bottom: 8px;
+ text-transform: uppercase;
+ letter-spacing: 1px;
+ }
+
+ .product-name {
+ font-size: 1.3rem;
+ font-weight: 600;
+ margin-bottom: 10px;
+ color: var(--charcoal);
+ }
+
+ .product-rating {
+ display: flex;
+ align-items: center;
+ gap: 5px;
+ margin-bottom: 15px;
+ }
+
+ .stars {
+ display: flex;
+ gap: 2px;
+ }
+
+ .star {
+ color: var(--gold-accent);
+ font-size: 0.9rem;
+ }
+
+ .rating-text {
+ font-size: 0.85rem;
+ color: var(--warm-gray);
+ margin-left: 8px;
+ }
+
+ .product-price {
+ font-size: 1.5rem;
+ font-weight: 700;
+ color: var(--coral);
+ margin-bottom: 20px;
+ }
+
+ .product-actions {
+ display: flex;
+ gap: 10px;
+ }
+
+ .btn-add-cart {
+ flex: 1;
+ background: linear-gradient(135deg, var(--coral), var(--soft-pink));
+ color: white;
+ border: none;
+ padding: 12px 20px;
+ border-radius: 25px;
+ font-weight: 600;
+ cursor: pointer;
+ transition: all 0.3s ease;
+ }
+
+ .btn-add-cart:hover {
+ transform: translateY(-2px);
+ box-shadow: 0 8px 20px rgba(255, 127, 127, 0.3);
+ }
+
+ .btn-quick-view {
+ width: 45px;
+ height: 45px;
+ background: var(--pearl-white);
+ border: 1px solid var(--rose-gold);
+ border-radius: 50%;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ cursor: pointer;
+ transition: all 0.3s ease;
+ color: var(--coral);
+ }
+
+ .btn-quick-view:hover {
+ background: var(--rose-gold);
+ color: white;
+ }
+
+ /* Testimonials */
+ .testimonials {
+ padding: 120px 0;
+ background: var(--pearl-white);
+ }
+
+ .testimonials-container {
+ max-width: 1200px;
+ margin: 0 auto;
+ padding: 0 40px;
+ text-align: center;
+ }
+
+ .testimonials-slider {
+ display: flex;
+ gap: 40px;
+ overflow-x: auto;
+ scroll-behavior: smooth;
+ padding: 40px 0;
+ scrollbar-width: none;
+ }
+
+ .testimonials-slider::-webkit-scrollbar {
+ display: none;
+ }
+
+ .testimonial-card {
+ min-width: 350px;
+ background: white;
+ padding: 40px 30px;
+ border-radius: 20px;
+ box-shadow: 0 15px 40px rgba(232, 180, 184, 0.1);
+ position: relative;
+ }
+
+ .testimonial-card::before {
+ content: '"';
+ position: absolute;
+ top: -20px;
+ left: 30px;
+ font-size: 4rem;
+ color: var(--coral);
+ font-family: serif;
+ }
+
+ .testimonial-text {
+ font-size: 1.1rem;
+ line-height: 1.8;
+ margin-bottom: 25px;
+ color: var(--warm-gray);
+ font-style: italic;
+ }
+
+ .testimonial-author {
+ display: flex;
+ align-items: center;
+ gap: 15px;
+ }
+
+ .author-avatar {
+ width: 50px;
+ height: 50px;
+ border-radius: 50%;
+ background: linear-gradient(135deg, var(--soft-pink), var(--coral));
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ color: white;
+ font-weight: 600;
+ }
+
+ .author-info h4 {
+ font-size: 1rem;
+ color: var(--charcoal);
+ margin-bottom: 2px;
+ }
+
+ .author-info p {
+ font-size: 0.9rem;
+ color: var(--warm-gray);
+ }
+
+ /* Newsletter */
+ .newsletter {
+ padding: 100px 0;
+ background: linear-gradient(135deg, var(--blush) 0%, var(--lavender) 100%);
+ text-align: center;
+ }
+
+ .newsletter-container {
+ max-width: 800px;
+ margin: 0 auto;
+ padding: 0 40px;
+ }
+
+ .newsletter-icon {
+ width: 80px;
+ height: 80px;
+ background: rgba(255, 255, 255, 0.2);
+ border-radius: 50%;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ margin: 0 auto 30px;
+ font-size: 2rem;
+ color: var(--coral);
+ }
+
+ .newsletter-title {
+ font-size: 2.5rem;
+ font-weight: 700;
+ margin-bottom: 20px;
+ color: var(--charcoal);
+ }
+
+ .newsletter-title .script {
+ font-family: 'Dancing Script', cursive;
+ color: var(--coral);
+ }
+
+ .newsletter-description {
+ font-size: 1.1rem;
+ color: var(--warm-gray);
+ margin-bottom: 40px;
+ }
+
+ .newsletter-form {
+ display: flex;
+ max-width: 500px;
+ margin: 0 auto;
+ background: white;
+ border-radius: 50px;
+ padding: 8px;
+ box-shadow: 0 15px 40px rgba(232, 180, 184, 0.2);
+ }
+
+ .newsletter-input {
+ flex: 1;
+ border: none;
+ padding: 15px 25px;
+ font-size: 1rem;
+ background: transparent;
+ outline: none;
+ }
+
+ .newsletter-input::placeholder {
+ color: var(--warm-gray);
+ }
+
+ .newsletter-submit {
+ background: linear-gradient(135deg, var(--coral), var(--soft-pink));
+ color: white;
+ border: none;
+ padding: 15px 30px;
+ border-radius: 50px;
+ font-weight: 600;
+ cursor: pointer;
+ transition: all 0.3s ease;
+ }
+
+ .newsletter-submit:hover {
+ transform: scale(1.05);
+ }
+
+ /* Footer */
+ .footer {
+ background: var(--charcoal);
+ color: white;
+ padding: 80px 0 40px;
+ }
+
+ .footer-content {
+ max-width: 1400px;
+ margin: 0 auto;
+ padding: 0 40px;
+ display: grid;
+ grid-template-columns: 2fr 1fr 1fr 1fr;
+ gap: 60px;
+ margin-bottom: 50px;
+ }
+
+ .footer-brand h3 {
+ font-size: 2.5rem;
+ font-family: 'Dancing Script', cursive;
+ margin-bottom: 20px;
+ color: var(--coral);
+ }
+
+ .footer-brand p {
+ color: rgba(255, 255, 255, 0.8);
+ line-height: 1.8;
+ margin-bottom: 30px;
+ }
+
+ .footer-social {
+ display: flex;
+ gap: 15px;
+ }
+
+ .social-link {
+ width: 45px;
+ height: 45px;
+ background: rgba(255, 127, 127, 0.1);
+ border: 1px solid var(--coral);
+ border-radius: 50%;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ color: var(--coral);
+ text-decoration: none;
+ transition: all 0.3s ease;
+ }
+
+ .social-link:hover {
+ background: var(--coral);
+ color: white;
+ transform: translateY(-3px);
+ }
+
+ .footer-column h4 {
+ font-size: 1.3rem;
+ margin-bottom: 25px;
+ color: white;
+ }
+
+ .footer-links {
+ list-style: none;
+ }
+
+ .footer-links li {
+ margin-bottom: 12px;
+ }
+
+ .footer-links a {
+ color: rgba(255, 255, 255, 0.8);
+ text-decoration: none;
+ transition: all 0.3s ease;
+ }
+
+ .footer-links a:hover {
+ color: var(--coral);
+ padding-right: 10px;
+ }
+
+ .footer-bottom {
+ text-align: center;
+ padding-top: 40px;
+ border-top: 1px solid rgba(255, 255, 255, 0.1);
+ color: rgba(255, 255, 255, 0.6);
+ }
+
+ /* Responsive Design */
+ @media (max-width: 1200px) {
+ .hero-container {
+ grid-template-columns: 1fr;
+ text-align: center;
+ gap: 60px;
+ }
+
+ .collections-grid {
+ grid-template-columns: repeat(2, 1fr);
+ }
+ }
+
+ @media (max-width: 768px) {
+ .nav-menu {
+ display: none;
+ }
+
+ .hero-title {
+ font-size: 2.5rem;
+ }
+
+ .collections-grid {
+ grid-template-columns: 1fr;
+ }
+
+ .products-grid {
+ grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+ }
+
+ .footer-content {
+ grid-template-columns: 1fr;
+ text-align: center;
+ }
+
+ .newsletter-form {
+ flex-direction: column;
+ padding: 20px;
+ border-radius: 20px;
+ }
+
+ .newsletter-input {
+ margin-bottom: 15px;
+ text-align: center;
+ }
+ }
+
+ /* Animations */
+ .fade-in {
+ opacity: 0;
+ transform: translateY(30px);
+ transition: all 0.8s ease;
+ }
+
+ .fade-in.visible {
+ opacity: 1;
+ transform: translateY(0);
+ }
+
+ /* Sparkle Effect */
+ .sparkle {
+ position: fixed;
+ width: 6px;
+ height: 6px;
+ background: var(--gold-accent);
+ border-radius: 50%;
+ pointer-events: none;
+ z-index: 1000;
+ animation: sparkleAnim 1s ease-out forwards;
+ }
+
+ @keyframes sparkleAnim {
+ 0% {
+ opacity: 1;
+ transform: scale(0);
+ }
+ 50% {
+ opacity: 1;
+ transform: scale(1);
+ }
+ 100% {
+ opacity: 0;
+ transform: scale(0);
+ }
+ }
+ </style>
+</head>
+<body>
+ <!-- Romantic Loading Screen -->
+ <div class="loader" id="loader">
+ <div class="loader-content">
+ <div class="loader-logo">زیما</div>
+ <div class="loader-text">زیبایی در انتظار شماست...</div>
+ </div>
+ </div>
+
+ <!-- Elegant Custom Cursor -->
+ <div class="cursor" id="cursor"></div>
+ <div class="cursor-dot" id="cursorDot"></div>
+
+ <!-- Floating Hearts -->
+ <div class="floating-heart" style="top: 20%; left: 10%;"><i class="fas fa-heart"></i></div>
+ <div class="floating-heart" style="top: 60%; right: 15%;"><i class="fas fa-heart"></i></div>
+ <div class="floating-heart" style="bottom: 30%; left: 20%;"><i class="fas fa-heart"></i></div>
+
+ <!-- Navigation -->
+ <div class="nav-container" id="navbar">
+ <nav class="navbar">
+ <a href="/static" class="logo">زیما</a>
+
+ <ul class="nav-menu">
+ <li><a href="#" class="nav-link">کالکشن‌ها</a></li>
+ <li><a href="/products" class="nav-link">محصولات</a></li>
+ <li><a href="#" class="nav-link">راهنمای سایز</a></li>
+ <li><a href="#" class="nav-link">درباره ما</a></li>
+ <li><a href="#" class="nav-link">تماس</a></li>
+ </ul>
+
+ <div class="nav-icons">
+ <div class="nav-icon">
+ <i class="fas fa-search"></i>
+ </div>
+ <div class="nav-icon">
+ <i class="fas fa-heart"></i>
+ </div>
+ <div class="nav-icon">
+ <i class="fas fa-user"></i>
+ </div>
+ <div class="nav-icon">
+ <i class="fas fa-shopping-bag"></i>
+ <span class="cart-count">2</span>
+ </div>
+ </div>
+ </nav>
+ </div>
+
+ <!-- Hero Section -->
+ <section class="hero">
+ <div class="hero-shapes">
+ <div class="shape"></div>
+ <div class="shape"></div>
+ <div class="shape"></div>
+ </div>
+
+ <div class="hero-container">
+ <div class="hero-content">
+ <div class="hero-badge">
+ <i class="fas fa-sparkles"></i>
+ کالکشن جدید زمستان
+ </div>
+ <h1 class="hero-title">
+ زیبایی <span class="highlight">خصوصی</span><br>
+ شما را کشف کنید
+ </h1>
+ <p class="hero-description">
+ مجموعه‌ای منحصربه‌فرد از لباس‌های زیر که احساس زیبایی و اعتماد به نفس را در شما بیدار می‌کند
+ </p>
+ <div class="hero-cta">
+ <a href="#" class="btn btn-primary">
+ <span>کشف کالکشن</span>
+ <i class="fas fa-arrow-left"></i>
+ </a>
+ <a href="#" class="btn btn-secondary">
+ <i class="fas fa-play"></i>
+ <span>تماشای ویدیو</span>
+ </a>
+ </div>
+ </div>
+
+ <div class="hero-image">
+ <img src="hero-lingerie.jpg" alt="کالکشن زیما" class="hero-img">
+ <div class="floating-elements">
+ <div class="floating-element">
+ <i class="fas fa-star" style="color: var(--gold-accent); font-size: 1.5rem;"></i>
+ </div>
+ <div class="floating-element">
+ <i class="fas fa-heart" style="color: var(--coral); font-size: 1.2rem;"></i>
+ </div>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- Collections Section -->
+ <section class="collections fade-in">
+ <div class="section-header">
+ <div class="section-badge">کالکشن‌های ویژه</div>
+ <h2 class="section-title">
+ سه دنیای <span class="script">زیبایی</span>
+ </h2>
+ <p class="section-description">
+ هر کالکشن داستانی از زیبایی، راحتی و اعتماد به نفس را روایت می‌کند
+ </p>
+ </div>
+
+ <div class="collections-grid">
+ <div class="collection-card fade-in">
+ <img src="collection-classic.jpg" alt="کلاسیک" class="collection-image">
+ <div class="collection-content">
+ <h3 class="collection-title">کلاسیک و شیک</h3>
+ <p class="collection-description">
+ مجموعه‌ای از طراحی‌های کلاسیک که هرگز از مد نمی‌افتد
+ </p>
+ <a href="#" class="collection-link">
+ مشاهده کالکشن <i class="fas fa-arrow-left"></i>
+ </a>
+ </div>
+ </div>
+
+ <div class="collection-card fade-in">
+ <img src="collection-romantic.jpg" alt="رمانتیک" class="collection-image">
+ <div class="collection-content">
+ <h3 class="collection-title">رمانتیک و زیبا</h3>
+ <p class="collection-description">
+ طراحی‌های رمانتیک برای لحظات خاص زندگی شما
+ </p>
+ <a href="#" class="collection-link">
+ مشاهده کالکشن <i class="fas fa-arrow-left"></i>
+ </a>
+ </div>
+ </div>
+
+ <div class="collection-card fade-in">
+ <img src="collection-sporty.jpg" alt="اسپرت" class="collection-image">
+ <div class="collection-content">
+ <h3 class="collection-title">اسپرت و راحت</h3>
+ <p class="collection-description">
+ راحتی و سبکی برای زندگی پر انرژی شما
+ </p>
+ <a href="#" class="collection-link">
+ مشاهده کالکشن <i class="fas fa-arrow-left"></i>
+ </a>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- Featured Products -->
+ <section class="featured fade-in">
+ <div class="products-container">
+ <div class="section-header">
+ <div class="section-badge">محبوب‌ترین‌ها</div>
+ <h2 class="section-title">
+ پرفروش‌ترین <span class="script">محصولات</span>
+ </h2>
+ <p class="section-description">
+ محصولاتی که بیشترین رضایت را از مشتریان عزیز دریافت کرده‌اند
+ </p>
+ </div>
+
+ <div class="products-grid">
+ <div class="product-card fade-in">
+ <div class="product-image-container">
+ <div class="product-badge">جدید</div>
+ <div class="product-favorite">
+ <i class="far fa-heart"></i>
+ </div>
+ <img src="product-bra-1.jpg" alt="سوتین ابریشمی" class="product-image">
+ </div>
+ <div class="product-info">
+ <div class="product-brand">زیما</div>
+ <h3 class="product-name">ست سوتین و شورت ابریشمی</h3>
+ <div class="product-rating">
+ <div class="stars">
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ </div>
+ <span class="rating-text">(124 نظر)</span>
+ </div>
+ <div class="product-price">۳۲۰,۰۰۰ تومان</div>
+ <div class="product-actions">
+ <button class="btn-add-cart">افزودن به سبد</button>
+ <button class="btn-quick-view">
+ <i class="fas fa-eye"></i>
+ </button>
+ </div>
+ </div>
+ </div>
+
+ <div class="product-card fade-in">
+ <div class="product-image-container">
+ <div class="product-badge">پرفروش</div>
+ <div class="product-favorite">
+ <i class="far fa-heart"></i>
+ </div>
+ <img src="product-nightgown.jpg" alt="لباس خواب" class="product-image">
+ </div>
+ <div class="product-info">
+ <div class="product-brand">زیما</div>
+ <h3 class="product-name">لباس خواب ساتن کوتاه</h3>
+ <div class="product-rating">
+ <div class="stars">
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="far fa-star star"></i>
+ </div>
+ <span class="rating-text">(89 نظر)</span>
+ </div>
+ <div class="product-price">۲۸۵,۰۰۰ تومان</div>
+ <div class="product-actions">
+ <button class="btn-add-cart">افزودن به سبد</button>
+ <button class="btn-quick-view">
+ <i class="fas fa-eye"></i>
+ </button>
+ </div>
+ </div>
+ </div>
+
+ <div class="product-card fade-in">
+ <div class="product-image-container">
+ <div class="product-badge">محدود</div>
+ <div class="product-favorite">
+ <i class="far fa-heart"></i>
+ </div>
+ <img src="product-bodysuit.jpg" alt="بادی سوت" class="product-image">
+ </div>
+ <div class="product-info">
+ <div class="product-brand">زیما</div>
+ <h3 class="product-name">بادی سوت توری مشکی</h3>
+ <div class="product-rating">
+ <div class="stars">
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ </div>
+ <span class="rating-text">(67 نظر)</span>
+ </div>
+ <div class="product-price">۴۲۰,۰۰۰ تومان</div>
+ <div class="product-actions">
+ <button class="btn-add-cart">افزودن به سبد</button>
+ <button class="btn-quick-view">
+ <i class="fas fa-eye"></i>
+ </button>
+ </div>
+ </div>
+ </div>
+
+ <div class="product-card fade-in">
+ <div class="product-image-container">
+ <div class="product-badge">تخفیف</div>
+ <div class="product-favorite">
+ <i class="far fa-heart"></i>
+ </div>
+ <img src="product-robe.jpg" alt="روب حمام" class="product-image">
+ </div>
+ <div class="product-info">
+ <div class="product-brand">زیما</div>
+ <h3 class="product-name">روب حمام ساتن بلند</h3>
+ <div class="product-rating">
+ <div class="stars">
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="fas fa-star star"></i>
+ <i class="far fa-star star"></i>
+ </div>
+ <span class="rating-text">(156 نظر)</span>
+ </div>
+ <div class="product-price">۵۵۰,۰۰۰ تومان</div>
+ <div class="product-actions">
+ <button class="btn-add-cart">افزودن به سبد</button>
+ <button class="btn-quick-view">
+ <i class="fas fa-eye"></i>
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- Testimonials -->
+ <section class="testimonials fade-in">
+ <div class="testimonials-container">
+ <div class="section-header">
+ <div class="section-badge">نظرات مشتریان</div>
+ <h2 class="section-title">
+ آنچه <span class="script">مشتریان</span> می‌گویند
+ </h2>
+ </div>
+
+ <div class="testimonials-slider">
+ <div class="testimonial-card">
+ <p class="testimonial-text">
+ کیفیت محصولات زیما واقعاً فوق‌العاده است. راحتی و زیبایی در کنار هم. من عاشق این برند شدم!
+ </p>
+ <div class="testimonial-author">
+ <div class="author-avatar">س</div>
+ <div class="author-info">
+ <h4>سارا احمدی</h4>
+ <p>مشتری وفادار</p>
+ </div>
+ </div>
+ </div>
+
+ <div class="testimonial-card">
+ <p class="testimonial-text">
+ خرید من از زیما تجربه‌ای بی‌نظیر بود. از کیفیت تا خدمات پس از فروش، همه چیز عالی!
+ </p>
+ <div class="testimonial-author">
+ <div class="author-avatar">م</div>
+ <div class="author-info">
+ <h4>مریم نوری</h4>
+ <p>مشتری جدید</p>
+ </div>
+ </div>
+ </div>
+
+ <div class="testimonial-card">
+ <p class="testimonial-text">
+ پس از سال‌ها جستجو، بالاخره برندی پیدا کردم که هم راحت باشد هم زیبا. ممنون زیما!
+ </p>
+ <div class="testimonial-author">
+ <div class="author-avatar">ن</div>
+ <div class="author-info">
+ <h4>نیلوفر رضایی</h4>
+ <p>مشتری راضی</p>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- Newsletter -->
+ <section class="newsletter fade-in">
+ <div class="newsletter-container">
+ <div class="newsletter-icon">
+ <i class="fas fa-envelope-heart"></i>
+ </div>
+ <h2 class="newsletter-title">
+ عضو <span class="script">خانواده</span> زیما شوید
+ </h2>
+ <p class="newsletter-description">
+ اولین نفری باشید که از جدیدترین کالکشن‌ها و تخفیف‌های ویژه مطلع می‌شوید
+ </p>
+ <form class="newsletter-form" id="newsletterForm">
+ <input type="email" class="newsletter-input" placeholder="آدرس ایمیل شما" required>
+ <button type="submit" class="newsletter-submit">عضویت</button>
+ </form>
+ </div>
+ </section>
+
+ <!-- Footer -->
+ <footer class="footer">
+ <div class="footer-content">
+ <div class="footer-brand">
+ <h3>زیما</h3>
+ <p>
+ زیما، برندی است که زیبایی خصوصی شما را اولویت قرار می‌دهد.
+ ما معتقدیم هر زنی شایسته احساس زیبایی و اعتماد به نفس است.
+ </p>
+ <div class="footer-social">
+ <a href="#" class="social-link">
+ <i class="fab fa-instagram"></i>
+ </a>
+ <a href="#" class="social-link">
+ <i class="fab fa-telegram"></i>
+ </a>
+ <a href="#" class="social-link">
+ <i class="fab fa-whatsapp"></i>
+ </a>
+ <a href="#" class="social-link">
+ <i class="fab fa-pinterest"></i>
+ </a>
+ </div>
+ </div>
+
+ <div class="footer-column">
+ <h4>خدمات مشتریان</h4>
+ <ul class="footer-links">
+ <li><a href="#">راهنمای خرید</a></li>
+ <li><a href="#">راهنمای سایز</a></li>
+ <li><a href="#">شرایط ارسال</a></li>
+ <li><a href="#">ضمانت بازگشت</a></li>
+ <li><a href="#">پشتیبانی</a></li>
+ </ul>
+ </div>
+
+ <div class="footer-column">
+ <h4>درباره زیما</h4>
+ <ul class="footer-links">
+ <li><a href="#">داستان ما</a></li>
+ <li><a href="#">کیفیت محصولات</a></li>
+ <li><a href="#">حریم خصوصی</a></li>
+ <li><a href="#">وبلاگ</a></li>
+ <li><a href="#">فرصت‌های شغلی</a></li>
+ </ul>
+ </div>
+
+ <div class="footer-column">
+ <h4>تماس با ما</h4>
+ <ul class="footer-links">
+ <li><a href="tel:+982177889900">۰۲۱-۷۷۸۸۹۹۰۰</a></li>
+ <li><a href="mailto:info@zima.ir">info@zima.ir</a></li>
+ <li><a href="#">تهران، ولنجک</a></li>
+ <li><a href="#">شنبه تا پنجشنبه ۹-۱۸</a></li>
+ </ul>
+ </div>
+ </div>
+
+ <div class="footer-bottom">
+ <p>&copy; ۱۴۰۳ زیما. تمامی حقوق محفوظ است. طراحی شده با ❤️</p>
+ </div>
+ </footer>
+
+ <script>
+ // Romantic Loading Animation
+ window.addEventListener('load', () => {
+ setTimeout(() => {
+ document.getElementById('loader').classList.add('hidden');
+ }, 2000);
+ });
+
+ // Elegant Cursor System
+ const cursor = document.getElementById('cursor');
+ const cursorDot = document.getElementById('cursorDot');
+ let mouseX = 0, mouseY = 0;
+ let cursorX = 0, cursorY = 0;
+
+ document.addEventListener('mousemove', (e) => {
+ mouseX = e.clientX;
+ mouseY = e.clientY;
+
+ // Create sparkle effect randomly
+ if (Math.random() > 0.95) {
+ createSparkle(e.clientX, e.clientY);
+ }
+ });
+
+ function animateCursor() {
+ cursorX += (mouseX - cursorX) * 0.1;
+ cursorY += (mouseY - cursorY) * 0.1;
+
+ cursor.style.left = cursorX + 'px';
+ cursor.style.top = cursorY + 'px';
+ cursorDot.style.left = mouseX + 'px';
+ cursorDot.style.top = mouseY + 'px';
+
+ requestAnimationFrame(animateCursor);
+ }
+ animateCursor();
+
+ // Sparkle Effect
+ function createSparkle(x, y) {
+ const sparkle = document.createElement('div');
+ sparkle.className = 'sparkle';
+ sparkle.style.left = x + 'px';
+ sparkle.style.top = y + 'px';
+ document.body.appendChild(sparkle);
+
+ setTimeout(() => {
+ sparkle.remove();
+ }, 1000);
+ }
+
+ // Hover Effects
+ document.querySelectorAll('a, button, .product-card, .collection-card').forEach(el => {
+ el.addEventListener('mouseenter', () => {
+ cursor.classList.add('hover');
+ });
+
+ el.addEventListener('mouseleave', () => {
+ cursor.classList.remove('hover');
+ });
+ });
+
+ // Navbar Scroll Effect
+ window.addEventListener('scroll', () => {
+ const navbar = document.getElementById('navbar');
+ if (window.scrollY > 100) {
+ navbar.classList.add('scrolled');
+ } else {
+ navbar.classList.remove('scrolled');
+ }
+ });
+
+ // Fade In Animation
+ const observerOptions = {
+ threshold: 0.1,
+ rootMargin: '0px 0px -50px 0px'
+ };
+
+ const observer = new IntersectionObserver((entries) => {
+ entries.forEach(entry => {
+ if (entry.isIntersecting) {
+ entry.target.classList.add('visible');
+ }
+ });
+ }, observerOptions);
+
+ document.querySelectorAll('.fade-in').forEach(el => {
+ observer.observe(el);
+ });
+
+ // Heart Animation on Product Favorite
+ document.querySelectorAll('.product-favorite').forEach(heart => {
+ heart.addEventListener('click', function(e) {
+ e.preventDefault();
+ const icon = this.querySelector('i');
+
+ if (icon.classList.contains('far')) {
+ icon.classList.remove('far');
+ icon.classList.add('fas');
+ this.style.color = 'var(--coral)';
+
+ // Create floating heart
+ createFloatingHeart(e.clientX, e.clientY);
+ } else {
+ icon.classList.remove('fas');
+ icon.classList.add('far');
+ this.style.color = '';
+ }
+ });
+ });
+
+ function createFloatingHeart(x, y) {
+ const heart = document.createElement('div');
+ heart.innerHTML = '♥';
+ heart.style.cssText = `
+ position: fixed;
+ left: ${x}px;
+ top: ${y}px;
+ color: var(--coral);
+ font-size: 20px;
+ pointer-events: none;
+ z-index: 1000;
+ animation: floatingHeart 2s ease-out forwards;
+ `;
+
+ document.body.appendChild(heart);
+
+ setTimeout(() => {
+ heart.remove();
+ }, 2000);
+ }
+
+ // Add floating heart animation
+ const style = document.createElement('style');
+ style.textContent = `
+ @keyframes floatingHeart {
+ 0% {
+ opacity: 1;
+ transform: translateY(0) scale(1);
+ }
+ 100% {
+ opacity: 0;
+ transform: translateY(-100px) scale(1.5);
+ }
+ }
+ `;
+ document.head.appendChild(style);
+
+ // Add to Cart Animation
+ document.querySelectorAll('.btn-add-cart').forEach(btn => {
+ btn.addEventListener('click', function() {
+ const originalText = this.textContent;
+ this.innerHTML = '<i class="fas fa-check"></i> اضافه شد!';
+ this.style.background = 'linear-gradient(135deg, #50C878, #32CD32)';
+
+ setTimeout(() => {
+ this.textContent = originalText;
+ this.style.background = '';
+ }, 2000);
+ });
+ });
+
+ // Newsletter Form
+ document.getElementById('newsletterForm').addEventListener('submit', (e) => {
+ e.preventDefault();
+ const input = e.target.querySelector('.newsletter-input');
+ const button = e.target.querySelector('.newsletter-submit');
+
+ button.innerHTML = '<i class="fas fa-heart"></i> ممنون!';
+ input.value = '';
+ input.placeholder = 'به خانواده زیما خوش آمدید!';
+
+ setTimeout(() => {
+ button.textContent = 'عضویت';
+ input.placeholder = 'آدرس ایمیل شما';
+ }, 3000);
+ });
+
+ // Testimonials Auto Scroll
+ const testimonialSlider = document.querySelector('.testimonials-slider');
+ let testimonialScrollAmount = 0;
+
+ setInterval(() => {
+ testimonialScrollAmount += 390;
+ if (testimonialScrollAmount >= testimonialSlider.scrollWidth) {
+ testimonialScrollAmount = 0;
+ }
+ testimonialSlider.scrollTo({
+ left: testimonialScrollAmount,
+ behavior: 'smooth'
+ });
+ }, 4000);
+
+ // Product Image Hover Effect
+ document.querySelectorAll('.product-card').forEach(card => {
+ card.addEventListener('mouseenter', () => {
+ const image = card.querySelector('.product-image');
+ image.style.filter = 'brightness(1.1) saturate(1.2)';
+ });
+
+ card.addEventListener('mouseleave', () => {
+ const image = card.querySelector('.product-image');
+ image.style.filter = '';
+ });
+ });
+
+ console.log('💖 زیما - جایی که زیبایی زندگی می‌کند 💖');
+ </script>
+</body>
+</html>

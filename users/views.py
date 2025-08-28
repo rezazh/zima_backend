@@ -3,9 +3,11 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_POST
 
 from .forms import SignUpForm, LoginForm, UserProfileForm
-from .models import Address
+from .models import Address, Favorite
+from django.http import JsonResponse  # این خط را به ابتدای فایل اضافه کنید
 
 
 @ensure_csrf_cookie
@@ -178,3 +180,72 @@ def delete_address(request, address_id):
         messages.success(request, 'آدرس با موفقیت حذف شد.')
 
     return redirect('users:addresses')
+
+
+@login_required
+def favorites_view(request):
+    """نمایش لیست علاقه‌مندی‌های کاربر"""
+    favorites = Favorite.objects.filter(user=request.user).select_related('product')
+    return render(request, 'users/favorites.html', {'favorites': favorites})
+
+
+@login_required
+@require_POST
+def add_favorite(request, product_id):
+    """اضافه کردن محصول به علاقه‌مندی‌ها"""
+    try:
+        from products.models import Product
+        product = Product.objects.get(id=product_id)
+        favorite, created = Favorite.objects.get_or_create(
+            user=request.user,
+            product=product
+        )
+
+        if created:
+            return JsonResponse({
+                'success': True,
+                'message': 'محصول به علاقه‌مندی‌ها اضافه شد',
+                'action': 'added'
+            })
+        else:
+            return JsonResponse({
+                'success': True,
+                'message': 'محصول قبلاً در علاقه‌مندی‌ها موجود است',
+                'action': 'exists'
+            })
+    except Product.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'محصول یافت نشد'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': 'خطا در افزودن به علاقه‌مندی‌ها'
+        })
+
+
+@login_required
+@require_POST
+def remove_favorite(request, product_id):
+    """حذف محصول از علاقه‌مندی‌ها"""
+    try:
+        favorite = Favorite.objects.get(
+            user=request.user,
+            product_id=product_id
+        )
+        favorite.delete()
+        return JsonResponse({
+            'success': True,
+            'message': 'محصول از علاقه‌مندی‌ها حذف شد'
+        })
+    except Favorite.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'محصول در علاقه‌مندی‌ها یافت نشد'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': 'خطا در حذف از علاقه‌مندی‌ها'
+        })
