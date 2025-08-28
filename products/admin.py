@@ -32,7 +32,9 @@ class ProductFeatureInline(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
-    'display_image', 'name', 'category', 'price', 'get_discount_price', 'is_active', 'is_featured', 'created_at')
+        'display_image', 'name', 'category', 'price', 'get_discount_price',
+        'total_stock', 'is_active', 'is_featured', 'created_at'
+    )
     list_filter = ('is_active', 'is_featured', 'category', 'brand', 'gender', 'created_at')
     search_fields = ('name', 'description', 'brand')
     prepopulated_fields = {'slug': ('name',)}
@@ -49,8 +51,8 @@ class ProductAdmin(admin.ModelAdmin):
         ('قیمت‌گذاری', {
             'fields': ('price', 'discount_percent')
         }),
-        ('موجودی و ویژگی‌ها', {
-            'fields': ('stock', 'weight')
+        ('ویژگی‌های فیزیکی', {
+            'fields': ('weight',)
         }),
         ('مشخصات فیزیکی', {
             'fields': ('dimensions',),
@@ -67,8 +69,12 @@ class ProductAdmin(admin.ModelAdmin):
 
     get_discount_price.short_description = "قیمت با تخفیف"
 
+    def total_stock(self, obj):
+        return obj.total_stock
+
+    total_stock.short_description = "موجودی کل"
+
     def display_image(self, obj):
-        """نمایش تصویر اصلی محصول در لیست محصولات"""
         main_image = obj.get_main_image()
         if main_image and main_image.image:
             return format_html('<img src="{}" width="50" height="50" style="object-fit: cover;" />',
@@ -91,7 +97,6 @@ class CategoryAdmin(admin.ModelAdmin):
     get_products_count.short_description = "تعداد محصولات"
 
     def display_image(self, obj):
-        """نمایش تصویر دسته‌بندی در لیست دسته‌بندی‌ها"""
         if obj.image:
             return format_html('<img src="{}" width="50" height="50" style="object-fit: cover;" />', obj.image.url)
         return "بدون تصویر"
@@ -123,15 +128,22 @@ class ReviewAdmin(admin.ModelAdmin):
 
 @admin.register(Color)
 class ColorAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
+    list_display = ['name', 'color_preview']
+    search_fields = ['name']
+    ordering = ['name']
 
+    def color_preview(self, obj):
+        return format_html(
+            '<div style="width: 25px; height: 25px; background-color: {}; border-radius: 50%; border: 1px solid #ccc;"></div>',
+            obj.hex_code,
+        )
+    color_preview.short_description = 'پیش‌نمایش'
 
 @admin.register(Size)
 class SizeAdmin(admin.ModelAdmin):
-    list_display = ('name',)  # حذف 'order' از list_display
-    search_fields = ('name',)
-    # حذف list_editable
+    list_display = ['name', 'id']
+    search_fields = ['name']
+    ordering = ['name']
 
 
 @admin.register(ProductInventory)
@@ -150,6 +162,7 @@ class ProductInventoryAdmin(admin.ModelAdmin):
             'description': 'مشخصات فیزیکی مختص این سایز و رنگ را وارد کنید.'
         }),
     )
+
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 from django.utils.text import slugify
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -57,7 +58,7 @@ class Category(models.Model):
 
     def get_absolute_url(self):
         from django.urls import reverse
-        return reverse('products:category', kwargs={'category_slug': self.slug})
+        return reverse('products:product_detail', kwargs={'slug': self.slug})
 
     def get_all_sizes(self):
         product_ids = self.products.filter(is_active=True).values_list('id', flat=True)
@@ -100,7 +101,7 @@ class Product(models.Model):
     discount_percent = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(100)],
                                                    verbose_name='درصد تخفیف')
 
-    stock = models.PositiveIntegerField(default=0, verbose_name='موجودی')
+    # stock = models.PositiveIntegerField(default=0, verbose_name='موجودی')
     is_active = models.BooleanField(default=True, verbose_name='فعال')
     is_featured = models.BooleanField(default=False, verbose_name='محصول ویژه')
 
@@ -151,6 +152,23 @@ class Product(models.Model):
         from django.urls import reverse
         return reverse('products:detail', kwargs={'product_id': self.id})
 
+    def get_display_price(self):
+        """قیمت نمایشی محصول (با احتساب تخفیف)"""
+        return self.get_discount_price()
+
+    def get_available_sizes_display(self):
+        """نمایش سایزهای موجود به صورت رشته"""
+        sizes = self.get_available_sizes()
+        return '-'.join([size.name for size in sizes]) if sizes else 'ناموجود'
+
+    @property
+    def is_new(self):
+        """بررسی اینکه محصول جدید است یا نه (کمتر از 30 روز)"""
+        from django.utils import timezone
+        from datetime import timedelta
+        return self.created_at >= timezone.now() - timedelta(days=30)
+
+
     def get_discount_price(self):
         if self.discount_percent > 0:
             discount_amount = (self.price * self.discount_percent) / 100
@@ -184,7 +202,7 @@ class Product(models.Model):
         return self.discount_percent > 0
 
     def in_stock(self):
-        return self.stock > 0
+        return self.is_in_stock
 
     def get_stock_for_variant(self, size, color):
         key = f"{size}-{color}"
@@ -210,6 +228,17 @@ class Product(models.Model):
         if main_image:
             return main_image
         return self.images.first()  # اگر تصویر اصلی نداشت، اولین تصویر را برگردان
+
+    @property
+    def total_stock(self):
+        """موجودی کل محصول را از جمع موجودی‌های ProductInventory محاسبه می‌کند"""
+        stock_sum = self.inventories.aggregate(total=Sum('quantity'))['total']
+        return stock_sum or 0
+
+    @property
+    def is_in_stock(self):
+        """بررسی می‌کند که آیا محصول بر اساس موجودی‌های رنگ و سایز، موجود است یا خیر"""
+        return self.total_stock > 0
 
     def get_average_rating(self):
         from django.db.models import Avg
@@ -359,6 +388,73 @@ class Banner(models.Model):
 
 class Color(models.Model):
     name = models.CharField(max_length=50, verbose_name='نام رنگ')
+
+    @property
+    def hex_code(self):
+        """
+        نام رنگ را به کد هگزادسیمال تبدیل می‌کند.
+        این دیکشنری کامل شده بر اساس لیست ارسالی شماست.
+        """
+        color_map = {
+            # خنثی
+            'سفید': '#FFFFFF', 'مشکی': '#000000', 'خاکستری': '#808080', 'نقره‌ای': '#C0C0C0', 'کرم': '#FFFDD0',
+            'بژ': '#F5F5DC', 'طوسی': '#808080', 'دودی': '#696969', 'زغالی': '#36454F', 'استخوانی': '#F9F6EE',
+            'شیری': '#FDFFF5',
+
+            # قرمز
+            'قرمز': '#FF0000', 'زرشکی': '#8B0000', 'سرخابی': '#FC0FC0', 'لاکی': '#D21404', 'آجری': '#B22222',
+            'سرخ': '#E30022', 'قرمز آتشین': '#FF4500', 'قرمز گیلاسی': '#D2042D', 'عنابی': '#722F37',
+            'کالباسی': '#F08080', 'قرمز توت فرنگی': '#FC5A8D', 'جگری': '#800020', 'آلبالویی': '#8B0000',
+            'قرمز گوجه‌ای': '#FF6347', 'شرابی': '#722F37',
+
+            # صورتی
+            'صورتی': '#FFC0CB', 'گلبهی': '#FFDAB9', 'صورتی کم‌رنگ': '#FFB6C1', 'صورتی تیره': '#FF69B4',
+            'صورتی فوشیا': '#FF00FF', 'رز': '#FF007F', 'گلی': '#FFB5C5', 'صورتی پررنگ': '#DE3163',
+            'صورتی چرک': '#D8A7B1', 'رزگلد': '#B76E79', 'صورتی پاستلی': '#F8C8DC', 'مرجانی': '#FF7F50',
+
+            # نارنجی
+            'نارنجی': '#FFA500', 'هلویی': '#FFE5B4', 'نارنجی تیره': '#FF8C00', 'نارنجی روشن': '#FFD580',
+            'کهربایی': '#FFBF00', 'پرتقالی': '#FCA510', 'زردآلویی': '#FBCEB1', 'مسی': '#B87333',
+            'نارنجی پرتقالی': '#FF7518', 'گل‌بهی': '#FFDAB9',
+
+            # زرد
+            'زرد': '#FFFF00', 'طلایی': '#FFD700', 'لیمویی': '#ADFF2F', 'زرد کم‌رنگ': '#FFFFE0',
+            'زرد آفتابی': '#FFC72C', 'زرد کانولا': '#FFEF00', 'نباتی': '#F5DEB3', 'زرد لیمو': '#FFF44F',
+            'زرد کره‌ای': '#FFFD74', 'برنزی': '#CD7F32', 'خردلی': '#FFDB58', 'زرد قناری': '#FFFF99',
+            'کاهی': '#E8DEB5', 'نخودی': '#F2DDA4',
+
+            # سبز
+            'سبز': '#008000', 'سبز لجنی': '#556B2F', 'سبز یشمی': '#00A86B', 'سبز زیتونی': '#808000',
+            'سبز تیره': '#006400', 'سبز روشن': '#90EE90', 'سبز جنگلی': '#228B22', 'سبز دریایی': '#2E8B57',
+            'سبز چمنی': '#7CFC00', 'سبز فسفری': '#7FFF00', 'سبز نعنایی': '#98FF98', 'سبز کاج': '#01796F',
+            'سبز پسته‌ای': '#93C572', 'سبز ارتشی': '#4B5320', 'سبزآبی': '#008080', 'سبز زمردی': '#50C878',
+            'سبز سیدی': '#32CD32', 'سبز خزه‌ای': '#8A9A5B',
+
+            # آبی
+            'آبی': '#0000FF', 'آبی آسمانی': '#87CEEB', 'آبی نفتی': '#000080', 'فیروزه‌ای': '#40E0D0',
+            'آبی روشن': '#ADD8E6', 'آبی تیره': '#00008B', 'آبی دریایی': '#000080', 'آبی یخی': '#99FFFF',
+            'آبی الکتریک': '#7DF9FF', 'آبی کبالت': '#0047AB', 'سرمه‌ای': '#000080', 'لاجوردی': '#4169E1',
+            'آبی پودری': '#B0E0E6', 'آبی کاربنی': '#0047AB', 'آبی درباری': '#4169E1', 'آبی پاستلی': '#A7C7E7',
+            'کله غازی': '#008080', 'نیلی': '#5A4FCF',
+
+            # بنفش
+            'بنفش': '#8A2BE2', 'یاسی': '#C8A2C8', 'ارغوانی': '#9932CC', 'بنفش تیره': '#301934',
+            'بنفش روشن': '#E6E6FA', 'بادمجانی': '#483D8B', 'ماژنتا': '#FF00FF', 'بنفش شاهی': '#800080',
+            'بنفش پاستلی': '#B1A2C7', 'ویولت': '#8F00FF',
+
+            # قهوه‌ای
+            'قهوه‌ای': '#A52A2A', 'شکلاتی': '#D2691E', 'قهوه‌ای تیره': '#654321', 'قهوه‌ای روشن': '#C4A484',
+            'خاکی': '#C2B280', 'کاراملی': '#C68E17', 'قهوه‌ای سوخته': '#3B2F2F', 'عسلی': '#D4AF37',
+            'گندمی': '#F5DEB3', 'شنی': '#C2B280', 'زعفرانی': '#F4C430', 'حنایی': '#AB274F',
+            'خرمایی': '#5C4033', 'نسکافه‌ای': '#826644', 'دارچینی': '#D2691E',
+
+            # سایر
+            'صدفی': '#FAF0E6', 'مروارید': '#E2DFD2', 'فیروزه': '#30D5C8',
+            'پسته‌ای': '#93C572', 'بادامی': '#EED9C4', 'گردویی': '#725C42',
+            'انار': '#C0362C', 'انگوری': '#6F2DA8', 'توتی': '#5A1F3C', 'نارگیلی': '#965A3E',
+            'خاکستری موشی': '#9E9E9E', 'خاکستری نقره‌ای': '#C0C0C0',
+        }
+        return color_map.get(self.name, '#CCCCCC')  # رنگ پیش‌فرض برای موارد یافت نشده
 
 
     class Meta:

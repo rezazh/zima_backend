@@ -1,140 +1,219 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
+    <style>
+    /* تنظیم padding برای تمام صفحات */
+    body {
+        padding-top: 40px !important;
+        box-sizing: border-box;
+    }
+
+    .main-content,
+    .container,
+    .content,
+    main {
+        padding-top: 20px;
+    }
+
+    .page-content,
+    .home-content,
+    .product-detail,
+    .product-list,
+    .chat-room,
+    .category-page {
+        margin-top: 0 !important;
+        padding-top: 20px;
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding-top: 70px !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        body {
+            padding-top: 60px !important;
+        }
+    }
+    </style>
     {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}فروشگاه زیما{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .cart-icon {position: relative; display: inline-block; margin-right: 15px; color: white; font-size: 1.2rem; text-decoration: none;}
-        .cart-count {position: absolute; top: -8px; right: -8px; background-color: #dc3545; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center;}
-        .cart-icon:hover {color: #f8f9fa;}
-        .floating-chat-btn {position: fixed; bottom: 20px; left: 20px; width: 60px; height: 60px; background: linear-gradient(45deg, #007bff, #0056b3); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,123,255,0.3); cursor: pointer; z-index: 1000; transition: all 0.3s ease;}
-        .floating-chat-btn:hover {transform: scale(1.1); box-shadow: 0 6px 16px rgba(0,123,255,0.4);}
-        .floating-chat-badge {position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;}
-        .notification-badge {font-size: 0.7rem; padding: 0.25rem 0.5rem;}
-    </style>
+    <title>{% block title %}زیما | زیبایی خصوصی شما{% endblock %}</title>
+
+    {# فونت‌ها #}
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;600;700;900&family=Vazir:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+
+    {# استایل‌های جدید تم #}
+    <link rel="stylesheet" href="{% static 'css/zima_theme_v2.css' %}">
+    {# برای استایل‌های خاص هر صفحه (بعدا اضافه می‌شود) #}
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <header class="bg-dark text-white py-3">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-3">
-                    <h1 class="h4 mb-0"><a href="/" class="text-white text-decoration-none">فروشگاه زیما</a></h1>
-                </div>                <div class="col-md-6">
-                    <form class="d-flex" action="{% url 'products:search' %}" method="GET">
-                    <input class="form-control me-2" type="search" name="q" placeholder="جستجو..." aria-label="Search" value="{{ request.GET.q|default:'' }}">
-                    <button class="btn btn-outline-light" type="submit">جستجو</button>
-                    </form>
-                </div>
-                <div class="col-md-3 text-end d-flex align-items-center justify-content-end">
-                    <a href="{% url 'cart:summary' %}" class="cart-icon me-3">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cart-items-count">
-                            {% if user.is_authenticated %}{{ user.cart_items.count }}{% else %}0{% endif %}
-                        </span>
-                    </a>
-
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'chat:notifications' %}" class="cart-icon me-3">
-                        <i class="fas fa-bell"></i>
-                        <span class="cart-count" id="notification-count" style="display: none;">0</span>
-                    </a>
-
-                    <div class="dropdown">
-                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ user.username }}
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="{% url 'users:profile' %}">پروفایل</a></li>
-                            <li><a class="dropdown-item" href="#">سفارشات من</a></li>
-                            <li><a class="dropdown-item" href="{% url 'chat:chat_list' %}">
-                                <i class="fas fa-comments"></i> چت‌های من
-                                <span class="badge bg-danger notification-badge" id="chat-notification-badge" style="display: none;">0</span>
-                            </a></li>
-                            {% if user.is_staff %}                                <li><a class="dropdown-item" href="{% url 'admin:index' %}">پنل مدیریت</a></li>
-                                <li><a class="dropdown-item" href="{% url 'chat:admin_dashboard' %}">داشبورد چت</a></li>
-                            {% endif %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'users:logout' %}">خروج</a></li>
-                        </ul>
-                    </div>
-                    {% else %}
-                        <a href="{% url 'users:login' %}" class="btn btn-outline-light me-2">ورود</a>                        <a href="{% url 'users:signup' %}" class="btn btn-light">ثبت‌نام</a>
-                    {% endif %}
-                </div>
-            </div>
+    <!-- Loading Screen -->
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-logo">زیما</div>
         </div>
-    </header>
+    </div>    <!-- Loading Spinner (برای استفاده در عملیات‌های AJAX) -->
+    <div class="loading-spinner" id="loadingSpinner"></div>
 
-    <main class="container my-4">
-        {% load i18n %}
-        {% if messages %}
-        <div class="django-messages">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
+    <!-- Toast Notification (برای نمایش پیام‌های موفقیت/خطا) -->
+    <div class="toast" id="toast">
+        <div class="toast-icon">
+            <i class="fas fa-check"></i>
         </div>
-        {% endif %}
-        {% block content %}{% endblock %}
-    </main>
+        <div class="toast-message"></div>
+    </div>
 
-    <footer class="bg-dark text-white py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <h5>فروشگاه زیما</h5>
-                    <p>فروشگاه آنلاین محصولات با کیفیت</p>
-                </div>
-                <div class="col-md-4">
-                    <h5>لینک‌های مفید</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-white">درباره ما</a></li>
-                        <li><a href="#" class="text-white">تماس با ما</a></li>
-                        <li><a href="#" class="text-white">قوانین و مقررات</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5>تماس با ما</h5>
-                    <address>
-                        <p>آدرس: تهران، خیابان ولیعصر</p>
-                        <p>تلفن: 021-12345678</p>
-                        <p>ایمیل: info@zima.com</p>
-                    </address>
-                </div>
+    <!-- Cursor -->
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+
+    <!-- Navigation -->
+    <div class="nav-container" id="navbar">
+        <nav class="navbar">
+            <a href="{% url 'pages:home' %}" class="logo">زیما</a>
+
+            <ul class="nav-menu">
+                <li><a href="{% url 'pages:home' %}" class="nav-link">صفحه اصلی</a></li>
+                <li><a href="{% url 'products:list' %}" class="nav-link">محصولات</a></li>
+                <li><a href="#" class="nav-link">راهنمای سایز</a></li>
+                <li><a href="{% url 'pages:about' %}" class="nav-link">درباره ما</a></li>
+                <li><a href="{% url 'pages:contact' %}" class="nav-link">تماس</a></li>
+            </ul>
+
+            <div class="nav-icons">
+                <a href="{% url 'products:search' %}" class="nav-icon"><i class="fas fa-search"></i></a>
+                <a href="#" class="nav-icon"><i class="fas fa-heart"></i></a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'users:profile' %}" class="nav-icon"><i class="fas fa-user"></i></a>
+                {% else %}
+                <a href="{% url 'users:login' %}" class="nav-icon"><i class="fas fa-user"></i></a>
+                {% endif %}
+                <a href="{% url 'cart:summary' %}" class="nav-icon">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="cart-badge" id="cart-items-count">{{ cart_items_count|default:0 }}</span>
+                </a>
             </div>
-            <hr>
-            <div class="text-center">
-                <p>&copy; 1404 فروشگاه زیما. تمامی حقوق محفوظ است.</p>
-            </div>
+        </nav>
+    </div>
+
+    <!-- Django Messages -->
+    {% if messages %}
+    <div class="django-messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
         </div>
-    </footer>
-
-    {% if user.is_authenticated %}
-    <div class="floating-chat-btn" id="floating-chat-btn" title="{% if user.is_staff %}داشبورد چت{% else %}چت‌های من{% endif %}">
-        <i class="fas {% if user.is_staff %}fa-headset{% else %}fa-comments{% endif %} fa-lg"></i>
-        <span class="floating-chat-badge" id="unread-count" style="display: none;">0</span>
+        {% endfor %}
     </div>
     {% endif %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
 
-    {% if user.is_authenticated %}
-    <script>
-        document.getElementById('floating-chat-btn')?.addEventListener('click', function() {
-            {% if user.is_staff %}
-                window.location.href = "{% url 'chat:admin_dashboard' %}";
-            {% else %}
-                window.location.href = "{% url 'chat:chat_list' %}";
-            {% endif %}
-        });    </script>
-    <script src="{% static 'chat/js/online-handler.js' %}"></script>
-    <script src="{% static 'chat/js/notifications.js' %}"></script>
-    {% endif %}
+    <!-- Newsletter Section -->
+    <section class="newsletter-section">
+        <div class="newsletter-content">
+            <h2 class="newsletter-title">عضو خانواده زیما شوید</h2>
+            <p class="newsletter-text">
+                از جدیدترین محصولات و تخفیف‌های ویژه مطلع شوید
+            </p>
+            <form class="newsletter-form" action="{% url 'pages:newsletter' %}" method="post">
+                {% csrf_token %}
+                <input type="email" name="email" class="newsletter-input" placeholder="آدرس ایمیل شما" required>
+                <button type="submit" class="newsletter-submit">عضویت</button>
+            </form>
+        </div>
+    </section>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <h3>زیما</h3>
+                <p>
+                    زیما، برندی است که زیبایی خصوصی شما را اولویت قرار می‌دهد.                    ما معتقدیم هر زنی شایسته احساس زیبایی، راحتی و اعتماد به نفس است.
+                </p>
+                <div class="footer-social">
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-pinterest"></i></a>
+                </div>
+            </div>
 
+            <div class="footer-column">
+                <h4>خدمات مشتریان</h4>
+                <ul class="footer-links">
+                    <li><a href="#">راهنمای خرید</a></li>
+                    <li><a href="#">راهنمای سایز</a></li>
+                    <li><a href="{% url 'pages:shipping' %}">شرایط ارسال</a></li>
+                    <li><a href="#">ضمانت بازگشت</a></li>
+                    <li><a href="{% url 'pages:contact' %}" target="_blank">پشتیبانی آنلاین</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>درباره زیما</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'pages:about' %}">داستان ما</a></li>
+                    <li><a href="#">کیفیت محصولات</a></li>
+                    <li><a href="{% url 'pages:privacy' %}">حریم خصوصی</a></li>
+                    <li><a href="#">مجله زیما</a></li>
+                    <li><a href="#">فرصت‌های شغلی</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>تماس با ما</h4>
+                <ul class="footer-links">
+                    <li><a href="tel:+982177889900">۰۲۱-۷۷۸۸۹۹۰۰</a></li>
+                    <li><a href="mailto:info@zima.ir">info@zima.ir</a></li>
+                    <li><a href="#">تهران، ولنجک، برج میلاد</a></li>
+                    <li><a href="#">شنبه تا پنجشنبه ۹-۱۸</a></li>
+                    <li><a href="#">جمعه ۱۰-۱۶</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; ۱۴۰۳ زیما. تمامی حقوق محفوظ است. طراحی شده با 💎 برای زنان ایران</p>
+        </div>
+    </footer>
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/zima_theme_v2.js' %}"></script>
     {% block extra_js %}{% endblock %}
+
+    {# ✅ ✅ ✅ تغییر اصلی: کل منطق چت به داخل این بلاک منتقل شد و ساده‌سازی شد ✅ ✅ ✅ #}
+    {% block chat_icon_block %}
+        {% if user.is_authenticated %}
+            <div class="chat-widget-container">
+                {# ✅ تغییر: لینک مستقیم به صفحه لیست چت #}
+                <a href="{% if user.is_staff %}{% url 'chat:admin_dashboard' %}{% else %}{% url 'chat:chat_list' %}{% endif %}" class="chat-widget" id="chatIcon">
+                    <i class="fas fa-comments"></i>
+                    {# ✅ نکته: اعلان زنده حذف شد تا کد ساده‌تر شود، می‌توان بعدا اضافه کرد #}
+                </a>
+            </div>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const chatIcon = document.getElementById('chatIcon');
+                if (chatIcon) {
+                    const currentPath = window.location.pathname;
+                    // فقط در صفحاتی که آدرسشان با /chat/ شروع می‌شود، آیکون را مخفی کن
+                    if (currentPath.startsWith('/chat/')) {
+                        chatIcon.style.display = 'none';
+                    }
+                }
+            });
+            </script>
+        {% endif %}
+    {% endblock chat_icon_block %}
+
 </body>
 </html>

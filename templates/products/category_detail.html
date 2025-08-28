@@ -2,262 +2,429 @@
 {% load static %}
 {% load product_filters %}
 
-{% block title %}{{ category.name }} - فروشگاه زیما{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* استایل برای فیلترها */
-    .filter-section {
-        margin-bottom: 20px;
-    }
-    
-    .filter-section h5 {
-        margin-bottom: 10px;
-    }
-    
-    .filter-select {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-
-    .color-swatch {
-        display: inline-block;
-        width: 15px;
-        height: 15px;
-        border-radius: 50%;
-        margin-right: 5px;
-        vertical-align: middle;
-    }
-
-    /* استایل برای کارت محصول */
-    .product-card {
-        transition: transform 0.3s;
-    }
-
-    .product-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    .filter-badge {
-        margin-right: 5px;
-        margin-bottom: 5px;
-    }
-
-    .active-filters {
-        margin-bottom: 15px;
-    }
-</style>
-{% endblock %}
+{% block title %}{{ page_title }} | زیما{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb" class="mt-3">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">صفحه اصلی</a></li>
-        {% if category.parent %}
-        <li class="breadcrumb-item">
-            <a href="{% url 'products:category' category.parent.slug %}">{{ category.parent.name }}</a>
-        </li>
-        {% endif %}
-        <li class="breadcrumb-item active" aria-current="page">{{ category.name }}</li>
-    </ol>
-</nav>
-
-<div class="row">
-    <!-- فیلترها -->
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">فیلترها</h5>
-            </div>
-            <div class="card-body">
-                <form id="filterForm" method="get">
-                    <!-- فیلترهای فعال -->
-                    {% if filters_applied %}
-                    <div class="active-filters">
-                        <h6>فیلترهای فعال:</h6>
-                        <div>
-                            {% if current_filters.brand %}
-                            <span class="badge bg-primary filter-badge">
-                                برند: {{ current_filters.brand }}
-                                <a href="#" onclick="removeFilter('brand')" class="text-white ms-1">&times;</a>
-                            </span>
-                            {% endif %}
-
-                            {% if current_filters.size %}
-                            <span class="badge bg-primary filter-badge">
-                                سایز: {{ current_filters.size }}
-                                <a href="#" onclick="removeFilter('size')" class="text-white ms-1">&times;</a>
-                            </span>
-                            {% endif %}
-
-                            {% if current_filters.color %}
-                            <span class="badge bg-primary filter-badge">
-                                رنگ: {{ current_filters.color }}
-                                <a href="#" onclick="removeFilter('color')" class="text-white ms-1">&times;</a>
-                            </span>
-                            {% endif %}
-
-                            {% if current_filters.min_price or current_filters.max_price %}
-                            <span class="badge bg-primary filter-badge">
-                                قیمت:
-                                {% if current_filters.min_price %}از {{ current_filters.min_price|floatformat:0 }}{% endif %}
-                                {% if current_filters.max_price %}تا {{ current_filters.max_price|floatformat:0 }}{% endif %}
-                                <a href="#" onclick="removeFilter('price')" class="text-white ms-1">&times;</a>
-                            </span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- فیلتر برند -->
-                    {% if all_brands %}
-                    <div class="filter-section">
-                        <h5>برند</h5>
-                        <select name="brand" class="form-select filter-select">
-                            <option value="none">انتخاب برند</option>
-                            {% for brand in all_brands %}
-                            <option value="{{ brand }}" {% if current_filters.brand == brand %}selected{% endif %}>{{ brand }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    {% endif %}
-
-                    <!-- فیلتر قیمت -->
-                    <div class="filter-section">
-                        <h5>قیمت (تومان)</h5>
-                        <div class="row">
-                            <div class="col-6">
-                                <input type="number" class="form-control" name="min_price" placeholder="از" value="{{ current_filters.min_price }}">
-                            </div>
-                            <div class="col-6">
-                                <input type="number" class="form-control" name="max_price" placeholder="تا" value="{{ current_filters.max_price }}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- فیلتر سایز -->
-                    {% if all_sizes %}
-                    <div class="filter-section">
-                        <h5>سایز</h5>
-                        <select name="size" class="form-select filter-select">
-                            <option value="none">انتخاب سایز</option>
-                            {% for size in all_sizes %}
-                            <option value="{{ size }}" {% if current_filters.size == size %}selected{% endif %}>{{ size }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    {% endif %}
-
-                    <!-- فیلتر رنگ -->
-                    {% if all_colors %}
-                    <div class="filter-section">
-                        <h5>رنگ</h5>
-                        <select name="color" class="form-select filter-select">
-                            <option value="none">انتخاب رنگ</option>
-                            {% for color in all_colors %}
-                            <option value="{{ color }}" {% if current_filters.color == color %}selected{% endif %}>
-                                {{ color }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    {% endif %}
-
-                    <!-- مرتب‌سازی -->
-                    <div class="filter-section">
-                        <h5>مرتب‌سازی</h5>
-                        <select name="sort" class="form-select filter-select">
-                            <option value="newest" {% if current_filters.sort == 'newest' %}selected{% endif %}>جدیدترین</option>
-                            <option value="price_low" {% if current_filters.sort == 'price_low' %}selected{% endif %}>ارزان‌ترین</option>
-                            <option value="price_high" {% if current_filters.sort == 'price_high' %}selected{% endif %}>گران‌ترین</option>
-                            <option value="popular" {% if current_filters.sort == 'popular' %}selected{% endif %}>پرفروش‌ترین</option>
-                        </select>
-                    </div>
-
-                    <!-- دکمه‌های اعمال و حذف فیلترها -->
-                    <div class="mt-3">
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">اعمال فیلترها</button>
-                            <a href="{% url 'products:category' category.slug %}" class="btn btn-outline-danger">حذف فیلترها</a>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
+<!-- Products Hero -->
+<section class="products-hero">
+    <div class="hero-content">
+        <h1 class="hero-title">{{ page_title }}</h1>
+        <p class="hero-subtitle">زیبایی، راحتی و اعتماد به نفس در یک مجموعه</p>
+        <nav class="breadcrumb">
+            <a href="{% url 'pages:home' %}">خانه</a>
+            <span>/</span>
+            {% if category %}
+                {% if category.parent %}
+                    <a href="{% url 'products:category_list' category.parent.slug %}">{{ category.parent.name }}</a>
+                    <span>/</span>
+                {% endif %}
+                <span>{{ category.name }}</span>
+            {% else %}
+                <span>محصولات</span>
+            {% endif %}
+        </nav>
     </div>
+</section>
 
-    <!-- محصولات -->
-    <div class="col-md-9">
-        <h1 class="mb-4">{{ category.name }}</h1>
-
-        {% if subcategories %}
-        <div class="mb-4">
-            <h5>دسته‌بندی‌های {{ category.name }}</h5>
-            <div class="row">
-                {% for subcat in subcategories %}
-                <div class="col-md-3 mb-3">
-                    <a href="{% url 'products:category' subcat.slug %}" class="btn btn-outline-primary w-100">{{ subcat.name }}</a>
+<!-- Main Products Section -->
+<div class="products-main">
+    <!-- Sidebar Filters -->
+    <aside class="sidebar" id="sidebar">
+        <form method="get" id="filterForm">
+            <!-- Search Filter -->
+            <div class="filter-section">
+                <div class="search-box">
+                    <input type="text" name="q" class="search-input" placeholder="جستجو در محصولات..." value="{{ current_filters.q|default:'' }}">
+                    <button class="search-btn" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
                 </div>
-                {% endfor %}
             </div>
-        </div>
-        {% endif %}
 
-        <div class="row">
-            {% for product in products %}
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 product-card">
-                    {% with image=product.get_main_image %}
-                    {% if image %}
-                    <img src="{{ image.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
-                    {% else %}
-                    <div class="bg-secondary text-white p-4 text-center" style="height: 200px;">بدون تصویر</div>
-                    {% endif %}
-                    {% endwith %}
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ product.name }}</h5>
-                        <p class="card-text text-muted small">{{ product.brand }}</p>
-                        <p class="card-text flex-grow-1">{{ product.short_description|default:product.description|truncatechars:80 }}</p>
-                        <div class="d-flex justify-content-between align-items-center mt-auto">
-                            {% if product.has_discount %}
-                            <div>
-                                <span class="text-muted text-decoration-line-through">{{ product.price|floatformat:0 }}</span>
-                                <span class="text-danger fw-bold">{{ product.get_discount_price|floatformat:0 }} تومان</span>
-                            </div>
-                            {% else %}
-                            <span class="text-danger fw-bold">{{ product.price|floatformat:0 }} تومان</span>
-                            {% endif %}
-                            <a href="{{ product.get_absolute_url }}" class="btn btn-primary btn-sm">مشاهده محصول</a>
+            <!-- Category Filter -->
+            {% if all_categories %}
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h3 class="filter-title">دسته‌بندی</h3>
+                    <i class="fas fa-chevron-down filter-toggle"></i>
+                </div>
+                <div class="filter-content">
+                    <div class="filter-content-inner">
+                        <ul class="category-list">
+                            {% for cat in all_categories %}
+                            <li class="category-item">
+                               <label class="category-label">
+                                    <input type="checkbox" name="categories" value="{{ cat.id }}" class="category-checkbox"
+                                           {% if cat.id|stringformat:'s' in current_filters.categories %}checked{% endif %}>
+                                    <span class="category-name">{{ cat.name }}</span>
+                                    <span class="category-count">({{ cat.product_count }})</span>
+                               </label>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Size Filter -->
+            {% if all_sizes %}
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h3 class="filter-title">سایز</h3>
+                    <i class="fas fa-chevron-down filter-toggle"></i>
+                </div>
+                <div class="filter-content">
+                    <div class="filter-content-inner">
+                        <div class="size-grid">
+                            {% for size in all_sizes %}
+                            <label class="size-btn {% if size.id|stringformat:'s' in current_filters.sizes %}active{% endif %}">
+                                <input type="checkbox" name="sizes" value="{{ size.id }}" style="display: none;"
+                                       {% if size.id|stringformat:"s" in current_filters.sizes %}checked{% endif %}>
+                                {{ size.name }}
+                            </label>
+                            {% endfor %}
                         </div>
                     </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Color Filter -->
+            {% if all_colors %}
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h3 class="filter-title">رنگ</h3>
+                    <i class="fas fa-chevron-down filter-toggle"></i>
+                </div>
+                <div class="filter-content">
+                    <div class="filter-content-inner">
+                        <div class="color-grid">
+                            {% for color in all_colors %}
+                            <label class="color-option {% if color.id|stringformat:'s' in current_filters.colors %}active{% endif %}"
+                                   style="background: {{ color.hex_code }}; {% if color.hex_code == '#FFFFFF' %}border: 2px solid #ddd;{% endif %}"
+                                   title="{{ color.name }}">
+                                <input type="checkbox" name="colors" value="{{ color.id }}" style="display: none;"
+                                       {% if color.id|stringformat:"s" in current_filters.colors %}checked{% endif %}>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Price Range Filter -->
+            {% if price_range.min_price is not None %}
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h3 class="filter-title">محدوده قیمت</h3>
+                    <i class="fas fa-chevron-down filter-toggle"></i>
+                </div>
+                <div class="filter-content">
+                    <div class="filter-content-inner">
+                        <div class="price-inputs">
+                            <input type="number" name="min_price" class="price-input" placeholder="از" value="{{ current_filters.min_price|default:'' }}">
+                            <span>تا</span>
+                            <input type="number" name="max_price" class="price-input" placeholder="تا" value="{{ current_filters.max_price|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Brand Filter -->
+            {% if all_brands %}
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h3 class="filter-title">برند</h3>
+                    <i class="fas fa-chevron-down filter-toggle"></i>
+                </div>
+                <div class="filter-content">
+                    <div class="filter-content-inner">
+                        <div class="size-grid"> {# از استایل دکمه‌های سایز استفاده می‌کنیم #}
+                            {% for brand_name in all_brands %}
+                            <label class="size-btn brand-label {% if brand_name in current_filters.brand %}active{% endif %}">
+                                <input type="checkbox" name="brand" value="{{ brand_name }}" style="display: none;"
+                                       {% if brand_name in current_filters.brand %}checked{% endif %}>
+                                {{ brand_name }}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Filter Actions -->
+            <div class="filter-actions">
+                <button type="submit" class="btn-apply">اعمال فیلتر</button>
+                <a href="{{ request.path }}" class="btn-reset">پاک کردن</a>
+            </div>
+        </form>
+    </aside>
+
+    <!-- Products Content -->
+    <div class="products-content">
+        <!-- Products Header -->
+        <div class="products-header">
+            <div class="results-count">
+                <strong>{{ results_count }}</strong> محصول یافت شد
+            </div>
+            <div class="header-controls">
+                <form method="get" id="sortForm" style="display: inline-block;">
+                    {% for key, value in request.GET.items %}
+                        {% if key != 'sort' %}
+                            {% if value|is_list %} {# از فیلتر کاستوم استفاده شد #}
+                                {% for item in value %}
+                                    <input type="hidden" name="{{ key }}" value="{{ item }}">
+                                {% endfor %}
+                            {% else %}
+                                <input type="hidden" name="{{ key }}" value="{{ value }}">
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    <select name="sort" class="sort-dropdown" onchange="this.form.submit()">
+                        <option value="newest" {% if current_filters.sort == 'newest' %}selected{% endif %}>جدیدترین</option>
+                        <option value="popular" {% if current_filters.sort == 'popular' %}selected{% endif %}>پرفروش‌ترین</option>
+                        <option value="price_low" {% if current_filters.sort == 'price_low' %}selected{% endif %}>ارزان‌ترین</option>
+                        <option value="price_high" {% if current_filters.sort == 'price_high' %}selected{% endif %}>گران‌ترین</option>
+                        <option value="rating" {% if current_filters.sort == 'rating' %}selected{% endif %}>بالاترین امتیاز</option>
+                        <option value="discount" {% if current_filters.sort == 'discount' %}selected{% endif %}>بیشترین تخفیف</option>
+                    </select>
+                </form>
+                <div class="view-options">
+                    <button class="view-btn active" id="gridViewBtn">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="view-btn" id="listViewBtn">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Products Grid -->
+        <div class="products-grid" id="productsGrid">
+            {% for product in products %}
+            <div class="product-card fade-in">
+                <div class="product-image-container">
+                    <div class="product-badges">
+                        {% if product.is_new %}
+                        <span class="product-badge new">جدید</span>
+                        {% endif %}
+                        {% if product.has_discount %}
+                        <span class="product-badge sale">{{ product.discount_percent }}% تخفیف</span>
+                        {% endif %}
+                        {% if product.is_featured %}
+                        <span class="product-badge">ویژه</span>
+                        {% endif %}
+                    </div>
+                    <div class="product-actions">
+                        <button class="action-btn {% if product.is_favorited %}active{% endif %}" onclick="toggleWishlist(this, '{{ product.id }}')">
+                            <i class="fa{% if product.is_favorited %}s{% else %}r{% endif %} fa-heart"></i>
+                        </button>
+                        <button class="action-btn" onclick="openQuickView('{{ product.id }}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="shareProduct('{{ product.id }}')">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
+                    <a href="{{ product.get_absolute_url }}">
+                        {% with image=product.get_main_image %}
+                        <img src="{% if image %}{{ image.image.url }}{% else %}{% static 'images/zima_theme/product-placeholder.jpg' %}{% endif %}"
+                             alt="{{ product.name }}" class="product-image">
+                        {% endwith %}
+                    </a>
+                </div>
+                <div class="product-info">
+                    <div class="product-brand">{{ product.brand }}</div>
+                    <a href="{{ product.get_absolute_url }}" class="text-decoration-none">
+                        <h3 class="product-name">{{ product.name }}</h3>
+                    </a>
+                    <div class="product-details">
+                        <div class="product-rating">
+                            <div class="stars">
+                                {% with rating=product.get_average_rating %}
+                                {% for i in "12345" %}
+                                <i class="fa{% if forloop.counter <= rating %}s{% else %}r{% endif %} fa-star star"></i>
+                                {% endfor %}
+                                {% endwith %}
+                            </div>
+                            <span class="rating-count">({{ product.get_rating_count }})</span>
+                        </div>
+                        <div class="product-sizes">{{ product.get_available_sizes_display }}</div>
+                    </div>
+                    <div class="product-colors">
+                        {% for color in product.get_available_colors %}
+                        <div class="color-dot" style="background: {{ color.hex_code }}; {% if color.hex_code == '#FFFFFF' %}border: 2px solid #ddd;{% endif %}" title="{{ color.name }}"></div>
+                        {% endfor %}
+                    </div>
+                    <div class="product-price-container">
+                        <div class="product-price">
+                            <span class="price-current">{{ product.get_display_price|floatformat:0 }} تومان</span>
+                            {% if product.has_discount %}
+                            <span class="price-original">{{ product.price|floatformat:0 }} تومان</span>
+                            {% endif %}
+                        </div>
+                        {% if product.has_discount %}
+                        <span class="discount-percentage">{{ product.discount_percent }}%</span>
+                        {% endif %}
+                    </div>
+                    {% if product.is_in_stock %}
+                        <button class="product-add-cart" onclick="addToCart('{{ product.id }}')">
+                            <i class="fas fa-shopping-cart"></i>
+                            افزودن به سبد خرید
+                        </button>
+                    {% else %}
+                        <button class="product-add-cart" disabled style="background: #ccc; cursor: not-allowed;">
+                            <i class="fas fa-times"></i>
+                            ناموجود
+                        </button>
+                    {% endif %}
                 </div>
             </div>
             {% empty %}
-            <div class="col-12">
-                <div class="alert alert-info">
-                    محصولی با فیلترهای انتخاب شده یافت نشد.
-                </div>
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <h3>محصولی یافت نشد</h3>
+                <p>لطفاً فیلترهای خود را تغییر دهید یا جستجوی جدیدی انجام دهید.</p>
             </div>
             {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if products.has_other_pages %}
+        <div class="pagination">
+            {% if products.has_previous %}
+            <a href="?{% url_replace page=products.previous_page_number %}" class="page-btn">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <span class="page-btn disabled">
+                <i class="fas fa-chevron-right"></i>
+            </span>
+            {% endif %}
+
+            {% for page_num in products.paginator.page_range %}
+                {% if page_num == products.number %}
+                    <span class="page-btn active">{{ page_num }}</span>
+                {% else %}
+                    <a href="?{% url_replace page=page_num %}" class="page-btn">{{ page_num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if products.has_next %}
+            <a href="?{% url_replace page=products.next_page_number %}" class="page-btn">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% else %}
+            <span class="page-btn disabled">
+                <i class="fas fa-chevron-left"></i>
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Mobile Filter Toggle -->
+<button class="mobile-filter-toggle" onclick="toggleMobileFilter()">
+    <i class="fas fa-filter"></i> فیلترها
+</button>
+
+<!-- Quick View Modal Structure -->
+<div class="quick-view-modal" id="quickViewModal">
+    <div class="modal-content-qv">
+        <button class="modal-close" onclick="closeQuickView()">
+            <i class="fas fa-times"></i>
+        </button>
+        <div id="quickViewModalContent">
+            <p style="text-align: center; padding: 50px;">در حال بارگذاری...</p>
         </div>
     </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-    // حذف فیلتر
-    function removeFilter(filterName) {
-        // حذف فیلتر مورد نظر و ارسال مجدد فرم
-        if (filterName === 'price') {
-            document.querySelector('input[name="min_price"]').value = '';
-            document.querySelector('input[name="max_price"]').value = '';
-        } else {
-            document.querySelector(`select[name="${filterName}"]`).value = 'none';
+
+{% block extra_js %}<script>
+    // Share Product function (simple placeholder)
+    function shareProduct(productId) {
+        // You can implement actual sharing logic here (e.g., copy to clipboard, open share dialog)
+        showToast('لینک محصول کپی شد!', 'share-alt');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Apply Filters button handles search input and general submit (if not already handled by change listener)
+        document.querySelector('.btn-apply').addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default form submission on button click
+            document.getElementById('filterForm').submit();
+        });
+
+        // View Toggle Functionality (Grid vs List)
+        const productsGrid = document.getElementById('productsGrid');
+        const gridViewBtn = document.getElementById('gridViewBtn');
+        const listViewBtn = document.getElementById('listViewBtn');
+
+        function setView(viewType) {
+            if (viewType === 'list') {
+                productsGrid.style.gridTemplateColumns = '1fr';
+                productsGrid.querySelectorAll('.product-card').forEach(card => {
+                    card.style.display = 'flex';
+                    card.style.flexDirection = 'row';
+                    card.style.height = '200px'; // ارتفاع ثابت برای حالت لیست
+                    card.querySelector('.product-image-container').style.minWidth = '200px'; // عرض ثابت تصویر
+                    card.querySelector('.product-image-container').style.height = '100%'; // ارتفاع تصویر به اندازه کارت
+                    card.querySelector('.product-image-container').style.flexShrink = '0'; // جلوگیری از کوچک شدن تصویر
+                    card.querySelector('.product-info').style.flex = '1';
+                    // تنظیمات خاص برای لیست ویو (مخفی کردن برخی جزئیات، نمایش توضیحات بیشتر و...)
+                    const productDetails = card.querySelector('.product-details');
+                    const productColors = card.querySelector('.product-colors');
+                    if (productDetails) productDetails.style.display = 'none'; // جزئیات مخفی شود
+                    if (productColors) productColors.style.display = 'none'; // رنگ‌ها مخفی شود
+                });
+                listViewBtn.classList.add('active');
+                gridViewBtn.classList.remove('active');
+            } else { // 'grid'
+                productsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(300px, 1fr))';
+                productsGrid.querySelectorAll('.product-card').forEach(card => {
+                    card.style.display = 'block';
+                    card.style.flexDirection = 'column';
+                    card.style.height = 'auto'; // ارتفاع خودکار برای حالت گرید
+                    card.querySelector('.product-image-container').style.minWidth = 'auto'; // بازگشت به حالت اولیه
+                    card.querySelector('.product-image-container').style.height = '380px'; // ارتفاع تصویر پیش‌فرض
+                    card.querySelector('.product-image-container').style.flexShrink = 'initial';
+                    card.querySelector('.product-info').style.flex = 'initial';
+                    // نمایش مجدد جزئیات برای حالت گرید
+                    const productDetails = card.querySelector('.product-details');
+                    const productColors = card.querySelector('.product-colors');
+                    if (productDetails) productDetails.style.display = 'flex';
+                    if (productColors) productColors.style.display = 'flex';
+                });
+                gridViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+            }
+            localStorage.setItem('productView', viewType); // Save preference
         }
 
-        document.getElementById('filterForm').submit();
-    }
+        // Load saved view preference
+        const savedView = localStorage.getItem('productView');
+        if (savedView) {
+            setView(savedView);
+        } else {
+            setView('grid'); // Default view
+        }
+
+        gridViewBtn.addEventListener('click', () => setView('grid'));
+        listViewBtn.addEventListener('click', () => setView('list'));
+
+        // Handle price input change on keyup (optional, for instant filter apply)
+        // document.querySelectorAll('.price-input').forEach(input => {
+        //     input.addEventListener('keyup', function() {
+        //         // You might want to debounce this or only apply on form submit
+        //         // For now, it's tied to the 'Apply Filter' button or form change listener
+        //     });
+        // });
+    });
 </script>
 {% endblock %}

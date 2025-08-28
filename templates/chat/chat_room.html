@@ -8,7 +8,9 @@
 <style>
     /* استایل اضافی برای اطمینان از عملکرد صحیح */
     .chat-actions {
-        min-height: 38px; /* ارتفاع حداقل برای جلوگیری از تغییر اندازه هنگام تغییر دکمه‌ها */
+        min-height: 38px;
+        display: flex;
+        gap: 10px;
     }
 
     .notification-container {
@@ -17,120 +19,155 @@
         right: 20px;
         z-index: 1000;
     }
+
+    .back-to-list {
+        display: block !important;
+        margin-bottom: 15px;
+    }
+
+    .file-preview {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 10px 0;
+        position: relative;
+    }
+
+    .file-preview .image-preview img {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 5px;
+    }
+
+    .file-preview .remove-file {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+    }
+
+    .typing-indicator {
+        font-style: italic;
+        color: #6c757d;
+        padding: 5px 10px;
+        display: none;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="notification-container"></div>
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2>گفتگو با {{ room.name|cut:"("|cut:")" }}</h2>
-                <a href="{% url 'chat:chat_list' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-right ml-1"></i> بازگشت به لیست گفتگوها
-                </a>
-            </div>
 
-            <div class="chat-container">
-                <div class="chat-header">
-                    <div class="d-flex align-items-center">
-                        <h3>{{ room.name|cut:"("|cut:")" }}</h3>
-                        {% if request.user.is_staff %}
-                            <!-- اگر کاربر ادمین است، وضعیت کاربر عادی را نمایش بده -->
-                            <div class="user-status {% if room.user.online_status.status == 'online' %}online{% else %}offline{% endif %}"
-                                 data-user-id="{{ room.user.id }}"
-                                 title="{% if room.user.online_status.status == 'online' %}آنلاین{% else %}آفلاین{% endif %}">
-                                <span class="status-dot {% if room.user.online_status.status == 'online' %}online{% else %}offline{% endif %}"></span>
-                            </div>
-                        {% else %}
-                            <!-- اگر کاربر عادی است، وضعیت ادمین/پشتیبان را نمایش بده (اگر پشتیبان وجود داشته باشد) -->
-                            {% if room.agent %}
-                                <div class="user-status {% if room.agent.online_status.status == 'online' %}online{% else %}offline{% endif %}"
-                                     data-user-id="{{ room.agent.id }}"
-                                     title="{% if room.agent.online_status.status == 'online' %}آنلاین{% else %}آفلاین{% endif %}">
-                                    <span class="status-dot {% if room.agent.online_status.status == 'online' %}online{% else %}offline{% endif %}"></span>
-                                </div>
-                            {% else %}
-                                <div class="user-status offline" title="آفلاین">
-                                    <span class="status-dot offline"></span>
-                                </div>
-                            {% endif %}
-                        {% endif %}
-                        <span class="badge {% if room.status == 'open' %}bg-success{% else %}bg-danger{% endif %} mx-2" id="room-status">
-                            {{ room.get_status_display }}
-                        </span>
-                    </div>
-                    <div class="chat-actions">
-                        {% if room.status == 'open' %}
-                            <button id="close-room-button" class="btn btn-danger btn-sm">
-                                <i class="fas fa-times"></i> بستن گفتگو
-                            </button>
-                        {% else %}
-                            {% if request.user.is_staff or not room.closed_by.is_staff %}
-                                <button id="reopen-room-button" class="btn btn-success btn-sm">
-                                    <i class="fas fa-redo"></i> بازگشایی گفتگو
-                                </button>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                </div>
+<section class="chat-room-page">
+    <div class="chat-room-container">
+        <!-- دکمه بازگشت در بالا -->
+        <div class="d-flex justify-content-between align-items-center mb-3 back-to-list">
+            <h2>گفتگو با {{ room.name|cut:"("|cut:")" }}</h2>
+            <a href="{% url 'chat:chat_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right ml-1"></i> بازگشت به لیست گفتگوها
+            </a>
+        </div>
 
-                <div class="chat-body" id="message-container">
-    {% for message in chat_messages %}  <!-- تغییر از messages به chat_messages -->
-        <div id="message-{{ message.id }}" class="message {% if message.message_type == 'system' %}system-message{% elif message.sender == request.user %}sent{% else %}received{% endif %} {% if message.is_read %}read{% endif %}">
-            <div class="message-content">
-                {{ message.content }}
-            </div>
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="d-flex align-items-center">
+                    <h3>{{ room.name|cut:"("|cut:")" }}</h3>
 
-            {% if message.file %}
-                {% with file_url=message.file.url|lower %}
-                    {% if '.jpg' in file_url or '.jpeg' in file_url or '.png' in file_url or '.gif' in file_url %}
-                        <div class="message-image">
-                            <a href="{{ message.file.url }}" target="_blank">
-                                <img src="{{ message.file.url }}" alt="تصویر پیوست" />
-                            </a>
+                    {% if request.user.is_staff %}
+                        <!-- اگر کاربر ادمین است، وضعیت کاربر عادی را نمایش بده -->
+                        <div class="user-status {% if room.user.online_status.status == 'online' %}online{% else %}offline{% endif %}"
+                             data-user-id="{{ room.user.id }}"
+                             title="{% if room.user.online_status.status == 'online' %}آنلاین{% else %}آفلاین{% endif %}">
+                            <span class="status-dot {% if room.user.online_status.status == 'online' %}online{% else %}offline{% endif %}"></span>
                         </div>
                     {% else %}
-                        <div class="message-file">
-                            <a href="{{ message.file.url }}" target="_blank">
-                                <i class="fas fa-file"></i> دانلود فایل
-                            </a>
-                        </div>
+                        <!-- اگر کاربر عادی است، وضعیت ادمین/پشتیبان را نمایش بده -->
+                        {% if room.agent %}
+                            <div class="user-status {% if room.agent.online_status.status == 'online' %}online{% else %}offline{% endif %}"
+                                 data-user-id="{{ room.agent.id }}"
+                                 title="{% if room.agent.online_status.status == 'online' %}آنلاین{% else %}آفلاین{% endif %}">
+                                <span class="status-dot {% if room.agent.online_status.status == 'online' %}online{% else %}offline{% endif %}"></span>
+                            </div>
+                        {% else %}
+                            <div class="user-status offline" title="آفلاین">
+                                <span class="status-dot offline"></span>
+                            </div>
+                        {% endif %}
                     {% endif %}
-                {% endwith %}
-            {% endif %}
 
-            <div class="message-info">
-                <span class="message-time">{{ message.created_at|date:"H:i" }} {{ message.created_at|date:"j F" }}</span>
-
-                {% if message.sender == request.user and message.message_type != 'system' %}
-                    <span class="read-indicator" title="{% if message.is_read %}خوانده شده{% else %}ارسال شده{% endif %}">
-                        <i class="fas {% if message.is_read %}fa-check-double{% else %}fa-check{% endif %}"></i>
+                    <span class="badge {% if room.status == 'open' %}bg-success{% else %}bg-danger{% endif %} mx-2" id="room-status">
+                        {{ room.get_status_display }}
                     </span>
-                {% endif %}
-            </div>
-        </div>
-    {% endfor %}
-</div>
-
-
-                <div class="typing-indicator" id="typing-indicator"></div>
-
-                <div class="chat-footer">
-                    <textarea id="message-input" placeholder="پیام خود را بنویسید..." {% if room.status != 'open' %}disabled{% endif %}></textarea>
-                    <button id="file-upload-button" class="btn btn-light" type="button" {% if room.status != 'open' %}disabled{% endif %}>
-                        <i class="fas fa-paperclip"></i>
-                    </button>
-                    <button id="send-button" class="btn btn-primary" type="button" {% if room.status != 'open' %}disabled{% endif %}>
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                    <input type="file" id="file-input" style="display: none;">
                 </div>
+
+                <div class="chat-actions">
+                    {% if room.status == 'open' %}
+                        <button id="close-room-button" class="btn btn-danger btn-sm">
+                            <i class="fas fa-times"></i> بستن گفتگو
+                        </button>
+                    {% else %}
+                        {% if request.user.is_staff or not room.closed_by.is_staff %}
+                            <button id="reopen-room-button" class="btn btn-success btn-sm">
+                                <i class="fas fa-redo"></i> بازگشایی گفتگو
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="chat-body" id="message-container">
+                {% for message in chat_messages %}
+                    <div id="message-{{ message.id }}" class="message {% if message.message_type == 'system' %}system-message{% elif message.sender == request.user %}sent{% else %}received{% endif %} {% if message.is_read %}read{% endif %}">
+                        <div class="message-content">
+                            {{ message.content|linebreaksbr }}
+                        </div>
+
+                        {% if message.file %}
+                            {% with file_url=message.file.url|lower %}
+                                {% if '.jpg' in file_url or '.jpeg' in file_url or '.png' in file_url or '.gif' in file_url %}
+                                    <div class="message-image">
+                                        <a href="{{ message.file.url }}" target="_blank">
+                                            <img src="{{ message.file.url }}" alt="تصویر پیوست" />
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <div class="message-file">
+                                        <a href="{{ message.file.url }}" target="_blank">
+                                            <i class="fas fa-file"></i> دانلود فایل
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        {% endif %}
+
+                        <div class="message-info">
+                            <span class="message-time">{{ message.created_at|date:"H:i" }} {{ message.created_at|date:"j F" }}</span>
+
+                            {% if message.sender == request.user and message.message_type != 'system' %}
+                                <span class="read-indicator" title="{% if message.is_read %}خوانده شده{% else %}ارسال شده{% endif %}">
+                                    <i class="fas {% if message.is_read %}fa-check-double{% else %}fa-check{% endif %}"></i>
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="typing-indicator" id="typing-indicator"></div>
+
+            <div class="chat-footer">
+                <textarea id="message-input" placeholder="پیام خود را بنویسید..." {% if room.status != 'open' %}disabled{% endif %}></textarea>
+                <button id="file-upload-button" class="btn btn-light" type="button" {% if room.status != 'open' %}disabled{% endif %}>
+                    <i class="fas fa-paperclip"></i>
+                </button>
+                <button id="send-button" class="btn btn-primary" type="button" {% if room.status != 'open' %}disabled{% endif %}>
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+                <input type="file" id="file-input" style="display: none;">
             </div>
         </div>
     </div>
-</div>
+</section>
 
 <!-- فیلدهای مخفی برای استفاده در JavaScript -->
 <input type="hidden" id="room-id" value="{{ room.id }}">
@@ -141,4 +178,5 @@
 
 {% block extra_js %}
 <script src="{% static 'chat/js/chat.js' %}"></script>
+<script src="{% static 'chat/js/online-handler.js' %}"></script>
 {% endblock %}

@@ -1,44 +1,92 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}شروع گفتگوی جدید{% endblock %}
+{% block title %}شروع گفتگوی جدید | زیما{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'chat/css/start-chat.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">شروع گفتگوی جدید</h3>
+<section class="start-chat-page">
+    <div class="start-chat-container">
+        <div class="start-chat-wrapper">
+            <!-- Info Panel -->
+            <aside class="info-panel">
+                <h2 class="info-title">
+                    <i class="fas fa-info-circle"></i>
+                    راهنمای گفتگو
+                </h2>
+
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="info-content">
+                        <h4>ساعات پاسخگویی</h4>
+                        <p>پشتیبانان ما در ساعات کاری (شنبه تا پنجشنبه، ۹ صبح تا ۹ شب) آماده پاسخگویی سریع به شما هستند.</p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
 
-                        <div class="mb-3">
-                            <label for="subject" class="form-label">موضوع</label>
-                            <input type="text" class="form-control" id="subject" name="subject" required>
-                            <div class="form-text">موضوع گفتگو را به صورت مختصر بنویسید.</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="message" class="form-label">پیام</label>
-                            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
-                            <div class="form-text">توضیحات خود را بنویسید. پشتیبان‌های ما در اسرع وقت به شما پاسخ خواهند داد.</div>
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'chat:chat_list' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-right ml-1"></i> انصراف
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane ml-1"></i> ارسال
-                            </button>
-                        </div>
-                    </form>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <div class="info-content">
+                        <h4>چه سوالاتی بپرسید؟</h4>
+                        <p>شما می‌توانید در مورد وضعیت سفارش، اطلاعات محصولات، راهنمای سایز و هر سوال دیگری با ما در ارتباط باشید.</p>
+                    </div>
                 </div>
+
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="info-content">
+                        <h4>حفظ حریم خصوصی</h4>
+                        <p>تمامی گفتگوهای شما با ما محرمانه باقی می‌ماند و اطلاعات شما نزد ما محفوظ است.</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Form Container -->
+            <div class="form-container">
+                <h1 class="form-title">
+                    <i class="fas fa-paper-plane"></i>
+                    شروع گفتگوی جدید
+                </h1>
+                <p class="form-description">
+                    برای شروع، لطفاً موضوع و پیام خود را وارد کنید. یکی از پشتیبانان ما به زودی به شما ملحق خواهد شد.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="id_subject" class="form-label">موضوع گفتگو *</label>
+                        <input type="text" class="form-input" id="id_subject" name="subject" required placeholder="مثلاً: پیگیری سفارش شماره ۱۲۳">
+                        <div class="form-help">موضوع گفتگو را به صورت مختصر بنویسید.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_message" class="form-label">اولین پیام *</label>
+                        <textarea class="form-textarea" id="id_message" name="message" rows="5" required placeholder="سلام، در مورد ... سوال داشتم."></textarea>
+                        <div class="form-help">توضیحات خود را بنویسید.</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{% url 'chat:chat_list' %}" class="btn-cancel">
+                            <i class="fas fa-times"></i>
+                            انصراف
+                        </a>
+                        <button type="submit" class="btn-start-chat">
+                            <i class="fas fa-paper-plane"></i>
+                            ارسال و شروع گفتگو
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}

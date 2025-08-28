@@ -3,157 +3,885 @@
 
 {% block title %}آدرس‌های من | زیما{% endblock %}
 
-{% block content %}
-    <div class="row">
-        <!-- منوی کناری -->
-        <div class="col-lg-3 mb-4">
-            <div class="list-group">
-                <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-user me-2"></i> اطلاعات حساب کاربری
-                </a>
-                <a href="{% url 'users:addresses' %}" class="list-group-item list-group-item-action active">
-                    <i class="fas fa-map-marker-alt me-2"></i> آدرس‌ها
-                </a>
-                <a href="{% url 'orders:list' %}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-shopping-bag me-2"></i> سفارش‌ها
-                </a>
-                <a href="{% url 'users:change_password' %}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-key me-2"></i> تغییر رمز عبور
-                </a>
-                <a href="{% url 'users:logout' %}" class="list-group-item list-group-item-action text-danger">
-                    <i class="fas fa-sign-out-alt me-2"></i> خروج از حساب کاربری
-                </a>
-            </div>
-        </div>
+{% block extra_css %}
+<style>
+    .profile-section {
+        min-height: 100vh;
+        background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+        padding: 140px 0 60px;
+        position: relative;
+        overflow: hidden;
+    }
 
-        <!-- محتوای اصلی -->
-        <div class="col-lg-9">
-            <div class="card">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">آدرس‌های من</h5>
-                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addAddressModal">
-                        <i class="fas fa-plus me-1"></i> افزودن آدرس جدید
+    .profile-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "images/patterns/subtle-pattern.png" %}') repeat;
+        opacity: 0.03;
+        pointer-events: none;
+    }
+
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .profile-wrapper {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 40px;
+        align-items: flex-start;
+    }
+
+    /* Sidebar Styles */
+    .profile-sidebar {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        position: sticky;
+        top: 160px;
+    }
+
+    .sidebar-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 30px 25px;
+        text-align: center;
+        position: relative;
+    }
+
+    .sidebar-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+        opacity: 0.1;
+    }
+
+    .user-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        color: var(--primary-color);
+        font-size: 2rem;
+        font-weight: 600;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        position: relative;
+        z-index: 2;
+    }
+
+    .user-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .user-status {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 2;
+    }
+
+    .sidebar-nav {
+        padding: 0;
+    }
+
+    .nav-item {
+        border-bottom: 1px solid var(--zima-pearl);
+    }
+
+    .nav-item:last-child {
+        border-bottom: none;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 18px 25px;
+        color: var(--text-color-dark);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .nav-link::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--primary-color);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        background: var(--zima-blush);
+        color: var(--primary-color);
+        transform: translateX(5px);
+    }
+
+    .nav-link:hover::before,
+    .nav-link.active::before {
+        transform: scaleY(1);
+    }
+
+    .nav-link.logout {
+        color: #dc3545;
+    }
+
+    .nav-link.logout:hover {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .nav-icon {
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    /* Main Content Styles */
+    .profile-content {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .content-header {
+        background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+        padding: 30px 40px;
+        border-bottom: 1px solid var(--zima-pearl);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-content {
+        flex: 1;
+    }
+
+    .content-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-color-dark);
+        margin: 0;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .content-subtitle {
+        color: var(--text-color-medium);
+        margin: 5px 0 0;
+        font-size: 1rem;
+    }
+
+    .btn-add-address {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-add-address:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        color: white;
+    }
+
+    .content-body {
+        padding: 40px;
+    }
+
+    .addresses-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 25px;
+        margin-top: 20px;
+    }
+
+    .address-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        border: 2px solid var(--zima-pearl);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .address-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        border-color: var(--primary-color);
+    }
+
+    .address-header {
+        background: var(--zima-blush);
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .address-title {
+        font-weight: 600;
+        color: var(--text-color-dark);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .address-badge {
+        background: var(--primary-color);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .address-body {
+        padding: 25px;
+    }
+
+    .address-text {
+        color: var(--text-color-dark);
+        line-height: 1.6;
+        margin-bottom: 15px;
+        font-size: 0.95rem;
+    }
+
+    .address-postal {
+        color: var(--text-color-medium);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .address-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-edit {
+        background: #17a2b8;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-edit:hover {
+        background: #138496;
+        transform: translateY(-1px);
+    }
+
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-delete:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 40px;
+        color: var(--text-color-medium);
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        color: var(--zima-pearl);
+        margin-bottom: 20px;
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--text-color-dark);
+    }
+
+    .empty-text {
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 30px;
+    }
+
+    .alert {
+        padding: 15px 20px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-size: 0.95rem;
+        border: none;
+    }
+
+    .alert-success {
+        background: rgba(40, 167, 69, 0.1);
+        color: #155724;
+    }
+
+    .alert-danger {
+        background: rgba(220, 53, 69, 0.1);
+        color: #721c24;
+    }
+
+    .alert-info {
+        background: rgba(23, 162, 184, 0.1);
+        color: #0c5460;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal.show {
+        display: flex;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        padding: 25px 30px;
+        border-bottom: 1px solid var(--zima-pearl);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-color-dark);
+        margin: 0;
+    }
+
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-color-medium);
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .btn-close:hover {
+        background: var(--zima-pearl);
+        color: var(--text-color-dark);
+    }
+
+    .modal-body {
+        padding: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-color-dark);
+        font-size: 0.95rem;
+    }
+
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--zima-pearl);
+        border-radius: 12px;
+        font-size: 1rem;
+        font-family: 'Vazir', sans-serif;
+        transition: all 0.3s ease;
+        background: white;
+        outline: none;
+        resize: vertical;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+    }
+
+    .modal-footer {
+        padding: 20px 30px;
+        border-top: 1px solid var(--zima-pearl);
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .btn-secondary {
+        background: white;
+        border: 2px solid var(--zima-pearl);
+        color: var(--text-color-dark);
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .profile-wrapper {
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        .profile-sidebar {
+            position: relative;
+            top: auto;
+        }
+
+        .content-header {
+            flex-direction: column;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .addresses-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .profile-section {
+            padding: 120px 0 40px;
+        }
+
+        .profile-container {
+            padding: 0 15px;
+        }
+
+        .content-header {
+            padding: 25px 20px;
+        }
+
+        .content-body {
+            padding: 25px 20px;
+        }
+
+        .address-header {
+            padding: 15px 20px;
+        }
+
+        .address-body {
+            padding: 20px;
+        }
+
+        .modal-content {
+            width: 95%;
+        }
+
+        .modal-header,
+        .modal-body,
+        .modal-footer {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+    <div class="profile-container">
+        <div class="profile-wrapper">
+            <!-- Sidebar -->
+            <aside class="profile-sidebar">
+                <div class="sidebar-header">
+                    <div class="user-avatar">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                    <h3 class="user-name">{{ user.get_full_name|default:user.username }}</h3>
+                    <p class="user-status">عضو زیما</p>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <a href="{% url 'users:profile' %}" class="nav-link">
+                        <i class="nav-icon fas fa-user"></i>
+                        <span>اطلاعات حساب کاربری</span>
+                    </a>
+                    <a href="{% url 'users:addresses' %}" class="nav-link active">
+                        <i class="nav-icon fas fa-map-marker-alt"></i>
+                        <span>آدرس‌ها</span>
+                    </a>
+                    <a href="{% url 'orders:list' %}" class="nav-link">
+                        <i class="nav-icon fas fa-shopping-bag"></i>
+                        <span>سفارش‌ها</span>
+                    </a>
+                    <a href="{% url 'users:change_password' %}" class="nav-link">
+                        <i class="nav-icon fas fa-key"></i>
+                        <span>تغییر رمز عبور</span>
+                    </a>
+                    <a href="{% url 'users:favorites' %}" class="nav-link">
+                        <i class="nav-icon fas fa-heart"></i>
+                        <span>علاقه‌مندی‌ها</span>
+                    </a>
+                    <a href="{% url 'users:logout' %}" class="nav-link logout">
+                        <i class="nav-icon fas fa-sign-out-alt"></i>
+                        <span>خروج از حساب کاربری</span>
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="profile-content">
+                <div class="content-header">
+                    <div class="header-content">
+                        <h1 class="content-title">آدرس‌های من</h1>
+                        <p class="content-subtitle">آدرس‌های ارسال خود را مدیریت کنید</p>
+                    </div>
+                    <button class="btn-add-address" onclick="openAddModal()">
+                        <i class="fas fa-plus"></i>
+                        افزودن آدرس جدید
                     </button>
                 </div>
-                <div class="card-body">
+
+                <div class="content-body">
+                    <!-- Messages -->
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
                         {% endfor %}
                     {% endif %}
 
-                    <div class="row">
-                        {% for address in addresses %}
-                            <div class="col-md-6 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <h6 class="card-title">آدرس {{ forloop.counter }}</h6>
-                                        <p class="card-text">{{ address.full_address }}</p>
-                                        <p class="card-text">کد پستی: {{ address.postal_code }}</p>
+                    <!-- Addresses Grid -->
+                    {% if addresses %}
+                        <div class="addresses-grid">
+                            {% for address in addresses %}
+                                <div class="address-card">
+                                    <div class="address-header">
+                                        <h3 class="address-title">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            آدرس {{ forloop.counter }}
+                                        </h3>
+                                        {% if address.is_default %}
+                                            <span class="address-badge">پیش‌فرض</span>
+                                        {% endif %}
                                     </div>
-                                    <div class="card-footer bg-white d-flex justify-content-between">
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#editAddressModal{{ address.id }}">
-                                            <i class="fas fa-edit"></i> ویرایش
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#deleteAddressModal{{ address.id }}">
-                                            <i class="fas fa-trash-alt"></i> حذف
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- مودال ویرایش آدرس -->
-                            <div class="modal fade" id="editAddressModal{{ address.id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">ویرایش آدرس</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    <div class="address-body">
+                                        <p class="address-text">{{ address.full_address }}</p>
+                                        <div class="address-postal">
+                                            <i class="fas fa-mail-bulk"></i>
+                                            کد پستی: {{ address.postal_code }}
                                         </div>
-                                        <form method="post" action="{% url 'users:edit_address' address.id %}">
-                                            {% csrf_token %}
-                                            <div class="modal-body">
-                                                <div class="mb-3">
-                                                    <label for="full_address{{ address.id }}" class="form-label">آدرس کامل</label>
-                                                    <textarea name="full_address" id="full_address{{ address.id }}" rows="3" class="form-control" required>{{ address.full_address }}</textarea>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="postal_code{{ address.id }}" class="form-label">کد پستی</label>
-                                                    <input type="text" name="postal_code" id="postal_code{{ address.id }}" class="form-control" value="{{ address.postal_code }}" required>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
-                                                <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- مودال حذف آدرس -->
-                            <div class="modal fade" id="deleteAddressModal{{ address.id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">حذف آدرس</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p>آیا از حذف این آدرس اطمینان دارید؟</p>
-                                            <p class="text-muted">{{ address.full_address }}</p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
-                                            <form method="post" action="{% url 'users:delete_address' address.id %}">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger">حذف</button>
-                                            </form>
+                                        <div class="address-actions">
+                                            <button class="btn-edit" onclick="openEditModal({{ address.id }}, '{{ address.full_address|escapejs }}', '{{ address.postal_code }}')">
+                                                <i class="fas fa-edit"></i>
+                                                ویرایش
+                                            </button>
+                                            <button class="btn-delete" onclick="openDeleteModal({{ address.id }}, '{{ address.full_address|escapejs|truncatechars:50 }}')">
+                                                <i class="fas fa-trash-alt"></i>
+                                                حذف
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fas fa-map-marker-alt"></i>
                             </div>
-                        {% empty %}
-                            <div class="col-12">
-                                <div class="alert alert-info">شما هنوز آدرسی ثبت نکرده‌اید.</div>
-                            </div>
-                        {% endfor %}
-                    </div>
+                            <h3 class="empty-title">هنوز آدرسی ثبت نکرده‌اید</h3>
+                            <p class="empty-text">برای سفارش محصولات، ابتدا آدرس ارسال خود را ثبت کنید</p>
+                            <button class="btn-add-address" onclick="openAddModal()">
+                                <i class="fas fa-plus"></i>
+                                افزودن اولین آدرس
+                            </button>
+                        </div>
+                    {% endif %}
                 </div>
-            </div>
+            </main>
         </div>
     </div>
+</section>
 
-    <!-- مودال افزودن آدرس جدید -->
-    <div class="modal fade" id="addAddressModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">افزودن آدرس جدید</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Add Address Modal -->
+<div class="modal" id="addModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">افزودن آدرس جدید</h3>
+            <button class="btn-close" onclick="closeAddModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="post" action="{% url 'users:add_address' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="add_full_address" class="form-label">آدرس کامل</label>
+                    <textarea name="full_address"
+                              id="add_full_address"
+                              class="form-textarea"
+                              rows="4"
+                              placeholder="آدرس کامل خود را وارد کنید..."
+                              required></textarea>
                 </div>
-                <form method="post" action="{% url 'users:add_address' %}">
-                    {% csrf_token %}
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="full_address_new" class="form-label">آدرس کامل</label>
-                            <textarea name="full_address" id="full_address_new" rows="3" class="form-control" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="postal_code_new" class="form-label">کد پستی</label>
-                            <input type="text" name="postal_code" id="postal_code_new" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
-                        <button type="submit" class="btn btn-primary">افزودن آدرس</button>
-                    </div>
-                </form>
+                <div class="form-group">
+                    <label for="add_postal_code" class="form-label">کد پستی</label>
+                    <input type="text"
+                           name="postal_code"
+                           id="add_postal_code"
+                           class="form-input"
+                           placeholder="کد پستی ۱۰ رقمی"
+                           maxlength="10"
+                           required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeAddModal()">انصراف</button>
+                <button type="submit" class="btn-primary">افزودن آدرس</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Address Modal -->
+<div class="modal" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">ویرایش آدرس</h3>
+            <button class="btn-close" onclick="closeEditModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="post" id="editForm">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_full_address" class="form-label">آدرس کامل</label>
+                    <textarea name="full_address"
+                              id="edit_full_address"
+                              class="form-textarea"
+                              rows="4"
+                              required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit_postal_code" class="form-label">کد پستی</label>
+                    <input type="text"
+                           name="postal_code"
+                           id="edit_postal_code"
+                           class="form-input"
+                           maxlength="10"
+                           required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeEditModal()">انصراف</button>
+                <button type="submit" class="btn-primary">ذخیره تغییرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Address Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">حذف آدرس</h3>
+            <button class="btn-close" onclick="closeDeleteModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 3rem; color: #dc3545; margin-bottom: 20px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h4 style="color: var(--text-color-dark); margin-bottom: 15px;">آیا از حذف این آدرس اطمینان دارید؟</h4>
+                <p style="color: var(--text-color-medium); line-height: 1.6;" id="deleteAddressText"></p>
             </div>
         </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeDeleteModal()">انصراف</button>
+            <form method="post" id="deleteForm" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-delete">حذف آدرس</button>
+            </form>
+        </div>
     </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal functions
+    window.openAddModal = function() {
+        document.getElementById('addModal').classList.add('show');
+        document.getElementById('add_full_address').focus();
+    };
+
+    window.closeAddModal = function() {
+        document.getElementById('addModal').classList.remove('show');
+        document.getElementById('add_full_address').value = '';
+        document.getElementById('add_postal_code').value = '';
+    };
+
+    window.openEditModal = function(id, address, postalCode) {
+        const modal = document.getElementById('editModal');
+        const form = document.getElementById('editForm');
+
+        form.action = `/users/addresses/edit/${id}/`;
+        document.getElementById('edit_full_address').value = address;
+        document.getElementById('edit_postal_code').value = postalCode;
+
+        modal.classList.add('show');
+        document.getElementById('edit_full_address').focus();
+    };
+
+    window.closeEditModal = function() {
+        document.getElementById('editModal').classList.remove('show');
+    };
+
+    window.openDeleteModal = function(id, address) {
+        const modal = document.getElementById('deleteModal');
+        const form = document.getElementById('deleteForm');
+        const text = document.getElementById('deleteAddressText');
+
+        form.action = `/users/addresses/delete/${id}/`;
+        text.textContent = address;
+
+        modal.classList.add('show');
+    };
+
+    window.closeDeleteModal = function() {
+        document.getElementById('deleteModal').classList.remove('show');
+    };
+
+    // Close modals on outside click
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+            }
+        });
+    });
+
+    // Postal code validation
+    const postalInputs = document.querySelectorAll('input[name="postal_code"]');
+    postalInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').substring(0, 10);
+        });
+    });
+
+    // Auto-hide alerts
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+    });
+});
+</script>
 {% endblock %}

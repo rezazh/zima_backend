@@ -1,371 +1,533 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q, Avg, Count, Min, Max, Value, BooleanField
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.db.models import Q, Avg, Min, Max
 from django.contrib import messages
-from .models import Product, Category, Review, ProductInventory, Size, Color
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+import json
+
+from cart.models import WishlistItem
+from .models import Product, Category, Color, Size, ProductInventory, ProductImage, Review
 
 
-def product_list(request):
-    """نمایش لیست محصولات با امکان فیلتر و مرتب‌سازی"""
-    products = Product.objects.all()
-
-    # فیلتر بر اساس دسته‌بندی
-    category_slug = request.GET.get('category')
-    if category_slug:
-        category = get_object_or_404(Category, slug=category_slug)
-        products = products.filter(category=category)
-
-    # فیلتر بر اساس جستجو
-    search_query = request.GET.get('search')
-    if search_query:
-        products = products.filter(
-            Q(name__icontains=search_query) |
-            Q(description__icontains=search_query) |
-            Q(brand__icontains=search_query)
-        )
-
-    # فیلتر بر اساس قیمت
-    price_min = request.GET.get('price_min')
-    price_max = request.GET.get('price_max')
-
-    if price_min:
-        products = products.filter(price__gte=price_min)
-    if price_max:
-        products = products.filter(price__lte=price_max)
-
-    # فیلتر بر اساس سایز، رنگ و برند
-    size = request.GET.get('size')
-    color = request.GET.get('color')
-    brand = request.GET.get('brand')
-
-    if size:
-        products = products.filter(sizes__icontains=size)
-    if color:
-        products = products.filter(colors__icontains=color)
-    if brand:
-        products = products.filter(brand__icontains=brand)
-
-    # مرتب‌سازی
-    sort = request.GET.get('sort', 'newest')
-    if sort == 'price_low':
-        products = products.order_by('price')
-    elif sort == 'price_high':
-        products = products.order_by('-price')
-    elif sort == 'popular':
-        products = products.order_by('-views')
-    else:  # newest (default)
-        products = products.order_by('-created_at')
-
-    # تعریف گزینه‌های فیلتر (خارج از شرط)
-    filter_options = {
-        'sizes': ['S', 'M', 'L', 'XL', 'XXL'],
-        'colors': [
-            'سفید', 'مشکی', 'خاکستری', 'نقره‌ای',
-            'قرمز', 'زرشکی', 'صورتی', 'گلبهی',
-            'نارنجی', 'هلویی', 'طلایی', 'زرد', 'لیمویی',
-            'سبز', 'سبز لجنی', 'سبز یشمی', 'سبز زیتونی',
-            'آبی', 'آبی آسمانی', 'آبی نفتی', 'فیروزه‌ای',
-            'بنفش', 'یاسی', 'ارغوانی',
-            'قهوه‌ای', 'کرم', 'بژ', 'شکلاتی', 'عنابی',
-            'مسی', 'برنزی', 'سرمه‌ای', 'کالباسی', 'نباتی', 'آجری'
-        ],
-        'brands': Product.objects.values_list('brand', flat=True).distinct(),
-    }
-
-    # صفحه‌بندی
-    paginator = Paginator(products, 12)  # 12 محصول در هر صفحه
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'products': page_obj,
-        'filter_options': filter_options,
-        'page_title': 'همه محصولات',
-    }
-
-    return render(request, 'products/product_list.html', context)
-
-
-def product_detail(request, product_id):
-    product = get_object_or_404(Product, id=product_id, is_active=True)
-
-    # دریافت رنگ‌ها و سایزهای موجود برای این محصول
-    available_inventories = ProductInventory.objects.filter(product=product, quantity__gt=0)
-
-    # استخراج رنگ‌های منحصر به فرد
-    available_colors = []
-    for inventory in available_inventories:
-        if inventory.color not in available_colors:
-            available_colors.append(inventory.color)
-
-    # استخراج سایزهای منحصر به فرد
-    available_sizes = []
-    for inventory in available_inventories:
-        if inventory.size not in available_sizes:
-            available_sizes.append(inventory.size)
-    inventories_data = [inventory.to_dict() for inventory in available_inventories]
-    related_products = Product.objects.filter(
-        category=product.category,
-        is_active=True
-    ).exclude(id=product.id)[:4]
-    context = {
-        'product': product,
-        'available_colors': available_colors,
-        'available_sizes': available_sizes,
-        'inventories': inventories_data,
-        'related_products': related_products,
-
-    }
-    return render(request, 'products/product_detail.html', context)
-
-
-def category_products(request, category_slug):
-    """نمایش محصولات یک دسته‌بندی خاص"""
-    category = get_object_or_404(Category, slug=category_slug)
-    products = Product.objects.filter(category=category)
-
-    # مرتب‌سازی
-    sort = request.GET.get('sort', 'newest')
-    if sort == 'price_low':
-        products = products.order_by('price')
-    elif sort == 'price_high':
-        products = products.order_by('-price')
-    elif sort == 'popular':
-        products = products.annotate(avg_rating=Avg('review__rating')).order_by('-avg_rating')
-    else:  # newest
-        products = products.order_by('-created_at')
-
-    # صفحه‌بندی
-    paginator = Paginator(products, 12)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'products': page_obj,
-        'category': category,
-        'page_title': f'محصولات {category.name}',
-    }
-
-    return render(request, 'products/product_list.html', context)
-
-
-def men_products(request):
-    """نمایش محصولات مردانه"""
-    men_category = get_object_or_404(Category, slug='men')
-    products = Product.objects.filter(category=men_category)
-
-    # مرتب‌سازی و فیلترها مشابه product_list
-
-    # صفحه‌بندی
-    paginator = Paginator(products, 12)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'products': page_obj,
-        'page_title': 'محصولات مردانه',
-    }
-
-    return render(request, 'products/product_list.html', context)
-
-
-def women_products(request):
-    """نمایش محصولات زنانه"""
-    women_category = get_object_or_404(Category, slug='women')
-    products = Product.objects.filter(category=women_category)
-
-    # مرتب‌سازی و فیلترها مشابه product_list
-
-    # صفحه‌بندی
-    paginator = Paginator(products, 12)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'products': page_obj,
-        'page_title': 'محصولات زنانه',
-    }
-
-    return render(request, 'products/product_list.html', context)
-
-
-def featured_products(request):
-    """نمایش محصولات ویژه"""
-    products = Product.objects.filter(is_featured=True)
-
-    # مرتب‌سازی و فیلترها مشابه product_list
-
-    # صفحه‌بندی
-    paginator = Paginator(products, 12)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'products': page_obj,
-        'page_title': 'محصولات ویژه',
-    }
-
-    return render(request, 'products/product_list.html', context)
-
-
-def latest_products(request):
-    """نمایش جدیدترین محصولات"""
-    products = Product.objects.order_by('-created_at')
-
-    # صفحه‌بندی
-    paginator = Paginator(products, 12)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'products': page_obj,
-        'page_title': 'جدیدترین محصولات',
-    }
-
-    return render(request, 'products/product_list.html', context)
-
-
-@login_required
-def add_review(request, product_id):
-    """افزودن نظر برای محصول"""
-    product = get_object_or_404(Product, id=product_id)
-
-    if request.method == 'POST':
-        rating = request.POST.get('rating')
-        comment = request.POST.get('comment')
-
-        # بررسی اینکه کاربر قبلاً نظر داده یا نه
-        if Review.objects.filter(product=product, user=request.user).exists():
-            messages.error(request, 'شما قبلاً برای این محصول نظر ثبت کرده‌اید.')
-        else:
-            Review.objects.create(
-                product=product,
-                user=request.user,
-                rating=rating,
-                comment=comment
-            )
-            messages.success(request, 'نظر شما با موفقیت ثبت شد.')
-
-    return redirect('products:detail', product_id=product_id)
-
-
-def category_detail(request, category_slug):
-    category = get_object_or_404(Category, slug=category_slug, is_active=True)
-    subcategories = Category.objects.filter(parent=category, is_active=True)
-
-    if subcategories.exists():
-        category_ids = [category.id] + list(subcategories.values_list('id', flat=True))
-        all_products = Product.objects.filter(category_id__in=category_ids, is_active=True)
-    else:
-        all_products = Product.objects.filter(category=category, is_active=True)
-
-    all_brands = list(all_products.values_list('brand', flat=True).distinct().order_by('brand'))
-
-    size_objects = Size.objects.filter(
-        productinventory__product__in=all_products,
-        productinventory__quantity__gt=0
-    ).distinct().order_by('name')
-    all_sizes = [size.name for size in size_objects]
-
-    color_objects = Color.objects.filter(
-        productinventory__product__in=all_products,
-        productinventory__quantity__gt=0
-    ).distinct().order_by('name')
-    all_colors = [color.name for color in color_objects]
-
-    products = all_products
-
-    brand = request.GET.get('brand')
-    if brand and brand != 'none':
-        products = products.filter(brand__iexact=brand)
-
+def _apply_filters_and_sort(request, products_queryset):
+    """اعمال فیلترها و مرتب‌سازی بر روی کوئری محصولات"""
+    query = request.GET.get('q', '')
+    categories_ids = request.GET.getlist('categories')
+    sizes_ids = request.GET.getlist('sizes')
+    colors_ids = request.GET.getlist('colors')
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
+    sort_by = request.GET.get('sort', 'newest')
+    brands = request.GET.getlist('brand')
+
+    if query:
+        products_queryset = products_queryset.filter(
+            Q(name__icontains=query) | Q(description__icontains=query) |
+            Q(category__name__icontains=query) |
+            Q(brand__icontains=brands)
+        ).distinct()
+
+    if categories_ids:
+        products_queryset = products_queryset.filter(category__id__in=categories_ids).distinct()
+
+    if sizes_ids:
+        products_queryset = products_queryset.filter(inventories__size__id__in=sizes_ids).distinct()
+    if colors_ids:
+        products_queryset = products_queryset.filter(inventories__color__id__in=colors_ids).distinct()
 
     if min_price:
         try:
-            products = products.filter(price__gte=int(min_price))
+            min_price = float(min_price)
+            products_queryset = products_queryset.filter(price__gte=min_price)
         except ValueError:
             pass
 
     if max_price:
         try:
-            products = products.filter(price__lte=int(max_price))
+            max_price = float(max_price)
+            products_queryset = products_queryset.filter(price__lte=max_price)
         except ValueError:
             pass
 
-    size = request.GET.get('size')
-    color = request.GET.get('color')
+    if brands:
+        products_queryset = products_queryset.filter(brand__in=brands)
 
-    if size and size != 'none':
-        products = products.filter(
-            inventories__size__name=size,
-            inventories__quantity__gt=0
-        ).distinct()
-
-    if color and color != 'none':
-        products = products.filter(
-            inventories__color__name=color,
-            inventories__quantity__gt=0
-        ).distinct()
-
-    sort_by = request.GET.get('sort', 'newest')
-    if sort_by == 'price_low':
-        products = products.order_by('price')
-    elif sort_by == 'price_high':
-        products = products.order_by('-price')
+    # مرتب‌سازی
+    if sort_by == 'newest':
+        products_queryset = products_queryset.order_by('-created_at')
     elif sort_by == 'popular':
-        products = products.order_by('-total_sales')
-    else:  # newest
-        products = products.order_by('-created_at')
+        products_queryset = products_queryset.annotate(sales_count=Count('total_sales')).order_by('-total_sales')
+    elif sort_by == 'price_low':
+        products_queryset = products_queryset.order_by('price')
+    elif sort_by == 'price_high':
+        products_queryset = products_queryset.order_by('-price')
+    elif sort_by == 'rating':
+        products_queryset = products_queryset.annotate(avg_rating=Avg('reviews__rating')).order_by('-avg_rating')
+    elif sort_by == 'discount':
+        products_queryset = products_queryset.filter(discount_percent__gt=0).order_by('-discount_percent')
 
-    products = products[:12]  # یا استفاده از Paginator
-
-    context = {
-        'category': category,
-        'subcategories': subcategories,
-        'products': products,
-        'all_brands': all_brands,
-        'all_sizes': all_sizes,
-        'all_colors': all_colors,
-        'price_range': all_products.aggregate(min_price=Min('price'), max_price=Max('price')),
-        'current_filters': {
-            'brand': brand if brand and brand != 'none' else None,
-            'size': size if size and size != 'none' else None,
-            'color': color if color and color != 'none' else None,
-            'min_price': min_price,
-            'max_price': max_price,
-            'sort': sort_by
-        },
-        'filters_applied': any([
-            brand and brand != 'none',
-            size and size != 'none',
-            color and color != 'none',
-            min_price,
-            max_price
-        ])
+    return products_queryset, {
+        'q': query,
+        'categories': categories_ids,
+        'sizes': sizes_ids,
+        'colors': colors_ids,
+        'min_price': min_price,
+        'max_price': max_price,
+        'brand': brands,
+        'sort': sort_by,
     }
 
+
+def product_list(request):
+    """لیست همه محصولات"""
+    products_queryset = Product.objects.filter(is_active=True).prefetch_related('images', 'inventories__color',
+                                                                                'inventories__size')
+
+    if request.user.is_authenticated:
+        products_queryset = products_queryset.annotate(
+            is_favorited=Count('wishlistitem', filter=Q(wishlistitem__user=request.user))
+        )
+    else:
+        products_queryset = products_queryset.annotate(is_favorited=Value(0, output_field=BooleanField()))
+
+    products_queryset, current_filters = _apply_filters_and_sort(request, products_queryset)
+
+    # صفحه‌بندی
+    paginator = Paginator(products_queryset, 9)
+    page_number = request.GET.get('page')
+    try:
+        products = paginator.page(page_number)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)
+
+    # دسته‌بندی‌ها
+    all_categories = Category.objects.annotate(product_count=Count('products')).filter(product_count__gt=0)
+
+    available_inventory = ProductInventory.objects.filter(
+        product__in=products_queryset,
+        quantity__gt=0
+    )
+    available_color_ids = available_inventory.values_list('color_id', flat=True).distinct()
+    available_size_ids = available_inventory.values_list('size_id', flat=True).distinct()
+
+    # دریافت آبجکت‌های رنگ و سایز موجود
+    all_colors = Color.objects.filter(id__in=available_color_ids).order_by('name')
+    all_sizes = Size.objects.filter(id__in=available_size_ids).order_by('name')
+
+    all_brands = products_queryset.values_list('brand', flat=True).distinct().order_by('brand')
+
+    # محدوده قیمت
+    price_range_qs = Product.objects.filter(is_active=True)
+    min_overall_price = price_range_qs.aggregate(min_price=Min('price'))['min_price']
+    max_overall_price = price_range_qs.aggregate(max_price=Max('price'))['max_price']
+
+    price_range = {
+        'min_price': min_overall_price if min_overall_price is not None else 0,
+        'max_price': max_overall_price if max_overall_price is not None else 10000000,
+    }
+
+    context = {
+        'page_title': 'همه محصولات',
+        'products': products,
+        'results_count': products_queryset.count(),
+        'all_categories': all_categories,
+        'all_sizes': all_sizes,
+        'all_colors': all_colors,
+        'all_brands': all_brands,
+        'price_range': price_range,
+        'current_filters': current_filters,
+    }
+    return render(request, 'products/product_list.html', context)
+
+
+def category_list(request, category_slug):
+    """لیست محصولات یک دسته‌بندی خاص"""
+    category = get_object_or_404(Category, slug=category_slug)
+    products_queryset = Product.objects.filter(is_active=True).filter(
+        Q(category=category) | Q(category__parent=category)
+    ).prefetch_related('images')
+
+    if request.user.is_authenticated:
+        products_queryset = products_queryset.annotate(
+            is_favorited=Count('wishlistitem', filter=Q(wishlistitem__user=request.user))
+        )
+    else:
+        products_queryset = products_queryset.annotate(is_favorited=Value(0, output_field=BooleanField()))
+
+    products_queryset, current_filters = _apply_filters_and_sort(request, products_queryset)
+
+    # صفحه‌بندی
+    paginator = Paginator(products_queryset, 9)
+    page_number = request.GET.get('page')
+    try:
+        products = paginator.page(page_number)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)
+
+    # زیردسته‌ها
+    subcategories = category.children.annotate(product_count=Count('products')).filter(product_count__gt=0)
+
+    available_inventory = ProductInventory.objects.filter(
+        product__in=products_queryset,
+        quantity__gt=0
+    )
+    available_color_ids = available_inventory.values_list('color_id', flat=True).distinct()
+    available_size_ids = available_inventory.values_list('size_id', flat=True).distinct()
+
+    # دریافت آبجکت‌های رنگ و سایز موجود
+    all_colors = Color.objects.filter(id__in=available_color_ids).order_by('name')
+    all_sizes = Size.objects.filter(id__in=available_size_ids).order_by('name')
+
+    all_brands = products_queryset.values_list('brand', flat=True).distinct().order_by('brand')
+
+    # محدوده قیمت برای این دسته‌بندی
+    price_range_qs = Product.objects.filter(is_active=True, category=category)
+    min_overall_price = price_range_qs.aggregate(min_price=Min('price'))['min_price']
+    max_overall_price = price_range_qs.aggregate(max_price=Max('price'))['max_price']
+    price_range = {
+        'min_price': min_overall_price if min_overall_price is not None else 0,
+        'max_price': max_overall_price if max_overall_price is not None else 10000000,
+    }
+
+    context = {
+        'page_title': category.name,
+        'products': products,
+        'category': category,
+        'subcategories': subcategories,
+        'results_count': products_queryset.count(),
+        'all_sizes': all_sizes,
+        'all_colors': all_colors,
+        'all_brands': all_brands,
+        'price_range': price_range,
+        'current_filters': current_filters,
+    }
     return render(request, 'products/category_detail.html', context)
 
 
-def search_products(request):
-    query = request.GET.get('q', '')
-    if query:
-        # جستجو در نام، توضیحات و برند محصولات
-        products = Product.objects.filter(
-            Q(name__icontains=query) |
-            Q(description__icontains=query) |
-            Q(brand__icontains=query),
-            is_active=True
-        ).distinct()
-    else:
-        products = Product.objects.none()
+def search_results(request):
+    """نتایج جستجو"""
+    products_queryset = Product.objects.filter(is_active=True).prefetch_related('images')
 
-    context = {
-        'products': products,
-        'query': query
+    if request.user.is_authenticated:
+        products_queryset = products_queryset.annotate(
+            is_favorited=Count('wishlistitem', filter=Q(wishlistitem__user=request.user))
+        )
+    else:
+        products_queryset = products_queryset.annotate(is_favorited=Value(0, output_field=BooleanField()))
+
+    products_queryset, current_filters = _apply_filters_and_sort(request, products_queryset)
+    query = request.GET.get('q', '')
+
+    # صفحه‌بندی
+    paginator = Paginator(products_queryset, 9)
+    page_number = request.GET.get('page')
+    try:
+        products = paginator.page(page_number)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)
+
+    # دسته‌بندی‌ها
+    all_categories = Category.objects.annotate(product_count=Count('products')).filter(product_count__gt=0)
+
+    available_inventory = ProductInventory.objects.filter(
+        product__in=products_queryset,
+        quantity__gt=0
+    )
+    available_color_ids = available_inventory.values_list('color_id', flat=True).distinct()
+    available_size_ids = available_inventory.values_list('size_id', flat=True).distinct()
+
+    # دریافت آبجکت‌های رنگ و سایز موجود
+    all_colors = Color.objects.filter(id__in=available_color_ids).order_by('name')
+    all_sizes = Size.objects.filter(id__in=available_size_ids).order_by('name')
+
+    all_brands = products_queryset.values_list('brand', flat=True).distinct().order_by('brand')
+
+    # محدوده قیمت
+    price_range_qs = Product.objects.filter(is_active=True)
+    min_overall_price = price_range_qs.aggregate(min_price=Min('price'))['min_price']
+    max_overall_price = price_range_qs.aggregate(max_price=Max('price'))['max_price']
+    price_range = {
+        'min_price': min_overall_price if min_overall_price is not None else 0,
+        'max_price': max_overall_price if max_overall_price is not None else 10000000,
     }
 
+    context = {
+        'page_title': f'نتایج جستجو برای: "{query}"',
+        'query': query,
+        'products': products,
+        'results_count': products_queryset.count(),
+        'all_categories': all_categories,
+        'all_sizes': all_sizes,
+        'all_colors': all_colors,
+        'all_brands': all_brands,
+        'price_range': price_range,
+        'current_filters': current_filters,
+    }
     return render(request, 'products/search_results.html', context)
+
+
+def product_detail(request, product_id):
+    """نمایش جزئیات محصول"""
+    product = get_object_or_404(Product, id=product_id, is_active=True)
+
+    # دریافت موجودی‌های محصول با رنگ و سایز
+    inventories = ProductInventory.objects.filter(
+        product=product,
+        quantity__gt=0
+    ).select_related('color', 'size')
+
+    # محاسبه کل موجودی
+    total_stock = sum(inv.quantity for inv in inventories)
+
+    # دریافت رنگ‌ها و سایزهای موجود
+    available_colors = Color.objects.filter(
+        id__in=inventories.values_list('color_id', flat=True).distinct()
+    ).distinct()
+
+    available_sizes = Size.objects.filter(
+        id__in=inventories.values_list('size_id', flat=True).distinct()
+    ).distinct()
+
+    # ایجاد mapping برای JavaScript
+    inventory_mapping = {}
+    for inv in inventories:
+        color_id = str(inv.color.id) if inv.color else 'null'
+        size_id = str(inv.size.id) if inv.size else 'null'
+
+        if color_id not in inventory_mapping:
+            inventory_mapping[color_id] = {}
+
+        inventory_mapping[color_id][size_id] = {
+            'quantity': inv.quantity,
+            'size_name': inv.size.name if inv.size else '',
+            'color_name': inv.color.name if inv.color else ''
+        }
+
+    # محصولات مشابه
+    related_products = Product.objects.filter(
+        category=product.category,
+        is_active=True
+    ).exclude(id=product.id)[:8]
+
+    # اگر محصولات مشابه کم بود، از دسته‌های مرتبط هم بگیر
+    if related_products.count() < 4:
+        related_products = Product.objects.filter(
+            Q(category=product.category) | Q(brand=product.brand),
+            is_active=True
+        ).exclude(id=product.id)[:8]
+
+    # بررسی اینکه کاربر این محصول را خریداری کرده یا نه
+    has_purchased = False
+    if request.user.is_authenticated:
+        # فرض می‌کنیم مدل Order و OrderItem دارید
+        # has_purchased = OrderItem.objects.filter(
+        #     order__user=request.user,
+        #     product=product,
+        #     order__status='completed'
+        # ).exists()
+        pass
+
+    context = {
+        'product': product,
+        'related_products': related_products,
+        'available_colors': available_colors,
+        'available_sizes': available_sizes,
+        'total_stock': total_stock,
+        'inventory_mapping': json.dumps(inventory_mapping),
+        'has_purchased': has_purchased,
+    }
+
+    return render(request, 'products/product_detail.html', context)
+
+
+@require_POST
+def add_review(request, product_id):
+    """افزودن نظر به محصول"""
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'message': 'برای ثبت نظر ابتدا وارد حساب کاربری خود شوید.',
+            'redirect': '/accounts/login/'
+        })
+
+    product = get_object_or_404(Product, id=product_id)
+
+    # بررسی اینکه کاربر این محصول را خریداری کرده یا نه
+    # has_purchased = OrderItem.objects.filter(
+    #     order__user=request.user,
+    #     product=product,
+    #     order__status='completed'
+    # ).exists()
+
+    # فعلاً این بررسی را غیرفعال می‌کنیم
+    has_purchased = True
+
+    if not has_purchased:
+        return JsonResponse({
+            'success': False,
+            'message': 'فقط کاربرانی که این محصول را خریداری کرده‌اند می‌توانند نظر ثبت کنند.'
+        })
+
+    try:
+        rating = int(request.POST.get('rating', 5))
+        comment = request.POST.get('comment', '')
+
+        if not comment.strip():
+            return JsonResponse({
+                'success': False,
+                'message': 'لطفاً متن نظر خود را وارد کنید.'
+            })
+
+        # بررسی اینکه کاربر قبلاً نظر داده یا نه
+        existing_review, created = Review.objects.get_or_create(
+            product=product,
+            user=request.user,
+            defaults={'rating': rating, 'comment': comment}
+        )
+
+        if not created:
+            existing_review.rating = rating
+            existing_review.comment = comment
+            existing_review.save()
+            message = 'نظر شما با موفقیت به‌روزرسانی شد.'
+        else:
+            message = 'نظر شما با موفقیت ثبت شد.'
+
+        return JsonResponse({
+            'success': True,
+            'message': message
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': 'خطا در ثبت نظر. لطفاً دوباره تلاش کنید.'
+        })
+
+
+def quick_view_product(request, product_id):
+    """نمایش سریع محصول"""
+    product = get_object_or_404(Product, id=product_id)
+    if request.user.is_authenticated:
+        product.is_favorited = WishlistItem.objects.filter(user=request.user, product=product).exists()
+    else:
+        product.is_favorited = False
+
+    context = {
+        'product': product,
+    }
+    return render(request, 'products/quick_view_modal_content.html', context)
+
+
+@require_POST
+@csrf_exempt
+def toggle_wishlist(request):
+    """اضافه/حذف محصول از علاقه‌مندی‌ها"""
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'message': 'برای این عمل باید وارد شوید'
+        })
+
+    try:
+        data = json.loads(request.body)
+        product_id = data.get('product_id')
+        product = get_object_or_404(Product, id=product_id)
+
+        wishlist_item, created = WishlistItem.objects.get_or_create(
+            user=request.user,
+            product=product
+        )
+
+        if not created:
+            wishlist_item.delete()
+            is_favorited = False
+        else:
+            is_favorited = True
+
+        return JsonResponse({
+            'success': True,
+            'is_favorited': is_favorited
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': 'خطا در عملیات'
+        })
+
+
+@require_POST
+def add_to_cart(request):
+    """افزودن محصول به سبد خرید"""
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'message': 'برای افزودن به سبد خرید ابتدا وارد حساب کاربری خود شوید.',
+            'redirect': '/accounts/login/'
+        })
+
+    try:
+        data = json.loads(request.body)
+        product_id = data.get('product_id')
+        quantity = int(data.get('quantity', 1))
+        color_id = data.get('color_id')
+        size_id = data.get('size_id')
+
+        product = get_object_or_404(Product, id=product_id)
+
+        # بررسی موجودی
+        inventory = ProductInventory.objects.filter(
+            product=product,
+            color_id=color_id if color_id else None,
+            size_id=size_id if size_id else None,
+            quantity__gte=quantity
+        ).first()
+
+        if not inventory:
+            return JsonResponse({
+                'success': False,
+                'message': 'موجودی کافی برای این ترکیب رنگ و سایز وجود ندارد.'
+            })
+
+        # افزودن به سبد خرید (منطق سبد خرید شما)
+        cart = request.session.get('cart', {})
+        cart_key = f"{product_id}_{color_id}_{size_id}"
+
+        if cart_key in cart:
+            cart[cart_key]['quantity'] += quantity
+        else:
+            cart[cart_key] = {
+                'product_id': product_id,
+                'color_id': color_id,
+                'size_id': size_id,
+                'quantity': quantity,
+                'price': float(product.get_display_price()),
+            }
+
+        request.session['cart'] = cart
+        request.session.modified = True
+
+        # محاسبه تعداد کل آیتم‌های سبد خرید
+        cart_items_count = sum(item.get('quantity', 0) for item in cart.values())
+
+        return JsonResponse({
+            'success': True,
+            'message': 'محصول با موفقیت به سبد خرید اضافه شد.',
+            'cart_items_count': cart_items_count
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'خطا در افزودن به سبد خرید: {str(e)}'
+        })

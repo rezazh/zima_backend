@@ -1,83 +1,265 @@
-/* start-chat.css - استایل‌های صفحه شروع گفتگو */
+/* =================================================== */
+/* == استایل‌های جدید صفحه شروع گفتگو (تم زیما) == */
+/* =================================================== */
 
-.start-chat-container {
-    max-width: 800px;
-    margin: 40px auto;
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+.start-chat-page {
+    padding: 140px 0 60px;
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+    min-height: 100vh;
+    position: relative;
     overflow: hidden;
 }
 
-.start-chat-header {
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e0e0e0;
-    text-align: center;
+.start-chat-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('/static/images/patterns/subtle-pattern.png') repeat;
+    opacity: 0.03;
+    pointer-events: none;
 }
 
-.start-chat-header h1 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 600;
+.start-chat-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
 }
 
-.start-chat-content {
-    padding: 30px;
+.start-chat-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr; /* بخش فرم کمی بزرگتر */
+    gap: 60px;
+    align-items: flex-start;
 }
 
-.start-chat-info {
+/* بخش راهنمای گفتگو */
+.info-panel {
+    background: linear-gradient(135deg, white, var(--zima-blush));
+    padding: 40px;
+    border-radius: 25px;
+    border: 2px solid var(--zima-pearl);
+    box-shadow: 0 15px 35px var(--shadow-soft);
+    position: sticky;
+    top: 140px; /* برای ثابت ماندن هنگام اسکرول */
+}
+
+.info-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color-dark);
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-family: 'Playfair Display', serif;
+}
+
+.info-item {
     display: flex;
     align-items: flex-start;
-    margin-bottom: 30px;
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
+    gap: 15px;
+    margin-bottom: 25px;
 }
 
 .info-icon {
-    margin-left: 20px;
-    font-size: 24px;
-    color: #007bff;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
 }
 
-.info-text p {
-    margin: 0 0 10px;
-    font-size: 16px;
-    color: #495057;
+.info-content h4 {
+    color: var(--text-color-dark);
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 1.2rem;
 }
 
-.info-text p:last-child {
-    margin-bottom: 0;
+.info-content p {
+    color: var(--text-color-medium);
+    margin: 0;
+    line-height: 1.6;
+    font-size: 0.95rem;
 }
 
-.start-chat-form {
-    text-align: center;
-    padding: 20px 0;
+/* بخش فرم گفتگو */
+.form-container {
+    background: white;
+    padding: 50px 40px;
+    border-radius: 25px;
+    box-shadow: 0 15px 35px var(--shadow-soft);
+    border: 3px solid var(--zima-pearl);
+    position: relative;
+}
+
+.form-container::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 30px;
+    z-index: -1;
+    opacity: 0.1;
+}
+
+.form-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-color-dark);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-family: 'Playfair Display', serif;
+}
+
+.form-description {
+    font-size: 1.1rem;
+    color: var(--text-color-medium);
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-color-dark);
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.form-input,
+.form-textarea {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid var(--zima-pearl);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: 'Vazir', sans-serif;
+    transition: all 0.3s ease;
+    background: white;
+    outline: none;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 150px;
+}
+
+.form-help {
+    font-size: 0.9rem;
+    color: var(--text-color-medium);
+    margin-top: 8px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn-start-chat,
+.btn-cancel {
+    padding: 15px 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 50px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.4s ease;
+    cursor: pointer;
+}
+
+.btn-start-chat {
+    flex-grow: 1;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+}
+
+.btn-start-chat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(255, 107, 107, 0.4);
+}
+
+.btn-cancel {
+    background: transparent;
+    color: var(--text-color-dark);
+    border: 2px solid var(--zima-pearl);
+}
+
+.btn-cancel:hover {
+    background: var(--zima-pearl);
+    border-color: var(--zima-pearl);
+    transform: translateY(-2px);
 }
 
 /* تنظیمات واکنش‌گرایی */
+@media (max-width: 992px) {
+    .start-chat-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .info-panel {
+        position: static;
+        margin-bottom: 30px;
+    }
+}
+
 @media (max-width: 768px) {
+    .start-chat-page {
+        padding: 120px 0 40px;
+    }
+
     .start-chat-container {
-        margin: 20px;
-        border-radius: 5px;
+        padding: 0 15px;
     }
 
-    .start-chat-header h1 {
-        font-size: 20px;
+    .form-container,
+    .info-panel {
+        padding: 30px;
     }
 
-    .start-chat-content {
-        padding: 20px;
+    .form-title, .info-title {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-container,
+    .info-panel {
+        padding: 25px 20px;
     }
 
-    .start-chat-info {
+    .form-actions {
         flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .info-icon {
-        margin: 0 0 15px;
     }
 }

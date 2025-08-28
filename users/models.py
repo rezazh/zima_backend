@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 
 class CustomUser(AbstractUser):
@@ -183,3 +184,18 @@ class Newsletter(models.Model):
 
     def __str__(self):
         return self.email
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='favorites')
+    product = models.ForeignKey('products.Product', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')
+        verbose_name = 'علاقه‌مندی'
+        verbose_name_plural = 'علاقه‌مندی‌ها'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user.username} - {self.product.name}'

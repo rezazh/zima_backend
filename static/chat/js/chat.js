@@ -22,12 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Chat room loaded');
     console.log('Is staff:', isStaff);
     console.log('User ID:', userId);
-    console.log('Room elements:', {
-        closeButton: closeRoomButton,
-        reopenButton: reopenRoomButton,
-        messageInput: messageInput,
-        sendButton: sendButton
-    });
 
     // اتصال به وب‌سوکت
     function connectWebSocket() {
@@ -57,28 +51,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 handleRoomStatusChange(data);
             }
             else if (data.type === 'chat.deleted_by_user') {
-                // پردازش پیام حذف گفتگو توسط کاربر
                 handleChatDeleted(data);
             }
             else if (data.type === 'chat_message') {
-                // دریافت پیام جدید
                 appendMessage(data.message);
 
-                // پخش صدای اعلان اگر پیام از کاربر دیگر است
                 if (data.message.sender_id !== userId) {
                     notificationSound.play().catch(error => console.error('Error playing notification sound:', error));
                 }
 
-                // اسکرول به پایین
                 messageContainer.scrollTop = messageContainer.scrollHeight;
 
-                // علامت‌گذاری پیام به عنوان خوانده شده اگر از کاربر دیگر است
                 if (data.message.sender_id !== userId && data.message.message_type !== 'system') {
                     markMessageAsRead(data.message.id);
                 }
             }
             else if (data.type === 'message_read') {
-                // به‌روزرسانی وضعیت خوانده شدن پیام
                 const messageElement = document.getElementById('message-' + data.message_id);
                 if (messageElement) {
                     const readIndicator = messageElement.querySelector('.read-indicator');
@@ -90,14 +78,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             else if (data.type === 'user_typing') {
-                // نمایش وضعیت تایپ کردن کاربر
                 if (data.user_id !== userId) {
-                    typingIndicator.textContent = data.username + ' در حال تایپ است...';
-                    typingIndicator.style.display = data.is_typing ? 'block' : 'none';
+                    if (data.is_typing) {
+                        typingIndicator.textContent = data.username + ' در حال تایپ است...';
+                        typingIndicator.style.display = 'block';
+                    } else {
+                        typingIndicator.style.display = 'none';
+                    }
                 }
             }
             else if (data.type === 'error') {
-                // نمایش خطا
                 showNotification(data.message, 'danger');
             }
         };
@@ -116,6 +106,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // مدیریت تغییر وضعیت اتاق
     function handleRoomStatusChange(data) {
+        console.log('Handling room status change:', data);
+
         // به‌روزرسانی نشانگر وضعیت
         if (roomStatus) {
             roomStatus.textContent = data.status === 'open' ? 'باز' : 'بسته شده';
@@ -139,7 +131,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 created_at: new Date().toISOString()
             });
 
-            // اسکرول به پایین
             messageContainer.scrollTop = messageContainer.scrollHeight;
         }
 
@@ -157,11 +148,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // به‌روزرسانی دکمه‌های بستن و بازگشایی
     function updateActionButtons(data) {
-        // پاک کردن محتوای قبلی
+        console.log('Updating action buttons for status:', data.status, 'closed_by_staff:', data.closed_by_staff);
+
         if (chatActions) {
             chatActions.innerHTML = '';
 
-            // ایجاد دکمه مناسب بر اساس وضعیت
             if (data.status === 'open') {
                 // اتاق باز است، نمایش دکمه بستن
                 const closeButton = document.createElement('button');
@@ -174,7 +165,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // اتاق بسته است، تصمیم‌گیری برای نمایش دکمه بازگشایی
                 let showReopenButton = false;
 
-                // شرایط نمایش دکمه بازگشایی
                 if (isStaff) {
                     showReopenButton = true;
                     console.log('Admin can reopen the chat');
@@ -199,65 +189,55 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // اتصال اولیه به وب‌سوکت
     connectWebSocket();
+
     function handleChatDeleted(data) {
-    // نمایش پیام سیستمی در چت
-    const messageContainer = document.getElementById('message-container');
-    const systemMessage = document.createElement('div');
-    systemMessage.className = 'message system-message';
-    systemMessage.innerHTML = `
-        <div class="message-content">
-            <strong class="text-danger">${data.message}</strong>
-        </div>
-    `;
-    messageContainer.appendChild(systemMessage);
-    messageContainer.scrollTop = messageContainer.scrollHeight;
+        const systemMessage = document.createElement('div');
+        systemMessage.className = 'message system-message';
+        systemMessage.innerHTML = `
+            <div class="message-content">
+                <strong class="text-danger">${data.message}</strong>
+            </div>
+        `;
+        messageContainer.appendChild(systemMessage);
+        messageContainer.scrollTop = messageContainer.scrollHeight;
 
-    // غیرفعال کردن ارسال پیام
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
-    const fileUploadButton = document.getElementById('file-upload-button');
+        if (messageInput) messageInput.disabled = true;
+        if (sendButton) sendButton.disabled = true;
+        if (fileUploadButton) fileUploadButton.disabled = true;
 
-    messageInput.disabled = true;
-    sendButton.disabled = true;
-    fileUploadButton.disabled = true;
+        if (messageInput) messageInput.placeholder = 'این گفتگو توسط کاربر حذف شده است';
 
-    messageInput.placeholder = 'این گفتگو توسط کاربر حذف شده است';
+        showNotification('این گفتگو توسط کاربر حذف شده است', 'warning', 0);
+    }
 
-    // نمایش اعلان
-    showNotification('این گفتگو توسط کاربر حذف شده است', 'warning', 0);
-}
     // تابع نمایش اعلان
     function showNotification(message, type, timeout = 5000) {
-    // بررسی وجود کانتینر اعلان
-    let notificationContainer = document.querySelector('.notification-container');
-    if (!notificationContainer) {
-        notificationContainer = document.createElement('div');
-        notificationContainer.className = 'notification-container';
-        document.body.appendChild(notificationContainer);
-    }
+        let notificationContainer = document.querySelector('.notification-container');
+        if (!notificationContainer) {
+            notificationContainer = document.createElement('div');
+            notificationContainer.className = 'notification-container';
+            document.body.appendChild(notificationContainer);
+        }
 
-    // ایجاد اعلان
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show`;
-    notification.role = 'alert';
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show`;
+        notification.role = 'alert';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
 
-    // افزودن اعلان به کانتینر
-    notificationContainer.appendChild(notification);
+        notificationContainer.appendChild(notification);
 
-    // حذف خودکار اعلان بعد از زمان مشخص شده (اگر timeout صفر باشد، اعلان حذف نمی‌شود)
-    if (timeout > 0) {
-        setTimeout(() => {
-            notification.classList.remove('show');
+        if (timeout > 0) {
             setTimeout(() => {
-                notification.remove();
-            }, 150);
-        }, timeout);
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 150);
+            }, timeout);
+        }
     }
-}
 
     // افزودن پیام به صفحه
     function appendMessage(message) {
@@ -265,7 +245,6 @@ document.addEventListener('DOMContentLoaded', function() {
         messageDiv.id = 'message-' + message.id;
         messageDiv.className = 'message';
 
-        // تعیین کلاس پیام بر اساس فرستنده
         if (message.message_type === 'system') {
             messageDiv.className += ' system-message';
         } else if (message.sender_id === userId) {
@@ -274,19 +253,17 @@ document.addEventListener('DOMContentLoaded', function() {
             messageDiv.className += ' received';
         }
 
-        // اگر پیام خوانده شده است، کلاس read را اضافه می‌کنیم
         if (message.is_read) {
             messageDiv.className += ' read';
         }
 
-        // ایجاد محتوای پیام
         let messageContent = `
             <div class="message-content">
                 ${message.content}
             </div>
         `;
 
-        // اگر فایل دارد، آن را نمایش می‌دهیم
+        // ✅ اصلاح: نمایش فایل
         if (message.file_url) {
             const fileUrl = message.file_url;
             const fileExtension = fileUrl.split('.').pop().toLowerCase();
@@ -309,13 +286,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // افزودن اطلاعات پیام (زمان، وضعیت خوانده شدن و ...)
         messageContent += `
             <div class="message-info">
                 <span class="message-time">${formatDateTime(message.created_at)}</span>
         `;
 
-        // اگر پیام از کاربر فعلی است، نشانگر خوانده شدن را نمایش می‌دهیم
         if (message.sender_id === userId && message.message_type !== 'system') {
             messageContent += `
                 <span class="read-indicator" title="${message.is_read ? 'خوانده شده' : 'ارسال شده'}">
@@ -325,11 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         messageContent += `</div>`;
-
-        // قرار دادن محتوا در المان پیام
         messageDiv.innerHTML = messageContent;
-
-        // افزودن پیام به صفحه
         messageContainer.appendChild(messageDiv);
     }
 
@@ -338,26 +309,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const message = messageInput.value.trim();
 
         if (message || tempFileId) {
-            // ارسال پیام به سرور
             socket.send(JSON.stringify({
                 'type': 'chat_message',
                 'message': message,
                 'file_id': tempFileId
             }));
 
-            // پاک کردن ورودی پیام
             messageInput.value = '';
 
-            // پاک کردن پیش‌نمایش فایل
             if (tempFilePreview) {
                 tempFilePreview.remove();
                 tempFilePreview = null;
             }
 
-            // پاک کردن شناسه فایل موقت
             tempFileId = null;
-
-            // متوقف کردن وضعیت تایپ کردن
             sendTypingStatus(false);
         }
     }
@@ -367,22 +332,25 @@ document.addEventListener('DOMContentLoaded', function() {
         fileInput.click();
     }
 
-    // پردازش انتخاب فایل
+    // ✅ اصلاح: پردازش انتخاب فایل
     function handleFileSelect(e) {
         const file = e.target.files[0];
         if (!file) return;
 
-        // بررسی اندازه فایل (حداکثر 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            alert('حداکثر اندازه فایل 5 مگابایت است.');
+            showNotification('حداکثر اندازه فایل 5 مگابایت است.', 'danger');
             return;
         }
 
-        // ایجاد شیء FormData
         const formData = new FormData();
         formData.append('file', file);
 
-        // ارسال فایل به سرور
+        // نمایش لودینگ
+        if (fileUploadButton) {
+            fileUploadButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            fileUploadButton.disabled = true;
+        }
+
         fetch('/chat/api/upload-file/', {
             method: 'POST',
             body: formData,
@@ -393,10 +361,8 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // ذخیره شناسه فایل موقت
                 tempFileId = data.file_id;
 
-                // نمایش پیش‌نمایش فایل
                 if (tempFilePreview) {
                     tempFilePreview.remove();
                 }
@@ -426,60 +392,95 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                 }
 
-                // افزودن پیش‌نمایش به صفحه
                 const chatFooter = document.querySelector('.chat-footer');
                 chatFooter.insertBefore(tempFilePreview, messageInput);
 
-                // افزودن رویداد کلیک برای دکمه حذف
                 tempFilePreview.querySelector('.remove-file').addEventListener('click', function() {
                     tempFilePreview.remove();
                     tempFilePreview = null;
                     tempFileId = null;
                 });
+
+                showNotification('فایل با موفقیت آپلود شد', 'success');
             } else {
-                alert('خطا در آپلود فایل: ' + data.error);
+                showNotification('خطا در آپلود فایل: ' + data.error, 'danger');
             }
         })
         .catch(error => {
             console.error('Error uploading file:', error);
-            alert('خطا در آپلود فایل. لطفاً مجدداً تلاش کنید.');
+            showNotification('خطا در آپلود فایل. لطفاً مجدداً تلاش کنید.', 'danger');
+        })
+        .finally(() => {
+            // بازگردانی دکمه به حالت عادی
+            if (fileUploadButton) {
+                fileUploadButton.innerHTML = '<i class="fas fa-paperclip"></i>';
+                fileUploadButton.disabled = false;
+            }
         });
 
-        // پاک کردن مقدار input فایل
         fileInput.value = '';
     }
 
     // علامت‌گذاری پیام به عنوان خوانده شده
     function markMessageAsRead(messageId) {
-        socket.send(JSON.stringify({
-            'type': 'mark_read',
-            'message_id': messageId
-        }));
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                'type': 'mark_read',
+                'message_id': messageId
+            }));
+        }
     }
 
     // ارسال وضعیت تایپ کردن
     function sendTypingStatus(isTyping) {
-        socket.send(JSON.stringify({
-            'type': 'typing',
-            'is_typing': isTyping
-        }));
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                'type': 'typing',
+                'is_typing': isTyping
+            }));
+        }
     }
 
     // بستن اتاق گفتگو
     function closeRoom() {
         if (confirm('آیا از بستن این گفتگو اطمینان دارید؟')) {
-            socket.send(JSON.stringify({
-                'type': 'close_room'
-            }));
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    'type': 'close_room'
+                }));
+            }
         }
     }
 
-    // بازگشایی اتاق گفتگو
+    // ✅ اصلاح: بازگشایی اتاق گفتگو
     function reopenRoom() {
         if (confirm('آیا از بازگشایی این گفتگو اطمینان دارید؟')) {
-            socket.send(JSON.stringify({
-                'type': 'reopen_room'
-            }));
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    'type': 'reopen_room'
+                }));
+            } else {
+                // اگر WebSocket متصل نیست، از API استفاده کن
+                fetch(`/chat/api/reopen-room/${roomId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        showNotification('خطا در بازگشایی گفتگو: ' + (data.error || 'خطای ناشناخته'), 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('خطا در ارتباط با سرور', 'danger');
+                });
+            }
         }
     }
 
@@ -497,7 +498,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const cookies = document.cookie.split(';');
             for (let i = 0; i < cookies.length; i++) {
                 const cookie = cookies[i].trim();
-                // آیا این کوکی با نام مورد نظر شروع می‌شود؟
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -508,13 +508,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // رویدادها
-
-    // ارسال پیام با کلیک روی دکمه
     if (sendButton) {
         sendButton.addEventListener('click', sendMessage);
     }
 
-    // ارسال پیام با فشردن Enter
     if (messageInput) {
         messageInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -523,41 +520,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // ارسال وضعیت تایپ کردن
         messageInput.addEventListener('input', function() {
             clearTimeout(typingTimeout);
-
-            // ارسال وضعیت تایپ کردن
             sendTypingStatus(true);
-
-            // تنظیم تایمر برای پایان وضعیت تایپ کردن
             typingTimeout = setTimeout(function() {
                 sendTypingStatus(false);
             }, 3000);
         });
     }
 
-    // آپلود فایل
     if (fileUploadButton) {
         fileUploadButton.addEventListener('click', uploadFile);
     }
 
-    // انتخاب فایل
     if (fileInput) {
         fileInput.addEventListener('change', handleFileSelect);
     }
 
-    // بستن اتاق گفتگو - افزودن رویداد به دکمه‌های موجود
     if (closeRoomButton) {
         closeRoomButton.addEventListener('click', closeRoom);
     }
 
-    // بازگشایی اتاق گفتگو - افزودن رویداد به دکمه‌های موجود
     if (reopenRoomButton) {
         reopenRoomButton.addEventListener('click', reopenRoom);
     }
 
-    // اسکرول به پایین صفحه
     if (messageContainer) {
         messageContainer.scrollTop = messageContainer.scrollHeight;
     }
