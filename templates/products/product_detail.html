@@ -4,7 +4,9 @@
 {% block title %}{{ product.name }} | زیما{% endblock %}
 
 {% block meta_description %}{{ product.description|truncatewords:20 }}{% endblock %}
-
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/product_detail.css' %}">
+{% endblock %}
 {% block content %}
 <!-- Product Breadcrumb -->
 <section class="product-breadcrumb">

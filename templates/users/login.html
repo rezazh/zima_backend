@@ -1,554 +1,57 @@
-{% extends 'base/base.html' %}
+{% extends "base/base.html" %}
 {% load static %}
 
 {% block title %}ورود به حساب کاربری | زیما{% endblock %}
 
 {% block extra_css %}
-<style>
-    .auth-section {
-        min-height: 100vh;
-        background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
-        display: flex;
-        align-items: center;
-        padding: 140px 0 60px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .auth-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('{% static "images/patterns/floral-pattern.png" %}') repeat;
-        opacity: 0.05;
-        pointer-events: none;
-    }
-
-    .auth-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-        position: relative;
-        z-index: 2;
-    }
-
-    .auth-wrapper {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 80px;
-        align-items: center;
-        background: white;
-        border-radius: 30px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-    }
-
-    .auth-visual {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        padding: 80px 60px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        color: white;
-        position: relative;
-    }
-
-    .auth-visual::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
-        opacity: 0.1;
-    }
-
-    .visual-content {
-        position: relative;
-        z-index: 2;
-    }
-
-    .welcome-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 15px;
-        font-family: 'Playfair Display', serif;
-    }
-
-    .welcome-subtitle {
-        font-size: 1.1rem;
-        margin-bottom: 30px;
-        opacity: 0.9;
-        line-height: 1.6;
-    }
-
-    .auth-features {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .auth-features li {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 15px;
-        font-size: 0.95rem;
-        opacity: 0.9;
-    }
-
-    .auth-features i {
-        color: var(--secondary-color);
-        font-size: 1.1rem;
-        width: 20px;
-    }
-
-    .auth-form-section {
-        padding: 80px 60px;
-    }
-
-    .form-header {
-        text-align: center;
-        margin-bottom: 40px;
-    }
-
-    .form-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--text-color-dark);
-        margin-bottom: 10px;
-        font-family: 'Playfair Display', serif;
-    }
-
-    .form-subtitle {
-        color: var(--text-color-medium);
-        font-size: 1rem;
-    }
-
-    .auth-form {
-        max-width: 400px;
-        margin: 0 auto;
-    }
-
-    .form-group {
-        margin-bottom: 25px;
-        position: relative;
-    }
-
-    .form-label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: var(--text-color-dark);
-        font-size: 0.9rem;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 15px 20px;
-        border: 2px solid var(--zima-pearl);
-        border-radius: 15px;
-        font-size: 1rem;
-        font-family: 'Vazir', sans-serif;
-        transition: all 0.3s ease;
-        background: white;
-        outline: none;
-    }
-
-    .form-input:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
-    }
-
-    .form-input.is-invalid {
-        border-color: #dc3545;
-        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
-    }
-
-    .form-input.is-valid {
-        border-color: #28a745;
-        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
-    }
-
-    .input-icon {
-        position: absolute;
-        left: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-color-medium);
-        font-size: 1.1rem;
-    }
-
-    .form-input:focus + .input-icon {
-        color: var(--primary-color);
-    }
-
-    .password-toggle {
-        position: absolute;
-        left: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: var(--text-color-medium);
-        cursor: pointer;
-        font-size: 1.1rem;
-        transition: color 0.3s ease;
-    }
-
-    .password-toggle:hover {
-        color: var(--primary-color);
-    }
-
-    .form-check {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 25px;
-    }
-
-    .form-check-input {
-        width: 18px;
-        height: 18px;
-        border: 2px solid var(--zima-pearl);
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .form-check-input:checked {
-        background: var(--primary-color);
-        border-color: var(--primary-color);
-    }
-
-    .form-check-label {
-        font-size: 0.9rem;
-        color: var(--text-color-medium);
-        cursor: pointer;
-    }
-
-    .invalid-feedback {
-        display: block;
-        color: #dc3545;
-        font-size: 0.85rem;
-        margin-top: 5px;
-    }
-
-    .alert {
-        padding: 15px 20px;
-        border-radius: 12px;
-        margin-bottom: 25px;
-        font-size: 0.9rem;
-    }
-
-    .alert-danger {
-        background: rgba(220, 53, 69, 0.1);
-        color: #721c24;
-        border: 1px solid rgba(220, 53, 69, 0.2);
-    }
-
-    .alert-success {
-        background: rgba(40, 167, 69, 0.1);
-        color: #155724;
-        border: 1px solid rgba(40, 167, 69, 0.2);
-    }
-
-    .btn-auth {
-        width: 100%;
-        padding: 15px 20px;
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        color: white;
-        border: none;
-        border-radius: 50px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 20px;
-    }
-
-    .btn-auth:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
-    }
-
-    .btn-auth:active {
-        transform: translateY(0);
-    }
-
-    .form-links {
-        text-align: center;
-        margin-bottom: 30px;
-    }
-
-    .form-links a {
-        color: var(--primary-color);
-        text-decoration: none;
-        font-weight: 500;
-        transition: color 0.3s ease;
-    }
-
-    .form-links a:hover {
-        color: var(--secondary-color);
-        text-decoration: underline;
-    }
-
-    .form-divider {
-        position: relative;
-        text-align: center;
-        margin: 30px 0;
-    }
-
-    .form-divider::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: var(--zima-pearl);
-    }
-
-    .form-divider span {
-        background: white;
-        padding: 0 20px;
-        color: var(--text-color-medium);
-        font-size: 0.9rem;
-    }
-
-    .auth-switch {
-        text-align: center;
-        padding: 25px;
-        background: var(--zima-blush);
-        border-radius: 15px;
-    }
-
-    .auth-switch-text {
-        color: var(--text-color-medium);
-        margin-bottom: 15px;
-        font-size: 0.95rem;
-    }
-
-    .btn-switch {
-        background: white;
-        color: var(--primary-color);
-        border: 2px solid var(--primary-color);
-        padding: 12px 30px;
-        border-radius: 25px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        display: inline-block;
-    }
-
-    .btn-switch:hover {
-        background: var(--primary-color);
-        color: white;
-        transform: translateY(-2px);
-    }
-
-    /* Responsive Design */
-    @media (max-width: 992px) {
-        .auth-wrapper {
-            grid-template-columns: 1fr;
-            gap: 0;
-        }
-
-        .auth-visual {
-            padding: 60px 40px;
-        }
-
-        .welcome-title {
-            font-size: 2rem;
-        }
-
-        .auth-form-section {
-            padding: 60px 40px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .auth-section {
-            padding: 120px 0 40px;
-        }
-
-        .auth-container {
-            padding: 0 15px;
-        }
-
-        .auth-visual,
-        .auth-form-section {
-            padding: 40px 30px;
-        }
-
-        .welcome-title {
-            font-size: 1.8rem;
-        }
-
-        .form-title {
-            font-size: 1.6rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .auth-visual,
-        .auth-form-section {
-            padding: 30px 20px;
-        }
-
-        .welcome-title {
-            font-size: 1.5rem;
-        }
-
-        .form-title {
-            font-size: 1.4rem;
-        }
-
-        .form-input {
-            padding: 12px 16px;
-        }
-
-        .btn-auth {
-            padding: 12px 16px;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/pages/auth.css' %}">
 {% endblock %}
 
 {% block content %}
 <section class="auth-section">
     <div class="auth-container">
         <div class="auth-wrapper">
-            <!-- Visual Section -->
-            <div class="auth-visual">
-                <div class="visual-content">
-                    <h1 class="welcome-title">خوش آمدید</h1>
-                    <p class="welcome-subtitle">به دنیای زیبایی و راحتی زیما خوش آمدید. تجربه‌ای منحصربه‌فرد از خرید آنلاین را کشف کنید.</p>
-
-                    <ul class="auth-features">
-                        <li>
-                            <i class="fas fa-gem"></i>
-                            <span>دسترسی به کالکشن‌های ویژه</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-percentage"></i>
-                            <span>تخفیف‌های اختصاصی اعضا</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-shipping-fast"></i>
-                            <span>ارسال سریع و رایگان</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-heart"></i>
-                            <span>ذخیره محصولات موردعلاقه</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-headset"></i>
-                            <span>پشتیبانی اختصاصی ۲۴/۷</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Form Section -->
             <div class="auth-form-section">
-                <div class="form-header">
-                    <h2 class="form-title">ورود به حساب</h2>
-                    <p class="form-subtitle">لطفاً اطلاعات خود را وارد کنید</p>
+                <div class="form-header-auth">
+                    <h2>خوش آمدید!</h2>
+                    <p>برای ادامه وارد حساب کاربری خود شوید.</p>
                 </div>
-
-                <form class="auth-form" method="post" action="{% url 'users:login' %}">
+                <form method="post" action="{% url 'users:login' %}">
                     {% csrf_token %}
-
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {% for error in form.non_field_errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-
                     <div class="form-group">
-                        <label for="id_username" class="form-label">نام کاربری، ایمیل یا شماره موبایل</label>
-                        <div style="position: relative;">
-                            <input type="text"
-                                name="username"
-                                id="id_username"
-                                class="form-input {% if form.username.errors %}is-invalid{% endif %}"
-                                placeholder="نام کاربری، ایمیل یا شماره موبایل خود را وارد کنید"
-                                required>
-                            <i class="fas fa-user input-icon"></i>
-                        </div>
-                        {% if form.username.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.username.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
+                        <label for="id_username" class="form-label">نام کاربری یا ایمیل:</label>
+                        <input type="text" name="username" id="id_username" class="form-input" placeholder="نام کاربری یا ایمیل" required>
                     </div>
-
                     <div class="form-group">
-                        <label for="id_password" class="form-label">رمز عبور</label>
-                        <div style="position: relative;">
-                            <input type="password"
-                                name="password"
-                                id="id_password"
-                                class="form-input {% if form.password.errors %}is-invalid{% endif %}"
-                                placeholder="رمز عبور خود را وارد کنید"
-                                required>
-                            <button type="button" class="password-toggle" onclick="togglePassword('id_password')">
-                                <i class="fas fa-eye" id="id_password_icon"></i>
-                            </button>
-                        </div>
-                        {% if form.password.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.password.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
+                        <label for="id_password" class="form-label">رمز عبور:</label>
+                        <input type="password" name="password" id="id_password" class="form-input" placeholder="رمز عبور" required>
+                        <span class="password-toggle" onclick="togglePasswordVisibility('id_password')">
+                            <i class="fas fa-eye"></i>
+                        </span>
                     </div>
-
                     <div class="form-check">
-                        <input type="checkbox" name="remember" id="id_remember" class="form-check-input">
-                        <label for="id_remember" class="form-check-label">مرا به خاطر بسپار</label>
+                        <input type="checkbox" name="remember_me" id="id_remember_me" class="form-check-input">
+                        <label for="id_remember_me" class="form-check-label">مرا به خاطر بسپار</label>
                     </div>
-
-                    {% if next %}
-                        <input type="hidden" name="next" value="{{ next }}">
-                    {% endif %}
-
+                    <a href="{% url 'users:password_reset' %}" class="form-link d-block mb-3">رمز عبور خود را فراموش کرده‌اید؟</a>
                     <button type="submit" class="btn-auth">ورود</button>
-
-                    <div class="form-links">
-                        <a href="{% url 'users:password_reset' %}">رمز عبور خود را فراموش کرده‌اید؟</a>
-                    </div>
-
-                    <div class="form-divider">
-                        <span>یا</span>
-                    </div>
-
-                    <div class="auth-switch">
-                        <p class="auth-switch-text">حساب کاربری ندارید؟</p>
-                        <a href="{% url 'users:signup' %}" class="btn-switch">ثبت‌نام کنید</a>
-                    </div>
                 </form>
+                <div class="social-login">
+                    <p>یا با استفاده از:</p>
+                    <div class="social-buttons">
+                        <a href="#" class="social-btn google"><i class="fab fa-google"></i></a>
+                        <a href="#" class="social-btn github"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                <p class="mt-4 text-center">حساب کاربری ندارید؟ <a href="{% url 'users:signup' %}" class="form-link">ثبت نام کنید</a></p>
+            </div>
+            <div class="auth-welcome">
+                <i class="fas fa-gem welcome-icon"></i>
+                <h3 class="welcome-title">به زیما خوش آمدید!</h3>
+                <p class="welcome-text">
+                    با ورود به حساب کاربری خود، به دنیای بی‌نظیر محصولات زیما دسترسی پیدا کنید و از تجربه خریدی آسان و دلنشین لذت ببرید.
+                </p>
+                <a href="{% url 'users:signup' %}" class="welcome-link">ایجاد حساب جدید</a>
             </div>
         </div>
     </div>
@@ -557,52 +60,18 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Password toggle functionality
-    window.togglePassword = function(inputId) {
-        const input = document.getElementById(inputId);
-        const icon = document.getElementById(inputId + '_icon');
-
-        if (input.type === 'password') {
-            input.type = 'text';
+    function togglePasswordVisibility(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = field.nextElementSibling.querySelector('i'); // assuming icon is next to input
+        if (field.type === "password") {
+            field.type = "text";
             icon.classList.remove('fa-eye');
             icon.classList.add('fa-eye-slash');
         } else {
-            input.type = 'password';
+            field.type = "password";
             icon.classList.remove('fa-eye-slash');
             icon.classList.add('fa-eye');
         }
-    };
-
-    // Input validation and styling
-    const inputs = document.querySelectorAll('.form-input');
-    inputs.forEach(input => {
-        input.addEventListener('input', function() {
-            if (this.value.trim()) {
-                this.classList.add('is-valid');
-                this.classList.remove('is-invalid');
-            } else {
-                this.classList.remove('is-valid', 'is-invalid');
-            }
-        });
-
-        input.addEventListener('blur', function() {
-            if (this.hasAttribute('required') && !this.value.trim()) {
-                this.classList.add('is-invalid');
-                this.classList.remove('is-valid');
-            }
-        });
-    });
-
-    // Auto-hide alerts after 5 seconds
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.opacity = '0';
-            alert.style.transform = 'translateY(-10px)';
-            setTimeout(() => alert.remove(), 300);
-        }, 5000);
-    });
-});
+    }
 </script>
 {% endblock %}

@@ -1,54 +1,20 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <style>
-    /* تنظیم padding برای تمام صفحات */
-    body {
-        padding-top: 40px !important;
-        box-sizing: border-box;
-    }
-
-    .main-content,
-    .container,
-    .content,
-    main {
-        padding-top: 20px;
-    }
-
-    .page-content,
-    .home-content,
-    .product-detail,
-    .product-list,
-    .chat-room,
-    .category-page {
-        margin-top: 0 !important;
-        padding-top: 20px;
-    }
-
-    @media (max-width: 768px) {
-        body {
-            padding-top: 70px !important;
-        }
-    }
-
-    @media (max-width: 480px) {
-        body {
-            padding-top: 60px !important;
-        }
-    }
-    </style>
     {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}زیما | زیبایی خصوصی شما{% endblock %}</title>
 
-    {# فونت‌ها #}
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;600;700;900&family=Vazir:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {# فونت‌های اصلی سایت (ZimaFont) #}
+    <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
 
-    {# استایل‌های جدید تم #}
-    <link rel="stylesheet" href="{% static 'css/zima_theme_v2.css' %}">
+    {# استایل‌های سراسری تم #}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {# استایل‌های مربوط به محصولات #}
+    <link rel="stylesheet" href="{% static 'css/products.css' %}">
     {# برای استایل‌های خاص هر صفحه (بعدا اضافه می‌شود) #}
     {% block extra_css %}{% endblock %}
 </head>

@@ -1,0 +1,21 @@
+/* static/css/fonts.css */
+
+@font-face {
+    font-family: 'ZimaFont';
+    src: url('../fonts/zima_font.TTF') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap; /* برای بهبود تجربه بارگذاری فونت */
+}
+
+@font-face {
+    font-family: 'ZimaFont';
+    src: url('../fonts/zima_bold_font.TTF') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap; /* برای بهبود تجربه بارگذاری فونت */
+}
+
+/* تمامی تعاریف @font-face برای فونت‌های دیگر (مثل Playfair Display, Dancing Script یا Vazir)
+   که قبلاً در هر فایل CSS دیگری وجود داشته‌اند، باید حذف شوند.
+   ما فقط از 'ZimaFont' با وزن‌های normal و bold استفاده خواهیم کرد. */

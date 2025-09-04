@@ -1,0 +1,657 @@
+/* static/css/pages/orders_checkout.css */
+
+.checkout-section {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+    padding: 140px 0 60px;
+    position: relative;
+    overflow: hidden;
+}
+
+.checkout-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/subtle-pattern.png" %}') repeat;
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.checkout-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.checkout-wrapper {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 50px;
+    align-items: flex-start;
+}
+
+.checkout-form-section {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 2px solid var(--zima-pearl);
+}
+
+.form-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 30px 40px;
+    position: relative;
+    border-bottom: 1px solid var(--zima-pearl);
+}
+
+.form-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+    opacity: 0.1;
+}
+
+.form-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 10px;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+    position: relative;
+    z-index: 2;
+}
+
+.form-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+    position: relative;
+    z-index: 2;
+}
+
+.form-body {
+    padding: 40px;
+}
+
+.checkout-step {
+    margin-bottom: 40px;
+}
+
+.step-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-color-dark);
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.step-title i {
+    color: var(--primary-color);
+    font-size: 1.3em;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-color-dark);
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid var(--zima-pearl);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.address-card {
+    background: var(--zima-blush);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid var(--zima-peach);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.address-card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+}
+
+.address-card.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.3);
+}
+
+.address-card p {
+    margin-bottom: 5px;
+    color: var(--text-color-dark);
+    font-size: 0.95rem;
+}
+
+.address-card p strong {
+    color: var(--primary-color);
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.address-card .select-icon {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    display: none;
+}
+
+.address-card.selected .select-icon {
+    display: block;
+}
+
+.add-address-btn {
+    background: var(--zima-cream);
+    border: 2px dashed var(--zima-pearl);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-color-medium);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.add-address-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--zima-blush);
+}
+
+.add-address-btn i {
+    font-size: 2rem;
+}
+
+.shipping-method-card,
+.payment-method-card {
+    background: var(--zima-blush);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid var(--zima-peach);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.shipping-method-card:hover,
+.payment-method-card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+}
+
+.shipping-method-card.selected,
+.payment-method-card.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.3);
+}
+
+.method-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--zima-cream);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--text-color-dark);
+    flex-shrink: 0;
+}
+
+.method-details {
+    flex: 1;
+}
+
+.method-details h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color-dark);
+    margin-bottom: 5px;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.method-details p {
+    font-size: 0.9rem;
+    color: var(--text-color-medium);
+    margin: 0;
+}
+
+.method-price {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    margin-left: auto;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.checkout-summary-section {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: sticky;
+    top: 160px;
+    border: 2px solid var(--zima-pearl);
+}
+
+.summary-header {
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+    padding: 30px 40px;
+    border-bottom: 1px solid var(--zima-pearl);
+}
+
+.summary-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-color-dark);
+    margin: 0;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.summary-body {
+    padding: 40px;
+}
+
+.summary-products-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 10px; /* برای اسکرول‌بار */
+}
+
+.summary-product-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.summary-product-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.summary-product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.summary-product-details {
+    flex: 1;
+}
+
+.summary-product-name {
+    font-weight: 600;
+    color: var(--text-color-dark);
+    margin-bottom: 5px;
+    font-size: 0.95rem;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.summary-product-variant {
+    color: var(--text-color-medium);
+    font-size: 0.85rem;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.summary-prices {
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--zima-pearl);
+    padding-bottom: 20px;
+}
+
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.price-row span:first-child {
+    color: var(--text-color-medium);
+}
+
+.price-row span:last-child {
+    font-weight: 600;
+    color: var(--text-color-dark);
+}
+
+.total-price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.checkout-actions {
+    text-align: center;
+}
+
+.btn-place-order {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    padding: 18px 40px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.btn-place-order:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+}
+
+.btn-place-order.disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.privacy-text {
+    font-size: 0.85rem;
+    color: var(--text-color-medium);
+    margin-top: 20px;
+    line-height: 1.6;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+/* Modals for Add/Edit Address */
+.address-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.address-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content-address {
+    background: white;
+    border-radius: 20px;
+    max-width: 700px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 40px;
+    position: relative;
+    animation: modalSlideIn 0.5s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-close {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    background: var(--zima-ivory);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 5;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: rotate(90deg);
+}
+
+.modal-title-address {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color-dark);
+    margin-bottom: 30px;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.modal-form .form-group {
+    margin-bottom: 20px;
+}
+
+.modal-form .form-label {
+    margin-bottom: 8px;
+}
+
+.modal-form .form-input,
+.modal-form .form-select {
+    padding: 12px 15px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+}
+
+.modal-actions-bottom {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn-save-address {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.btn-save-address:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+}
+
+.btn-cancel-modal {
+    background: var(--zima-pearl);
+    color: var(--text-color-medium);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.btn-cancel-modal:hover {
+    background: var(--zima-blush);
+    color: var(--primary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .checkout-wrapper {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .checkout-summary-section {
+        position: relative;
+        top: auto;
+        order: -1; /* Summary on top in mobile */
+    }
+
+    .summary-body {
+        padding: 30px;
+    }
+
+    .checkout-form-section {
+        padding: 0;
+    }
+    .form-body {
+        padding: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .checkout-section {
+        padding: 120px 0 40px;
+    }
+
+    .checkout-container {
+        padding: 0 15px;
+    }
+
+    .form-header {
+        padding: 25px 30px;
+    }
+
+    .form-title {
+        font-size: 1.8rem;
+    }
+
+    .form-subtitle {
+        font-size: 1rem;
+    }
+
+    .form-body {
+        padding: 25px 20px;
+    }
+
+    .step-title {
+        font-size: 1.4rem;
+        gap: 10px;
+    }
+
+    .step-title i {
+        font-size: 1.1em;
+    }
+
+    .summary-header {
+        padding: 25px 30px;
+    }
+
+    .summary-title {
+        font-size: 1.6rem;
+    }
+
+    .summary-body {
+        padding: 25px 20px;
+    }
+
+    .summary-products-list {
+        max-height: 200px;
+    }
+
+    .btn-place-order {
+        padding: 15px 30px;
+        font-size: 1rem;
+    }
+
+    .modal-content-address {
+        padding: 30px 20px;
+    }
+
+    .modal-title-address {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+    }
+}

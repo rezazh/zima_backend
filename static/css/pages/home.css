@@ -1,0 +1,541 @@
+/* static/css/pages/home.css */
+
+/* ---------------------------------------------------- */
+/* == Hero Section == */
+/* ---------------------------------------------------- */
+.hero {
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne), var(--zima-mauve)); /* از پالت قبلی */
+    padding-top: 100px; /* برای جبران ناوبار ثابت */
+}
+
+.hero-shapes {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.1;
+    animation: float 20s ease-in-out infinite;
+}
+
+.shape:nth-child(1) {
+    width: 300px;
+    height: 300px;
+    background: var(--zima-rose);
+    top: 10%;
+    right: 10%;
+    animation-delay: 0s;
+}
+
+.shape:nth-child(2) {
+    width: 200px;
+    height: 200px;
+    background: var(--primary-color);
+    top: 60%;
+    left: 15%;
+    animation-delay: 5s;
+}
+
+.shape:nth-child(3) {
+    width: 150px;
+    height: 150px;
+    background: var(--secondary-color);
+    bottom: 20%;
+    right: 20%;
+    animation-delay: 10s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    33% { transform: translateY(-30px) scale(1.1); }
+    66% { transform: translateY(20px) scale(0.9); }
+}
+
+.hero-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 80px;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-content {
+    animation: slideInLeft 1s ease-out;
+    text-align: right;
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 30px;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--zima-rose);
+}
+
+.hero-title {
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 25px;
+    color: var(--text-color-dark);
+    font-family: 'Zima-Bold', sans-serif; /* استفاده از فونت Zima-Bold */
+}
+
+.hero-title .highlight {
+    color: var(--primary-color);
+    font-family: 'ZimaFont', cursive; /* استفاده از ZimaFont با جلوه دست‌نویس */
+    font-weight: bold;
+}
+
+.hero-description {
+    font-size: 1.3rem;
+    color: var(--text-color-medium);
+    margin-bottom: 40px;
+    line-height: 1.8;
+}
+
+.hero-cta {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.btn {
+    padding: 18px 40px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 50px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.4s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: right 0.6s ease;
+}
+
+.btn:hover::before {
+    right: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--zima-rose));
+    color: white;
+    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4);
+}
+.btn-secondary {
+    background: transparent;
+    color: var(--text-color-dark);
+    border: 2px solid var(--zima-rose);
+}
+
+.btn-secondary:hover {
+    background: var(--zima-rose);
+    color: white;
+}
+
+.hero-image {
+    position: relative;
+    animation: slideInRight 1s ease-out;
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.hero-img {
+    width: 100%;
+    height: 600px;
+    object-fit: cover;
+    border-radius: 30px;
+    box-shadow: 0 30px 60px var(--shadow-soft);
+}
+
+.floating-elements {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+.floating-element {
+    position: absolute;
+    animation: gentleFloat 8s ease-in-out infinite;
+}
+
+.floating-element:nth-child(1) {
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+}
+.floating-element:nth-child(2) {
+    bottom: 20%;
+    left: 20%;
+    animation-delay: 4s;
+}
+
+@keyframes gentleFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+/* ---------------------------------------------------- */
+/* == Collections Section == */
+/* ---------------------------------------------------- */
+.collections {
+    padding: 120px 0;
+    background: var(--background-light);
+}
+
+.section-header {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 80px;
+}
+
+.section-badge {
+    display: inline-block;
+    background: var(--zima-champagne);
+    color: var(--primary-color);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 25px;
+    color: var(--text-color-dark);
+    font-family: 'Zima-Bold', sans-serif; /* استفاده از فونت Zima-Bold */
+}
+
+.section-title .script {
+    font-family: 'ZimaFont', cursive; /* استفاده از ZimaFont با جلوه دست‌نویس */
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.section-description {
+    font-size: 1.2rem;
+    color: var(--text-color-medium);
+    line-height: 1.8;
+}
+
+.collections-grid {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+}
+
+.collection-card {
+    background: white;
+    border-radius: 25px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px var(--shadow-soft);
+    transition: all 0.4s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.collection-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--zima-rose), var(--primary-color));
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 1;
+    border-radius: 25px;
+}
+
+.collection-card:hover::before {
+    opacity: 0.05;
+}
+
+.collection-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 25px 60px var(--shadow-medium);
+}
+
+.collection-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.collection-card:hover .collection-image {
+    transform: scale(1.05);
+}
+
+.collection-content {
+    padding: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.collection-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--text-color-dark);
+}
+
+.collection-description {
+    color: var(--text-color-medium);
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.collection-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: gap 0.3s ease;
+}
+.collection-link:hover {
+    gap: 15px;
+}
+
+/* ---------------------------------------------------- */
+/* == Featured Products Section == */
+/* ---------------------------------------------------- */
+.featured {
+    padding: 120px 0;
+    background: linear-gradient(135deg, var(--background-medium) 0%, var(--zima-champagne) 100%);
+}
+
+.products-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+/* ---------------------------------------------------- */
+/* == Testimonials Section == */
+/* ---------------------------------------------------- */
+.testimonials {
+    padding: 120px 0;
+    background: var(--background-light);
+}
+
+.testimonials-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+    text-align: center;
+}
+
+.testimonials-slider {
+    display: flex;
+    gap: 40px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 40px 0;
+    scrollbar-width: none; /* For Firefox */
+}
+
+.testimonials-slider::-webkit-scrollbar {
+    display: none; /* For Chrome, Safari, and Opera */
+}
+
+.testimonial-card {
+    min-width: 350px;
+    background: white;
+    padding: 40px 30px;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px var(--shadow-soft);
+    position: relative;
+    text-align: right;
+}
+
+.testimonial-card::before {
+    content: '"';
+    position: absolute;
+    top: -20px;
+    right: 30px;
+    font-size: 4rem;
+    color: var(--primary-color);
+    opacity: 0.2;
+    font-family: serif;
+}
+.testimonial-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: 25px;
+    color: var(--text-color-medium);
+    font-style: italic;
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.author-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--zima-rose), var(--primary-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+.author-info h4 {
+    font-size: 1rem;
+    color: var(--text-color-dark);
+    margin-bottom: 2px;
+}
+
+.author-info p {
+    font-size: 0.9rem;
+    color: var(--text-color-medium);
+}
+
+/* ---------------------------------------------------- */
+/* == Home Page Responsive Design == */
+/* ---------------------------------------------------- */
+@media (max-width: 992px) {
+    .hero-container {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding: 0 20px;
+    }
+    .hero-image {
+        order: -1; /* تصویر در موبایل بالا قرار گیرد */
+    }
+    .hero-title {
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+    }
+    .hero-description {
+        font-size: 1.1rem;
+    }
+    .hero-cta {
+        justify-content: center; /* دکمه‌ها در موبایل وسط چین شوند */
+    }
+    .collections-grid {
+        grid-template-columns: 1fr;
+        padding: 0 20px;
+        gap: 30px;
+    }
+    .products-container {
+        padding: 0 20px;
+    }
+    .testimonials-container {
+        padding: 0 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero {
+        padding-top: 80px;
+    }
+    .hero-img {
+        height: 450px;
+    }
+    .section-title {
+        font-size: 2.5rem;
+    }
+    .section-description {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        padding-top: 60px;
+    }
+    .hero-img {
+        height: 350px;
+    }
+    .hero-title {
+        font-size: clamp(2rem, 4.5vw, 3rem);
+    }
+    .hero-badge {
+        padding: 10px 20px;
+        font-size: 0.8rem;
+    }
+    .btn {
+        padding: 15px 30px;
+        font-size: 0.9rem;
+    }
+    .collections, .featured, .testimonials {
+        padding: 80px 0;
+    }
+    .section-title {
+        font-size: 2rem;
+    }
+    .collection-card {
+        padding: 20px;
+    }
+    .collection-title {
+        font-size: 1.5rem;
+    }
+    .testimonial-card {
+        min-width: 100%;
+        padding: 30px 20px;
+    }
+    .testimonials-slider {
+        gap: 20px;
+    }
+}

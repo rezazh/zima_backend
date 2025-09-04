@@ -2,7 +2,37 @@
 {% load static %}
 
 {% block title %}زیما | زیبایی خصوصی شما{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/home.css' %}">
+    <style>
+        /* Sparkle Effect */
+        .sparkle {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            animation: sparkleAnim 1s ease-out forwards;
+        }
 
+        @keyframes sparkleAnim {
+            0% {
+                opacity: 1;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+        }
+    </style>
+{% endblock %}
 {% block content %}
 <!-- Hero Section -->
 <section class="hero">
@@ -54,7 +84,8 @@
 
 <!-- Collections Section -->
 <section class="collections fade-in">
-    <div class="section-header">        <div class="section-badge">کالکشن‌های ویژه</div>
+    <div class="section-header">
+        <div class="section-badge">کالکشن‌های ویژه</div>
         <h2 class="section-title">
             سه دنیای <span class="script">زیبایی</span>
         </h2>
@@ -215,7 +246,8 @@
                         <h4>نیلوفر رضایی</h4>
                         <p>مشتری راضی</p>
                     </div>
-                </div>            </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>

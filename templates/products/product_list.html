@@ -3,7 +3,9 @@
 {% load product_filters %}
 
 {% block title %}{{ page_title }} | زیما{% endblock %}
-
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/product_list.css' %}">
+{% endblock %}
 {% block content %}
 <!-- Products Hero -->
 <section class="products-hero">

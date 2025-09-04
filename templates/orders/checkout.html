@@ -1,179 +1,519 @@
-{% extends 'base/base.html' %}
+{% extends "base/base.html" %}
 {% load static %}
+{% load price_filters %} {# برای فیلتر قیمت در صورت نیاز #}
 
 {% block title %}تکمیل سفارش | زیما{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/orders_checkout.css' %}">
+{% endblock %}
+
 {% block content %}
-    <h1 class="h2 mb-4">تکمیل سفارش</h1>
-    
-    {% if not cart_items %}
-        <div class="alert alert-warning">
-            سبد خرید شما خالی است. لطفاً ابتدا محصولات مورد نظر خود را به سبد خرید اضافه کنید.
-            <a href="{% url 'products:list' %}" class="alert-link">مشاهده محصولات</a>
-        </div>
-    {% else %}
-        <div class="row">
-            <!-- فرم اطلاعات ارسال -->
-            <div class="col-lg-8 mb-4">
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">آدرس تحویل</h5>
+<!-- Checkout Section -->
+<section class="checkout-section">
+    <div class="checkout-container">
+        <form id="checkoutForm" method="post" action="{% url 'orders:checkout' %}">
+            {% csrf_token %}
+            <div class="checkout-wrapper">
+                <!-- Checkout Form Section -->
+                <div class="checkout-form-section">
+                    <div class="form-header">
+                        <h1 class="form-title">تکمیل اطلاعات سفارش</h1>
+                        <p class="form-subtitle">لطفاً اطلاعات مورد نیاز را با دقت وارد کنید</p>
                     </div>
-                    <div class="card-body">
-                        {% if addresses %}
-                            <form method="post" action="{% url 'orders:checkout' %}">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label class="form-label">انتخاب آدرس:</label>
-                                    {% for address in addresses %}
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="address_id" id="address{{ address.id }}" value="{{ address.id }}" {% if forloop.first %}checked{% endif %}>
-                                            <label class="form-check-label" for="address{{ address.id }}">
-                                                {{ address.full_address }}
-                                                <div class="text-muted small">کد پستی: {{ address.postal_code }}</div>
-                                            </label>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <a href="{% url 'users:addresses' %}" class="btn btn-outline-primary">
-                                        <i class="fas fa-plus me-1"></i> افزودن آدرس جدید
-                                    </a>
-                                </div>
-                        {% else %}
-                            <div class="alert alert-info">
-                                شما هنوز آدرسی ثبت نکرده‌اید. لطفاً ابتدا یک آدرس اضافه کنید.
-                            </div>
-                            <a href="{% url 'users:addresses' %}" class="btn btn-primary">
-                                <i class="fas fa-plus me-1"></i> افزودن آدرس
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                {% if addresses %}
-                    <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">روش ارسال</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="shipping_method" id="shipping1" value="standard" checked>
-                                <label class="form-check-label" for="shipping1">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <strong>پست پیشتاز</strong>
-                                            <div class="text-muted small">تحویل ۲ تا ۴ روز کاری</div>
-                                        </div>
-                                        <div>
-                                            {% if cart_total.subtotal >= 300000 %}
-                                                <span class="text-success">رایگان</span>
-                                            {% else %}
-                                                <span>۳۰,۰۰۰ تومان</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="shipping_method" id="shipping2" value="express">
-                                <label class="form-check-label" for="shipping2">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <strong>تیپاکس</strong>
-                                            <div class="text-muted small">تحویل ۱ تا ۲ روز کاری</div>
-                                        </div>
-                                        <div>۵۰,۰۰۰ تومان</div>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">روش پرداخت</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="payment_method" id="payment1" value="online" checked>
-                                <label class="form-check-label" for="payment1">
-                                    <strong>پرداخت آنلاین</strong>
-                                    <div class="text-muted small">پرداخت از طریق درگاه بانکی</div>
-                                </label>
-                            </div>
-                            <div class="form-check mb-4">
-                                <input class="form-check-input" type="radio" name="payment_method" id="payment2" value="cash">
-                                <label class="form-check-label" for="payment2">
-                                    <strong>پرداخت در محل</strong>
-                                    <div class="text-muted small">پرداخت هنگام تحویل کالا</div>
-                                </label>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="description" class="form-label">توضیحات سفارش (اختیاری):</label>
-                                <textarea name="description" id="description" rows="3" class="form-control"></textarea>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-credit-card me-1"></i> پرداخت و ثبت سفارش
-                            </button>
-                        </div>
-                    </div>
-                </form>
-                {% endif %}
-            </div>
-            
-            <!-- خلاصه سفارش -->
-            <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">خلاصه سفارش</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <h6>محصولات ({{ cart_total.total_items }})</h6>
-                            <ul class="list-group list-group-flush">
-                                {% for item in cart_items %}
-                                    <li class="list-group-item px-0 d-flex justify-content-between">
-                                        <div>
-                                            <span>{{ item.name }}</span>
-                                            <div class="text-muted small">{{ item.quantity }} × {{ item.price|floatformat:0 }}</div>
-                                        </div>
-                                        <span>{{ item.total_price|floatformat:0 }} تومان</span>
-                                    </li>
+                    <div class="form-body">
+                        <!-- Step 1: Shipping Address -->
+                        <div class="checkout-step" id="shippingAddressStep">
+                            <h2 class="step-title"><i class="fas fa-map-marker-alt"></i> آدرس ارسال</h2>
+                            <div class="form-row">
+                                {% for address in user_addresses %}
+                                    <label class="address-card {% if selected_address and address.id == selected_address.id %}selected{% endif %}"
+                                           data-address-id="{{ address.id }}">
+                                        <input type="radio" name="address" value="{{ address.id }}" style="display: none;"
+                                               {% if selected_address and address.id == selected_address.id %}checked{% endif %}>
+                                        <i class="fas fa-check-circle select-icon"></i>
+                                        <p><strong>گیرنده:</strong> {{ address.full_name }}</p>
+                                        <p><strong>تلفن:</strong> {{ address.phone_number }}</p>
+                                        <p><strong>آدرس:</strong> {{ address.province }}, {{ address.city }}, {{ address.address_line1 }}</p>
+                                        <p><strong>کد پستی:</strong> {{ address.postal_code }}</p>
+                                    </label>
+                                {% empty %}
+                                    <p>آدرسی برای شما ثبت نشده است.</p>
                                 {% endfor %}
-                            </ul>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>مجموع قیمت:</span>
-                            <span>{{ cart_total.subtotal|floatformat:0 }} تومان</span>
-                        </div>
-                        {% if cart_total.discount %}
-                            <div class="d-flex justify-content-between mb-2 text-danger">
-                                <span>تخفیف:</span>
-                                <span>{{ cart_total.discount|floatformat:0 }} تومان</span>
+                                <button type="button" class="add-address-btn" onclick="openAddressModal()">
+                                    <i class="fas fa-plus"></i>
+                                    افزودن آدرس جدید
+                                </button>
                             </div>
-                        {% endif %}
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>هزینه ارسال:</span>
-                            {% if cart_total.shipping_cost > 0 %}
-                                <span>{{ cart_total.shipping_cost|floatformat:0 }} تومان</span>
-                            {% else %}
-                                <span class="text-success">رایگان</span>
-                            {% endif %}
                         </div>
-                        <hr>
-                        <div class="d-flex justify-content-between fw-bold">
-                            <span>مبلغ قابل پرداخت:</span>
-                            <span>{{ cart_total.total|floatformat:0 }} تومان</span>
+
+                        <!-- Step 2: Shipping Method -->
+                        <div class="checkout-step" id="shippingMethodStep">
+                            <h2 class="step-title"><i class="fas fa-truck"></i> روش ارسال</h2>
+                            <div class="form-row">
+                                {% for method in shipping_methods %}
+                                    <label class="shipping-method-card {% if selected_shipping_method and method.id == selected_shipping_method.id %}selected{% endif %}"
+                                           data-method-id="{{ method.id }}" data-price="{{ method.price }}">
+                                        <input type="radio" name="shipping_method" value="{{ method.id }}" style="display: none;"
+                                               {% if selected_shipping_method and method.id == selected_shipping_method.id %}checked{% endif %}>
+                                        <i class="fas fa-check-circle select-icon"></i>
+                                        <div class="method-icon"><i class="fas fa-{{ method.icon_class }}"></i></div>
+                                        <div class="method-details">
+                                            <h4>{{ method.name }}</h4>
+                                            <p>{{ method.description }}</p>
+                                        </div>
+                                        <span class="method-price">{{ method.price|floatformat:0 }} تومان</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Payment Method -->
+                        <div class="checkout-step" id="paymentMethodStep">
+                            <h2 class="step-title"><i class="fas fa-credit-card"></i> روش پرداخت</h2>
+                            <div class="form-row">
+                                {% for method in payment_methods %}
+                                    <label class="payment-method-card {% if selected_payment_method and method.id == selected_payment_method.id %}selected{% endif %}"
+                                           data-method-id="{{ method.id }}">
+                                        <input type="radio" name="payment_method" value="{{ method.id }}" style="display: none;"
+                                               {% if selected_payment_method and method.id == selected_payment_method.id %}checked{% endif %}>
+                                        <i class="fas fa-check-circle select-icon"></i>
+                                        <div class="method-icon"><i class="fas fa-{{ method.icon_class }}"></i></div>
+                                        <div class="method-details">
+                                            <h4>{{ method.name }}</h4>
+                                            <p>{{ method.description }}</p>
+                                        </div>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Optional: Discount Code -->
+                        <div class="checkout-step" id="discountCodeStep">
+                            <h2 class="step-title"><i class="fas fa-tags"></i> کد تخفیف</h2>
+                            <div class="form-group">
+                                <label for="id_coupon_code" class="form-label">کد تخفیف:</label>
+                                <div class="input-group">
+                                    <input type="text" name="coupon_code" id="id_coupon_code" class="form-input" placeholder="کد تخفیف خود را وارد کنید" value="{{ coupon_code|default:'' }}">
+                                    <button type="button" class="btn btn-primary" id="applyCouponBtn" style="border-radius: 0 12px 12px 0;">اعمال</button>
+                                </div>
+                                <div id="couponMessage" class="mt-2"></div>
+                            </div>
+                        </div>
+
+                        <!-- Order Notes -->
+                        <div class="checkout-step" id="orderNotesStep">
+                            <h2 class="step-title"><i class="fas fa-comment-dots"></i> توضیحات سفارش</h2>
+                            <div class="form-group">
+                                <label for="id_order_notes" class="form-label">توضیحات شما:</label>
+                                <textarea name="order_notes" id="id_order_notes" class="form-textarea" placeholder="اگر توضیحات خاصی دارید، اینجا بنویسید..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Summary Section -->
+                <div class="checkout-summary-section">
+                    <div class="summary-header">
+                        <h2 class="summary-title">خلاصه سفارش</h2>
+                    </div>
+                    <div class="summary-body">
+                        <div class="summary-products-list">
+                            {% for item in cart_items %}
+                            <div class="summary-product-item">
+                                <div class="summary-product-image">
+                                    {% with image=item.product_variant.product.get_main_image %}
+                                        <img src="{% if image %}{{ image.image.url }}{% else %}{% static 'images/zima_theme/product-placeholder.jpg' %}{% endif %}" alt="{{ item.product_variant.product.name }}">
+                                    {% endwith %}
+                                </div>
+                                <div class="summary-product-details">
+                                    <p class="summary-product-name">{{ item.product_variant.product.name }}</p>
+                                    <p class="summary-product-variant">
+                                        {% if item.product_variant.color %}رنگ: {{ item.product_variant.color.name }}{% endif %}
+                                        {% if item.product_variant.size %}، سایز: {{ item.product_variant.size.name }}{% endif %}
+                                        (تعداد: {{ item.quantity }})
+                                    </p>
+                                </div>
+                                <span class="summary-product-price">{{ item.get_total_price|floatformat:0 }} تومان</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="summary-prices">
+                            <div class="price-row">
+                                <span>مبلغ کل محصولات:</span>
+                                <span id="subtotalPrice">{{ cart_total_price|floatformat:0 }} تومان</span>
+                            </div>
+                            <div class="price-row">
+                                <span>هزینه ارسال:</span>
+                                <span id="shippingPrice">{{ selected_shipping_method.price|default:0|floatformat:0 }} تومان</span>
+                            </div>
+                            {% if discount_amount %}
+                            <div class="price-row">
+                                <span>تخفیف:</span>
+                                <span id="discountPrice">- {{ discount_amount|floatformat:0 }} تومان</span>
+                            </div>
+                            {% endif %}
+                            <div class="total-price-row">
+                                <span>مبلغ نهایی:</span>
+                                <span id="finalPrice">{{ final_price|floatformat:0 }} تومان</span>
+                            </div>
+                        </div>
+
+                        <div class="checkout-actions">
+                            <button type="submit" class="btn-place-order" id="placeOrderBtn">
+                                <i class="fas fa-check-circle"></i>
+                                تایید و ثبت سفارش
+                            </button>
+                            <p class="privacy-text">
+                                با ثبت سفارش، با <a href="#" class="text-primary">شرایط و قوانین</a> و <a href="#" class="text-primary">سیاست حفظ حریم خصوصی</a> زیما موافقت می‌کنید.
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    {% endif %}
+        </form>
+    </div>
+</section>
+
+<!-- Address Modal -->
+<div class="address-modal" id="addressModal">
+    <div class="modal-content-address">
+        <button class="modal-close" onclick="closeAddressModal()">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 class="modal-title-address" id="addressModalTitle">افزودن آدرس جدید</h2>
+        <form id="addressForm">
+            {% csrf_token %}
+            <input type="hidden" name="address_id" id="addressId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_full_name" class="form-label">نام و نام خانوادگی:</label>
+                    <input type="text" name="full_name" id="id_full_name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_phone_number" class="form-label">شماره تلفن:</label>
+                    <input type="tel" name="phone_number" id="id_phone_number" class="form-input" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_province" class="form-label">استان:</label>
+                    <select name="province" id="id_province" class="form-select" required>
+                        <option value="">انتخاب کنید</option>
+                        {# Populate with Iran provinces #}
+                        {% for province in provinces %}
+                            <option value="{{ province }}">{{ province }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="id_city" class="form-label">شهر:</label>
+                    <select name="city" id="id_city" class="form-select" required>
+                        <option value="">ابتدا استان را انتخاب کنید</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="id_address_line1" class="form-label">آدرس کامل:</label>
+                <textarea name="address_line1" id="id_address_line1" class="form-textarea" rows="3" required></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_postal_code" class="form-label">کد پستی:</label>
+                    <input type="text" name="postal_code" id="id_postal_code" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_is_default" class="form-label">آدرس پیش‌فرض:</label>
+                    <input type="checkbox" name="is_default" id="id_is_default" class="form-check-input mt-2">
+                </div>
+            </div>
+            <div class="modal-actions-bottom">
+                <button type="button" class="btn-cancel-modal" onclick="closeAddressModal()">انصراف</button>
+                <button type="submit" class="btn-save-address">ذخیره آدرس</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const provincesAndCities = {
+        "آذربایجان شرقی": ["تبریز", "مراغه", "مرند", "اهر"],
+        "آذربایجان غربی": ["ارومیه", "خوی", "میاندوآب", "مهاباد"],
+        "اردبیل": ["اردبیل", "پارس‌آباد", "مشگین‌شهر", "خلخال"],
+        "اصفهان": ["اصفهان", "کاشان", "خمینی‌شهر", "نجف‌آباد"],
+        "البرز": ["کرج", "فردیس", "کمال‌شهر", "نظرآباد"],
+        "ایلام": ["ایلام", "دهلران", "ایوان", "آبدانان"],
+        "بوشهر": ["بوشهر", "برازجان", "گناوه", "خورموج"],
+        "تهران": ["تهران", "اسلام‌شهر", "شهریار", "قدس"],
+        "چهارمحال و بختیاری": ["شهرکرد", "بروجن", "فرخ‌شهر", "فارسان"],
+        "خراسان جنوبی": ["بیرجند", "قاین", "طبس", "فردوس"],
+        "خراسان رضوی": ["مشهد", "سبزوار", "نیشابور", "تربت حیدریه"],
+        "خراسان شمالی": ["بجنورد", "شیروان", "اسفراین", "مانه و سملقان"],
+        "خوزستان": ["اهواز", "دزفول", "آبادان", "خرمشهر"],
+        "زنجان": ["زنجان", "ابهر", "خرمدره", "قیدار"],
+        "سمنان": ["سمنان", "شاهرود", "دامغان", "گرمسار"],
+        "سیستان و بلوچستان": ["زاهدان", "چابهار", "ایرانشهر", "زابل"],
+        "فارس": ["شیراز", "مرودشت", "جهرم", "فسا"],
+        "قزوین": ["قزوین", "تاکستان", "الوند", "محمدیه"],
+        "قم": ["قم"],
+        "کردستان": ["سنندج", "سقز", "مریوان", "بانه"],
+        "کرمان": ["کرمان", "سیرجان", "رفسنجان", "جیرفت"],
+        "کرمانشاه": ["کرمانشاه", "اسلام‌آباد غرب", "هرسین", "کنگاور"],
+        "کهگیلویه و بویراحمد": ["یاسوج", "گچساران", "دهدشت", "دوگنبدان"],
+        "گلستان": ["گرگان", "گنبد کاووس", "علی‌آباد کتول", "بندر ترکمن"],
+        "گیلان": ["رشت", "بندر انزلی", "لاهیجان", "لنگرود"],
+        "لرستان": ["خرم‌آباد", "بروجرد", "دورود", "کوهدشت"],
+        "مازندران": ["ساری", "بابل", "آمل", "قائم‌شهر"],
+        "مرکزی": ["اراک", "ساوه", "خمین", "محلات"],
+        "هرمزگان": ["بندرعباس", "میناب", "رودان", "قشم"],
+        "همدان": ["همدان", "ملایر", "نهاوند", "تویسرکان"],
+        "یزد": ["یزد", "میبد", "اردکان", "بافق"]
+    };
+
+    let selectedAddressId = null;
+    let selectedShippingMethodId = null;
+    let selectedShippingPrice = 0;
+    let selectedPaymentMethodId = null;
+    let cartSubtotal = parseFloat("{{ cart_total_price|floatformat:2 }}");
+    let discountAmount = parseFloat("{{ discount_amount|default:0|floatformat:2 }}");
+    let currentFinalPrice = parseFloat("{{ final_price|floatformat:2 }}");
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize selected values from backend context
+        selectedAddressId = "{{ selected_address.id|default:'' }}" ? parseInt("{{ selected_address.id }}") : null;
+        selectedShippingMethodId = "{{ selected_shipping_method.id|default:'' }}" ? parseInt("{{ selected_shipping_method.id }}") : null;
+        selectedShippingPrice = parseFloat("{{ selected_shipping_method.price|default:0|floatformat:2 }}");
+        selectedPaymentMethodId = "{{ selected_payment_method.id|default:'' }}" ? parseInt("{{ selected_payment_method.id }}") : null;
+
+        updateFinalPrice();
+        updatePlaceOrderButtonState();
+
+        // Address selection
+        document.querySelectorAll('.address-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.address-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                this.querySelector('input[type="radio"]').checked = true;
+                selectedAddressId = parseInt(this.dataset.addressId);
+                updatePlaceOrderButtonState();
+            });
+        });
+
+        // Shipping method selection
+        document.querySelectorAll('.shipping-method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.shipping-method-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                this.querySelector('input[type="radio"]').checked = true;
+                selectedShippingMethodId = parseInt(this.dataset.methodId);
+                selectedShippingPrice = parseFloat(this.dataset.price);
+                updateFinalPrice();
+                updatePlaceOrderButtonState();
+            });
+        });
+
+        // Payment method selection
+        document.querySelectorAll('.payment-method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                this.querySelector('input[type="radio"]').checked = true;
+                selectedPaymentMethodId = parseInt(this.dataset.methodId);
+                updatePlaceOrderButtonState();
+            });
+        });
+
+        // Coupon code application
+        document.getElementById('applyCouponBtn').addEventListener('click', function() {
+            const couponCode = document.getElementById('id_coupon_code').value;
+            applyCoupon(couponCode);
+        });
+
+        // Address Modal Logic
+        const addressModal = document.getElementById('addressModal');
+        const idProvince = document.getElementById('id_province');
+        const idCity = document.getElementById('id_city');
+
+        idProvince.addEventListener('change', function() {
+            const selectedProvince = this.value;
+            idCity.innerHTML = '<option value="">انتخاب کنید</option>';
+            if (selectedProvince && provincesAndCities[selectedProvince]) {
+                provincesAndCities[selectedProvince].forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    idCity.appendChild(option);
+                });
+            }
+        });
+
+        // Populate cities if a province is already selected (e.g., on edit)
+        if (idProvince.value) {
+            const event = new Event('change');
+            idProvince.dispatchEvent(event);
+        }
+
+        document.getElementById('addressForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveAddress();
+        });
+
+        // Initial check for place order button state
+        updatePlaceOrderButtonState();
+    });
+
+    function updateFinalPrice() {
+        let currentTotal = cartSubtotal + selectedShippingPrice - discountAmount;
+        currentFinalPrice = Math.max(0, currentTotal); // Final price cannot be negative
+        document.getElementById('shippingPrice').textContent = selectedShippingPrice.toLocaleString() + ' تومان';
+        document.getElementById('finalPrice').textContent = currentFinalPrice.toLocaleString() + ' تومان';
+    }
+
+    function updatePlaceOrderButtonState() {
+        const btn = document.getElementById('placeOrderBtn');
+        if (selectedAddressId && selectedShippingMethodId && selectedPaymentMethodId && currentFinalPrice > 0) {
+            btn.classList.remove('disabled');
+            btn.disabled = false;
+        } else {
+            btn.classList.add('disabled');
+            btn.disabled = true;
+        }
+    }
+
+    function applyCoupon(couponCode) {
+        fetch('{% url "orders:apply_coupon" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ 'coupon_code': couponCode })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const couponMessageDiv = document.getElementById('couponMessage');
+            couponMessageDiv.innerHTML = `<p class="{% if data.success %}text-success{% else %}text-danger{% endif %}">${data.message}</p>`;
+
+            if (data.success) {
+                discountAmount = parseFloat(data.discount_amount);
+                document.getElementById('discountPrice').textContent = `- ${discountAmount.toLocaleString()} تومان`;
+                updateFinalPrice();
+                showToast(data.message, 'tags');
+            } else {
+                discountAmount = 0; // Reset discount if coupon fails
+                updateFinalPrice();
+                showToast(data.message, 'exclamation-triangle');
+            }
+        })
+        .catch(error => {
+            console.error('Error applying coupon:', error);
+            showToast('خطا در اعمال کد تخفیف', 'exclamation-triangle');
+        });
+    }
+
+    function openAddressModal(addressId = null) {
+        const addressModal = document.getElementById('addressModal');
+        const addressModalTitle = document.getElementById('addressModalTitle');
+        const addressForm = document.getElementById('addressForm');
+        addressForm.reset(); // Clear previous data
+
+        document.getElementById('addressId').value = '';
+        document.getElementById('id_is_default').checked = false;
+
+        if (addressId) {
+            addressModalTitle.textContent = 'ویرایش آدرس';
+            // Fetch address data to populate form
+            fetch(`/profile/address/${addressId}/edit/`) // Adjust URL as per your Django setup
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('addressId').value = data.id;
+                    document.getElementById('id_full_name').value = data.full_name;
+                    document.getElementById('id_phone_number').value = data.phone_number;
+                    document.getElementById('id_province').value = data.province;
+                    // Trigger change event for province to populate cities
+                    const event = new Event('change');
+                    document.getElementById('id_province').dispatchEvent(event);
+                    setTimeout(() => { // Give a small delay for cities to populate
+                        document.getElementById('id_city').value = data.city;
+                    }, 100);
+                    document.getElementById('id_address_line1').value = data.address_line1;
+                    document.getElementById('id_postal_code').value = data.postal_code;
+                    document.getElementById('id_is_default').checked = data.is_default;
+                });
+        } else {
+            addressModalTitle.textContent = 'افزودن آدرس جدید';
+        }
+        addressModal.classList.add('active');
+    }
+
+    function closeAddressModal() {
+        document.getElementById('addressModal').classList.remove('active');
+    }
+
+    function saveAddress() {
+        const formData = new FormData(document.getElementById('addressForm'));
+        const addressId = document.getElementById('addressId').value;
+        const url = addressId ? `/profile/address/${addressId}/edit/` : '{% url "users:add_address" %}'; // Adjust URLs
+        const method = addressId ? 'POST' : 'POST'; // Django forms handle PUT/PATCH via POST with hidden field
+
+        fetch(url, {
+            method: method,
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'check-circle');
+                closeAddressModal();
+                setTimeout(() => location.reload(), 1000); // Reload to update address list
+            } else {
+                showToast(data.message, 'exclamation-triangle');
+                // Display form errors if any
+                if (data.errors) {
+                    for (const field in data.errors) {
+                        const input = document.getElementById(`id_${field}`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'invalid-feedback';
+                            errorDiv.textContent = data.errors[field].join(', ');
+                            input.parentNode.appendChild(errorDiv);
+                        }
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            showToast('خطا در ذخیره آدرس', 'exclamation-triangle');
+            console.error('Error saving address:', error);
+        });
+    }
+
+    // Global Toast notification function (ensure this is defined once in base.html or a common JS file)
+    function showToast(message, icon) {
+        // Remove existing toasts
+        document.querySelectorAll('.toast').forEach(toast => toast.remove());
+
+        const toast = document.createElement('div');
+        toast.className = 'toast show';
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="fas fa-${icon}"></i>
+            </div>
+            <div class="toast-message">${message}</div>
+        `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+</script>
 {% endblock %}
