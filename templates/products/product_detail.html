@@ -4,6 +4,7 @@
 {% block title %}{{ product.name }} | زیما{% endblock %}
 
 {% block meta_description %}{{ product.description|truncatewords:20 }}{% endblock %}
+{% block body_class %}animated-bg-page{% endblock %} {# ✅ این خط اضافه شد #}
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/pages/product_detail.css' %}">
 {% endblock %}

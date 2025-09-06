@@ -18,7 +18,31 @@
     {# برای استایل‌های خاص هر صفحه (بعدا اضافه می‌شود) #}
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
+
+    <!-- ✅ START: لایه‌های پس‌زمینه متحرک (fixed) -->
+    <div class="animated-gradient-background"></div>
+    <div class="floating-particles-container">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+    <div class="floating-stars-container">
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+    </div>
+    <!-- ✅ END: لایه‌های پس‌زمینه متحرک -->
+
     <!-- Loading Screen -->
     <div class="loader" id="loader">
         <div class="loader-content">

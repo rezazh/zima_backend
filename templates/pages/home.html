@@ -3,6 +3,8 @@
 {% load currency_filters %} {# تغییر: اضافه کردن لود فیلترهای ارز #}
 
 {% block title %}زیما | زیبایی خصوصی شما{% endblock %}
+{% block body_class %}animated-bg-page{% endblock %} {# ✅ این خط اضافه شد #}
+
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/pages/home.css' %}">
     <style>

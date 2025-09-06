@@ -6,31 +6,16 @@
 .products-hero {
     margin-top: 80px; /* فضای بالای ناوبار ثابت */
     padding: 80px 0;
-    background: linear-gradient(135deg,
-        var(--zima-blush) 0%,
-        var(--zima-champagne) 50%,
-        var(--zima-pearl) 100%);
+    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
     text-align: center;
     position: relative;
     overflow: hidden;
+    z-index: 2; /* ✅ اضافه شد: برای اینکه محتوای Hero روی پس‌زمینه باشد */
 }
 
-.products-hero::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, var(--secondary-color) 0%, transparent 70%);
-    opacity: 0.05;
-    animation: rotate 30s linear infinite;
-}
-
-@keyframes rotate {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+/* ❌ حذف شد: products-hero::before و rotate دیگر نیازی نیستند */
+/* .products-hero::before { ... } */
+/* @keyframes rotate { ... } */
 
 .hero-content {
     position: relative;
@@ -44,7 +29,7 @@
     font-size: 4rem;
     font-weight: 800;
     margin-bottom: 20px;
-    font-family: 'Zima-Bold', sans-serif; /* استفاده از فونت Zima-Bold */
+    font-family: 'Zima-Bold', sans-serif;
     background: linear-gradient(135deg, var(--zima-deep), var(--secondary-color), var(--primary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -78,6 +63,20 @@
 
 .breadcrumb span {
     color: var(--secondary-color);
+}
+
+/* ---------------------------------------------------- */
+/* == Main Products Section == */
+/* ---------------------------------------------------- */
+.products-main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 40px;
+    max-width: 1600px;
+    margin: 40px auto 80px;
+    padding: 0 40px;
+    position: relative; /* ✅ اضافه شد: برای اینکه محتوای محصولات روی پس‌زمینه باشد */
+    z-index: 2;
 }
 
 /* ---------------------------------------------------- */
@@ -143,6 +142,31 @@
 }
 
 /* Responsive Design for List Page */
+@media (max-width: 992px) {
+    .products-main {
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -300px; /* Hidden by default */
+        width: 280px;
+        height: 100%;
+        background: white;
+        z-index: 100;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        padding-top: 80px;
+    }
+    .sidebar.active {
+        left: 0;
+    }
+    .mobile-filter-toggle {
+        display: flex;
+    }
+}
+
 @media (max-width: 768px) {
     .products-hero {
         padding: 60px 0;

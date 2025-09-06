@@ -9,56 +9,18 @@
     display: flex;
     align-items: center;
     overflow: hidden;
-    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne), var(--zima-mauve)); /* از پالت قبلی */
-    padding-top: 100px; /* برای جبران ناوبار ثابت */
+    padding-top: 100px;
+    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
 }
 
-.hero-shapes {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
+/* ❌ حذف شد: hero-shapes و shape دیگر نیازی نیستند چون افکت‌های global جایگزین شدند */
+/* .hero-shapes { ... } */
+/* .shape { ... } */
+/* .shape:nth-child(1) { ... } */
+/* .shape:nth-child(2) { ... } */
+/* .shape:nth-child(3) { ... } */
+/* @keyframes float { ... } */
 
-.shape {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.1;
-    animation: float 20s ease-in-out infinite;
-}
-
-.shape:nth-child(1) {
-    width: 300px;
-    height: 300px;
-    background: var(--zima-rose);
-    top: 10%;
-    right: 10%;
-    animation-delay: 0s;
-}
-
-.shape:nth-child(2) {
-    width: 200px;
-    height: 200px;
-    background: var(--primary-color);
-    top: 60%;
-    left: 15%;
-    animation-delay: 5s;
-}
-
-.shape:nth-child(3) {
-    width: 150px;
-    height: 150px;
-    background: var(--secondary-color);
-    bottom: 20%;
-    right: 20%;
-    animation-delay: 10s;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0) scale(1); }
-    33% { transform: translateY(-30px) scale(1.1); }
-    66% { transform: translateY(20px) scale(0.9); }
-}
 
 .hero-container {
     max-width: 1400px;
@@ -69,7 +31,7 @@
     align-items: center;
     gap: 80px;
     position: relative;
-    z-index: 2;
+    z-index: 2; /* ✅ اضافه شد: برای اینکه محتوای Hero روی پس‌زمینه باشد */
 }
 
 .hero-content {
@@ -103,12 +65,12 @@
     line-height: 1.1;
     margin-bottom: 25px;
     color: var(--text-color-dark);
-    font-family: 'Zima-Bold', sans-serif; /* استفاده از فونت Zima-Bold */
+    font-family: 'Zima-Bold', sans-serif;
 }
 
 .hero-title .highlight {
     color: var(--primary-color);
-    font-family: 'ZimaFont', cursive; /* استفاده از ZimaFont با جلوه دست‌نویس */
+    font-family: 'ZimaFont', cursive;
     font-weight: bold;
 }
 
@@ -196,38 +158,22 @@
     box-shadow: 0 30px 60px var(--shadow-soft);
 }
 
-.floating-elements {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-}
-.floating-element {
-    position: absolute;
-    animation: gentleFloat 8s ease-in-out infinite;
-}
+/* ❌ حذف شد: floating-elements دیگر نیازی نیستند چون افکت‌های global جایگزین شدند */
+/* .floating-elements { ... } */
+/* .floating-element { ... } */
+/* .floating-element:nth-child(1) { ... } */
+/* .floating-element:nth-child(2) { ... } */
+/* @keyframes gentleFloat { ... } */
 
-.floating-element:nth-child(1) {
-    top: 10%;
-    left: 10%;
-    animation-delay: 0s;
-}
-.floating-element:nth-child(2) {
-    bottom: 20%;
-    left: 20%;
-    animation-delay: 4s;
-}
-
-@keyframes gentleFloat {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-20px) rotate(180deg); }
-}
 
 /* ---------------------------------------------------- */
 /* == Collections Section == */
 /* ---------------------------------------------------- */
 .collections {
     padding: 120px 0;
-    background: var(--background-light);
+    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
+    position: relative; /* ✅ اضافه شد: برای اینکه محتوای Collections روی پس‌زمینه باشد */
+    z-index: 2;
 }
 
 .section-header {
@@ -252,11 +198,11 @@
     font-weight: 700;
     margin-bottom: 25px;
     color: var(--text-color-dark);
-    font-family: 'Zima-Bold', sans-serif; /* استفاده از فونت Zima-Bold */
+    font-family: 'Zima-Bold', sans-serif;
 }
 
 .section-title .script {
-    font-family: 'ZimaFont', cursive; /* استفاده از ZimaFont با جلوه دست‌نویس */
+    font-family: 'ZimaFont', cursive;
     color: var(--primary-color);
     font-weight: bold;
 }
@@ -357,7 +303,9 @@
 /* ---------------------------------------------------- */
 .featured {
     padding: 120px 0;
-    background: linear-gradient(135deg, var(--background-medium) 0%, var(--zima-champagne) 100%);
+    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
+    position: relative; /* ✅ اضافه شد: برای اینکه محتوای Featured روی پس‌زمینه باشد */
+    z-index: 2;
 }
 
 .products-container {
@@ -371,7 +319,9 @@
 /* ---------------------------------------------------- */
 .testimonials {
     padding: 120px 0;
-    background: var(--background-light);
+    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
+    position: relative; /* ✅ اضافه شد: برای اینکه محتوای Testimonials روی پس‌زمینه باشد */
+    z-index: 2;
 }
 
 .testimonials-container {

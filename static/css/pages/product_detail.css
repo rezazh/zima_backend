@@ -4,8 +4,10 @@
 /* == Breadcrumb Section == */
 /* ---------------------------------------------------- */
 .product-breadcrumb {
-    padding: 120px 0 40px;
-    background: var(--background-light);
+    padding: 140px 0 40px; /* افزایش padding-top برای ناوبار ثابت */
+    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
+    position: relative; /* ✅ اضافه شد: برای اینکه محتوای Breadcrumb روی پس‌زمینه باشد */
+    z-index: 2;
 }
 
 .container {
@@ -41,7 +43,9 @@
 /* ---------------------------------------------------- */
 .product-detail-section {
     padding: 60px 0;
-    background: white;
+    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
+    position: relative; /* ✅ اضافه شد: برای اینکه محتوای Product Detail روی پس‌زمینه باشد */
+    z-index: 2;
 }
 
 .product-detail-wrapper {
@@ -49,6 +53,10 @@
     grid-template-columns: 1fr 1fr;
     gap: 80px;
     align-items: start;
+    background: white; /* ✅ اضافه شد: برای خوانایی بهتر، این بخش اصلی سفید باشد */
+    border-radius: 20px;
+    box-shadow: 0 10px 30px var(--shadow-soft);
+    padding: 40px;
 }
 
 /* Product Images */
@@ -156,7 +164,7 @@
     color: var(--text-color-dark);
     margin-bottom: 20px;
     line-height: 1.2;
-    font-family: 'Zima-Bold', sans-serif; /* استفاده از فونت Zima-Bold */
+    font-family: 'Zima-Bold', sans-serif;
 }
 
 .product-rating-detail {
@@ -208,7 +216,7 @@
     font-size: 2.2rem;
     font-weight: 800;
     color: var(--primary-color);
-    font-family: 'Zima-Bold', sans-serif; /* استفاده از فونت Zima-Bold */
+    font-family: 'Zima-Bold', sans-serif;
 }
 
 .original-price {
@@ -346,7 +354,7 @@
 .color-option-detail.active,
 .color-option-detail input:checked + .color-option-detail {
     border-color: var(--secondary-color);
-    box-shadow: 0 0 0 2px var(--secondary-color), 0 4px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 0 0 2px white, 0 0 0 5px var(--secondary-color);
     transform: scale(1.15);
 }
 
@@ -386,7 +394,7 @@
     font-weight: 600;
     outline: none;
     -moz-appearance: textfield;
-    font-family: 'ZimaFont', sans-serif; /* استفاده از فونت ZimaFont */
+    font-family: 'ZimaFont', sans-serif;
 }
 
 .quantity-input-detail::-webkit-outer-spin-button,
@@ -524,7 +532,9 @@
 /* Product Tabs */
 .product-tabs-section {
     padding: 80px 0;
-    background: var(--background-light);
+    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
+    position: relative; /* ✅ اضافه شد: برای اینکه محتوای Tabs روی پس‌زمینه باشد */
+    z-index: 2;
 }
 
 .tabs-wrapper {
@@ -641,7 +651,7 @@
     font-weight: 800;
     color: var(--primary-color);
     display: block;
-    font-family: 'Zima-Bold', sans-serif; /* استفاده از فونت Zima-Bold */
+    font-family: 'Zima-Bold', sans-serif;
 }
 
 .total-reviews {
@@ -720,7 +730,7 @@
     padding: 15px;
     border: 2px solid #eee;
     border-radius: 10px;
-    font-family: 'ZimaFont', sans-serif; /* استفاده از فونت ZimaFont */
+    font-family: 'ZimaFont', sans-serif;
     font-size: 1rem;
     resize: vertical;
     outline: none;
@@ -871,7 +881,7 @@
     padding: 15px;
     border: 2px solid #eee;
     border-radius: 10px;
-    font-family: 'ZimaFont', sans-serif; /* استفاده از فونت ZimaFont */
+    font-family: 'ZimaFont', sans-serif;
     resize: vertical;
     outline: none;
 }
@@ -942,7 +952,9 @@
 /* Related Products */
 .related-products-section {
     padding: 80px 0;
-    background: white;
+    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
+    position: relative; /* ✅ اضافه شد: برای اینکه محتوای Related Products روی پس‌زمینه باشد */
+    z-index: 2;
 }
 
 .related-products-grid {
@@ -1011,7 +1023,7 @@
 .product-detail-container {
  max-width: 1400px;
  margin: 0 auto;
- padding: 140px 50px 60px; /* افزایش padding-top */
+ padding: 0 50px; /* Padding top از Breadcrumb می‌آید */
 }
 
 /* استایل‌های زوم تصویر */
@@ -1106,125 +1118,18 @@
  .product-detail-container {
  padding: 120px 20px 40px;
  }
-
+ .product-detail-wrapper {
+    grid-template-columns: 1fr;
+    padding: 20px;
+ }
  .zoom-container {
  width: 95vw;
  height: 70vh;
  }
 }
 
-/* اصلاحات برای نمایش صحیح انتخاب رنگ و سایز در صفحه جزئیات */
-.color-option-detail.disabled,
-.size-option-detail.disabled {
-    opacity: 0.3 !important;
-    pointer-events: none !important;
-}
-
-.color-option-detail.active {
-    border: 3px solid var(--secondary-color) !important;
-    box-shadow: 0 0 0 2px white, 0 0 0 5px var(--secondary-color) !important;
-    transform: scale(1.15) !important;
-}
-
-.size-option-detail.active span {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
-    color: white !important;
-    border-color: transparent !important;
-}
-
-/* استایل برای زوم تصویر */
-.zoom-container {
-    overflow: hidden;
-    cursor: grab;
-    width: 80vw;
-    height: 80vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.zoom-container:active {
-    cursor: grabbing;
-}
-
-.zoom-container img {
-    max-width: none;
-    max-height: none;
-    width: auto;
-    height: auto;
-    transition: transform 0.1s ease;
-    user-select: none;
-}
-
-/* اصلاح padding برای جلوگیری از قرار گرفتن زیر هدر */
-.product-breadcrumb {
-    padding: 140px 0 40px !important;
-}
-
-/* Toast notifications */
-.toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: white;
-    border-radius: 10px;
-    padding: 15px 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 10001;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-}
-
-.toast.show {
-    transform: translateX(0);
-}
-
-.toast-icon {
-    color: var(--primary-color);
-    font-size: 1.2rem;
-}
-
-.toast-message {
-    color: var(--text-color-dark);
-    font-weight: 500;
-}
-
-/* استایل‌های مشترک برای صفحات احراز هویت */
-.auth-section .form-input::placeholder {
- color: #999;
- opacity: 1;
-}
-
-.auth-section .password-toggle:hover {
- color: var(--primary-color);
-}
-
-.auth-section .strength-text {
- font-size: 0.8rem;
- margin-top: 5px;
-}
-
-/* انیمیشن برای دکمه‌ها */
-.btn-auth:active {
- transform: translateY(0);
-}
-
-/* بهبود responsive */
 @media (max-width: 480px) {
- .auth-container {
- padding: 0 10px;
- }
-
- .auth-wrapper {
- margin: 10px;
- border-radius: 15px;
- }
-
- .auth-form-section,
- .auth-welcome {
- padding: 30px 20px;
- }
+    .product-detail-wrapper {
+        padding: 15px;
+    }
 }

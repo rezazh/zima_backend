@@ -61,17 +61,69 @@
 /* == Body Styles (Global Typography) == */
 /* ---------------------------------------------------- */
 body {
-    font-family: 'Zima', sans-serif; /* استفاده از فونت جدید Zima */
-    background: var(--background-light);
+    font-family: 'ZimaFont', sans-serif;
     color: var(--text-color-dark);
     overflow-x: hidden;
-    cursor: none; /* For custom cursor */
+    cursor: none;
     line-height: 1.7;
     direction: rtl;
     text-align: right;
-    padding-top: 40px !important; /* Base padding for fixed navbar */
+
+    /* ✅ ✅ ✅ بخش پس‌زمینه جدید و کامل ✅ ✅ ✅ */
+    background-color: var(--zima-blush); /* رنگ پایه */
+    /* لایه اول: ذرات شناور */
+    background-image:
+        radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 1%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 1.5%),
+        radial-gradient(circle at 30% 90%, rgba(255, 255, 255, 0.08) 0%, transparent 1%),
+        radial-gradient(circle at 60% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 1.2%),
+        /* لایه دوم: گرادینت شفق قطبی */
+        linear-gradient(-45deg, var(--zima-blush), var(--zima-champagne), var(--zima-pearl));
+
+    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 400% 400%;
+    background-position: 0 0, 0 0, 0 0, 0 0, 50% 50%;
+
+    animation:
+        auroraGradient 25s ease infinite,
+        particles 30s linear infinite;
+    /* ✅ ✅ ✅ پایان بخش پس‌زمینه جدید ✅ ✅ ✅ */
+}
+/* ✅ اضافه شد: انیمیشن‌های جدید برای پس‌زمینه */
+@keyframes auroraGradient {
+    0% { background-position: 0% 50%, 0 0, 0 0, 0 0, 0% 50%; }
+    50% { background-position: 0% 50%, 0 0, 0 0, 0 0, 100% 50%; }
+    100% { background-position: 0% 50%, 0 0, 0 0, 0 0, 0% 50%; }
 }
 
+@keyframes particles {
+    0% { background-position: 0% 50%, 80% 20%, 30% 90%, 60% 70%, 50% 50%; }
+    25% { background-position: 10% 60%, 70% 30%, 40% 80%, 50% 60%, 50% 50%; }
+    50% { background-position: 20% 70%, 60% 40%, 50% 70%, 40% 50%, 50% 50%; }
+    75% { background-position: 10% 60%, 70% 30%, 40% 80%, 50% 60%, 50% 50%; }
+    100% { background-position: 0% 50%, 80% 20%, 30% 90%, 60% 70%, 50% 50%; }
+}
+
+/* برای اینکه محتوای اصلی روی پس‌زمینه قرار بگیرد */
+main {
+    position: relative;
+    z-index: 2;
+}
+/* ✅ اضافه شد: استایل‌های جدید برای پس‌زمینه شفق قطبی */
+
+
+
+.page-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("{% static 'images/patterns/subtle-pattern.png' %}"); /* مسیر استاتیک در CSS کار نمی‌کند، این به عنوان یادآوری است */
+    /* نکته: مسیر بالا باید در تگ style داخل HTML باشد یا به صورت относительный تعریف شود. ما در base.html این کار را می‌کنیم. */
+    opacity: 0.03;
+    pointer-events: none;
+}
 /* برای اطمینان از اعمال فونت بولد Zima-Bold بر روی تمام عناصر بولد و تیترها */
 b, strong, h1, h2, h3, h4, h5, h6 {
     font-family: 'Zima-Bold', sans-serif;
@@ -779,3 +831,50 @@ main {
         display: none !important;
     }
 }
+
+/* ---------------------------------------------------- */
+/* == ✅ START: New Floating & Rotating Stars Effect == */
+/* ---------------------------------------------------- */
+
+.stars-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0; /* پشت محتوای اصلی */
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.star-particle {
+    position: absolute;
+    color: rgba(218, 165, 32, 0.4); /* رنگ طلایی بسیار ملایم */
+    text-shadow: 0 0 15px rgba(218, 165, 32, 0.5);
+    animation: gentleFloat 30s ease-in-out infinite;
+}
+
+@keyframes gentleFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0.7;
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+        opacity: 0.4;
+    }
+}
+
+/* تعریف ستاره‌های مختلف با اندازه‌ها، موقعیت‌ها و سرعت‌های متفاوت */
+.star-particle:nth-child(1) { top: 15%; left: 10%; font-size: 1.2rem; animation-delay: 0s; animation-duration: 25s; }
+.star-particle:nth-child(2) { top: 80%; left: 20%; font-size: 0.8rem; animation-delay: 5s; animation-duration: 40s; }
+.star-particle:nth-child(3) { top: 5%; left: 40%; font-size: 1.5rem; animation-delay: 10s; animation-duration: 35s; }
+.star-particle:nth-child(4) { top: 40%; left: 60%; font-size: 0.9rem; animation-delay: 2s; animation-duration: 28s; }
+.star-particle:nth-child(5) { top: 70%; left: 80%; font-size: 1.3rem; animation-delay: 7s; animation-duration: 32s; }
+.star-particle:nth-child(6) { top: 90%; left: 95%; font-size: 0.7rem; animation-delay: 12s; animation-duration: 45s; }
+.star-particle:nth-child(7) { top: 50%; left: 5%; font-size: 1.0rem; animation-delay: 15s; animation-duration: 38s; }
+.star-particle:nth-child(8) { top: 25%; left: 90%; font-size: 1.4rem; animation-delay: 1s; animation-duration: 29s; }
+
+/* ---------------------------------------------------- */
+/* == ✅ END: New Floating & Rotating Stars Effect == */
+/* ---------------------------------------------------- */
