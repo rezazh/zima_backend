@@ -1,5 +1,6 @@
 {% extends 'base/base.html' %}
 {% load static %}
+{% load currency_filters %} {# ✅ اطمینان از وجود این خط #}
 
 {% block title %}سبد خرید | زیما{% endblock %}
 
@@ -886,10 +887,10 @@
                         <div class="item-price">
                             <div class="price-container">
                                 {% if item.product.has_discount %}
-                                <div class="original-price">{{ item.product.price|floatformat:0 }} تومان</div>
-                                <div class="current-price discounted-price">{{ item.get_unit_price|floatformat:0 }} تومان</div>
+                                <div class="original-price">{{ item.product.get_formatted_price }} تومان</div>
+                                <div class="current-price discounted-price">{{ item.product.get_formatted_display_price}} تومان</div>
                                 {% else %}
-                                <div class="current-price">{{ item.get_unit_price|floatformat:0 }} تومان</div>
+                                <div class="current-price">{{ item.product.get_formatted_price }} تومان</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -918,7 +919,7 @@
 
                         <!-- Total Price -->
                         <div class="item-total">
-                            <div class="total-price">{{ item.get_final_price|floatformat:0 }} تومان</div>
+                            <div class="total-price">{{ item.get_final_price|fa_currency }} تومان</div>
                         </div>
 
                         <!-- Actions -->
@@ -982,27 +983,27 @@
                     <!-- Order Summary -->
                     <div class="summary-row">
                         <span class="summary-label">جمع کل محصولات:</span>
-                        <span class="summary-value">{{ cart_total.original_subtotal|floatformat:0 }} تومان</span>
+                        <span class="summary-value">{{ cart_total.original_subtotal|fa_currency }} تومان</span>
                     </div>
 
                     {% if cart_total.product_discount > 0 %}
                     <div class="summary-row">
                         <span class="summary-label">تخفیف محصولات:</span>
-                        <span class="summary-value discount-value">-{{ cart_total.product_discount|floatformat:0 }} تومان</span>
+                        <span class="summary-value discount-value">-{{ cart_total.product_discount|fa_currency }} تومان</span>
                     </div>
                     {% endif %}
 
                     {% if cart_total.coupon_discount > 0 %}
                     <div class="summary-row">
                         <span class="summary-label">تخفیف کد:</span>
-                        <span class="summary-value discount-value">-{{ cart_total.coupon_discount|floatformat:0 }} تومان</span>
+                        <span class="summary-value discount-value">-{{ cart_total.coupon_discount|fa_currency }} تومان</span>
                     </div>
                     {% endif %}
 
                     <div class="summary-row">
                         <span class="summary-label">هزینه ارسال:</span>
                         {% if cart_total.shipping_cost > 0 %}
-                        <span class="summary-value">{{ cart_total.shipping_cost|floatformat:0 }} تومان</span>
+                        <span class="summary-value">{{ cart_total.shipping_cost|fa_currency }} تومان</span>
                         {% else %}
                         <span class="summary-value shipping-free">رایگان</span>
                         {% endif %}
@@ -1011,13 +1012,13 @@
                     {% if cart_total.tax_amount > 0 %}
                     <div class="summary-row">
                         <span class="summary-label">مالیات:</span>
-                        <span class="summary-value">{{ cart_total.tax_amount|floatformat:0 }} تومان</span>
+                        <span class="summary-value">{{ cart_total.tax_amount|fa_currency }} تومان</span>
                     </div>
                     {% endif %}
 
                     <div class="summary-row total-row">
                         <span class="summary-label">مبلغ نهایی:</span>
-                        <span class="summary-value">{{ cart_total.total|floatformat:0 }} تومان</span>
+                        <span class="summary-value">{{ cart_total.total|fa_currency }} تومان</span>
                     </div>
 
                     <!-- Security Features -->
@@ -1055,7 +1056,7 @@
                             <i class="fas fa-info-circle"></i>
                             نزدیک به ارسال رایگان!
                         </h6>
-                        <p>با خرید {{ cart_total.free_shipping_remaining|floatformat:0 }} تومان بیشتر، ارسال رایگان خواهد بود!</p>
+                        <p>با خرید {{ cart_total.free_shipping_remaining|fa_currency }} تومان بیشتر، ارسال رایگان خواهد بود!</p>
                     </div>
                     {% endif %}
 

@@ -1,6 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load price_filters %} {# برای فیلتر قیمت در صورت نیاز #}
+{% load currency_filters %} {# ✅ اطمینان از وجود این خط به جای price_filters #}
 
 {% block title %}تکمیل سفارش | زیما{% endblock %}
 
@@ -62,7 +62,7 @@
                                             <h4>{{ method.name }}</h4>
                                             <p>{{ method.description }}</p>
                                         </div>
-                                        <span class="method-price">{{ method.price|floatformat:0 }} تومان</span>
+                                        <span class="method-price">{{ method.price|fa_currency }} تومان</span>
                                     </label>
                                 {% endfor %}
                             </div>
@@ -134,7 +134,7 @@
                                         (تعداد: {{ item.quantity }})
                                     </p>
                                 </div>
-                                <span class="summary-product-price">{{ item.get_total_price|floatformat:0 }} تومان</span>
+                                <span class="summary-product-price">{{ item.get_total_price|fa_currency }} تومان</span>
                             </div>
                             {% endfor %}
                         </div>
@@ -142,21 +142,21 @@
                         <div class="summary-prices">
                             <div class="price-row">
                                 <span>مبلغ کل محصولات:</span>
-                                <span id="subtotalPrice">{{ cart_total_price|floatformat:0 }} تومان</span>
+                                <span id="subtotalPrice">{{ cart_total_price|fa_currency }} تومان</span>
                             </div>
                             <div class="price-row">
                                 <span>هزینه ارسال:</span>
-                                <span id="shippingPrice">{{ selected_shipping_method.price|default:0|floatformat:0 }} تومان</span>
+                                <span id="shippingPrice">{{ selected_shipping_method.price|default:0|fa_currency }} تومان</span>
                             </div>
                             {% if discount_amount %}
                             <div class="price-row">
                                 <span>تخفیف:</span>
-                                <span id="discountPrice">- {{ discount_amount|floatformat:0 }} تومان</span>
+                                <span id="discountPrice">- {{ discount_amount|fa_currency }} تومان</span>
                             </div>
                             {% endif %}
                             <div class="total-price-row">
                                 <span>مبلغ نهایی:</span>
-                                <span id="finalPrice">{{ final_price|floatformat:0 }} تومان</span>
+                                <span id="finalPrice">{{ final_price|fa_currency }} تومان</span>
                             </div>
                         </div>
 
@@ -365,11 +365,13 @@
         updatePlaceOrderButtonState();
     });
 
-    function updateFinalPrice() {
+     function updateFinalPrice() {
         let currentTotal = cartSubtotal + selectedShippingPrice - discountAmount;
         currentFinalPrice = Math.max(0, currentTotal); // Final price cannot be negative
-        document.getElementById('shippingPrice').textContent = selectedShippingPrice.toLocaleString() + ' تومان';
-        document.getElementById('finalPrice').textContent = currentFinalPrice.toLocaleString() + ' تومان';
+
+        // از تابع formatPrice که در zima_theme_v2.js ساختیم استفاده می‌کنیم
+        document.getElementById('shippingPrice').textContent = formatPrice(selectedShippingPrice);
+        document.getElementById('finalPrice').textContent = formatPrice(currentFinalPrice);
     }
 
     function updatePlaceOrderButtonState() {
@@ -383,7 +385,7 @@
         }
     }
 
-    function applyCoupon(couponCode) {
+     function applyCoupon(couponCode) {
         fetch('{% url "orders:apply_coupon" %}', {
             method: 'POST',
             headers: {
@@ -399,7 +401,8 @@
 
             if (data.success) {
                 discountAmount = parseFloat(data.discount_amount);
-                document.getElementById('discountPrice').textContent = `- ${discountAmount.toLocaleString()} تومان`;
+                // استفاده از formatNumber برای نمایش عدد تخفیف
+                document.getElementById('discountPrice').textContent = `- ${formatNumber(discountAmount)} تومان`;
                 updateFinalPrice();
                 showToast(data.message, 'tags');
             } else {

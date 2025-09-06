@@ -12,11 +12,11 @@
         <div class="d-flex justify-content-between align-items-center mt-auto">
             {% if product.has_discount %}
             <div>
-                <span class="text-muted text-decoration-line-through">{{ product.price|floatformat:0 }}</span>
-                <span class="text-danger fw-bold">{{ product.get_discount_price|floatformat:0 }} تومان</span>
+                <span class="text-muted text-decoration-line-through">{{ product.get_formatted_price }}</span>
+                <span class="text-danger fw-bold">{{ product.get_formatted_display_price}} تومان</span>
             </div>
             {% else %}
-            <span class="text-danger fw-bold">{{ product.price|floatformat:0 }} تومان</span>
+            <span class="text-danger fw-bold">{{ product.get_formatted_display_price }} تومان</span>
             {% endif %}
             <a href="{{ product.get_absolute_url }}" class="btn btn-primary btn-sm">مشاهده محصول</a>
         </div>

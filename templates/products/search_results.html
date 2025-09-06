@@ -264,9 +264,9 @@
                     </div>
                     <div class="product-price-container">
                         <div class="product-price">
-                            <span class="price-current">{{ product.get_display_price|floatformat:0 }} تومان</span>
+                            <span class="price-current">{{ product.get_formatted_display_price }} تومان</span>
                             {% if product.has_discount %}
-                            <span class="price-original">{{ product.price|floatformat:0 }} تومان</span>
+                            <span class="price-original">{{ product.get_formatted_price }} تومان</span>
                             {% endif %}
                         </div>
                         {% if product.has_discount %}

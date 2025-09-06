@@ -6,6 +6,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 import uuid
 import os
+from django.contrib.humanize.templatetags.humanize import intcomma # ✅ این خط را اضافه کنید
 
 
 def get_product_image_path(instance, filename):
@@ -101,7 +102,6 @@ class Product(models.Model):
     discount_percent = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(100)],
                                                    verbose_name='درصد تخفیف')
 
-    # stock = models.PositiveIntegerField(default=0, verbose_name='موجودی')
     is_active = models.BooleanField(default=True, verbose_name='فعال')
     is_featured = models.BooleanField(default=False, verbose_name='محصول ویژه')
 
@@ -174,6 +174,26 @@ class Product(models.Model):
             discount_amount = (self.price * self.discount_percent) / 100
             return int(self.price - discount_amount)
         return self.price
+
+    # ✅✅✅ متدهای جدید به اینجا (خارج از متد قبلی) منتقل شدند ✅✅✅
+    def get_formatted_price(self):
+        """قیمت اصلی محصول را با استفاده از فرمت‌بندی استاندارد پایتون کاماگذاری می‌کند."""
+        try:
+            price_int = int(self.price)
+            # این روش به تنظیمات locale جنگو احترام می‌گذارد و جداکننده صحیح را استفاده می‌کند
+            return f"{price_int:,}"
+        except (ValueError, TypeError):
+            return self.price
+
+    def get_formatted_display_price(self):
+        """قیمت نهایی (با تخفیف) را با استفاده از فرمت‌بندی استاندارد پایتون کاماگذاری می‌کند."""
+        try:
+            display_price_int = int(self.get_discount_price())
+            # این روش به تنظیمات locale جنگو احترام می‌گذارد و جداکننده صحیح را استفاده می‌کند
+            return f"{display_price_int:,}"
+        except (ValueError, TypeError):
+            return self.get_discount_price()
+
 
     def get_available_colors(self):
         from django.db.models import Q

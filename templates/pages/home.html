@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load currency_filters %} {# تغییر: اضافه کردن لود فیلترهای ارز #}
 
 {% block title %}زیما | زیبایی خصوصی شما{% endblock %}
 {% block extra_css %}
@@ -185,9 +186,9 @@
                     </div>
                     <div class="product-price">
                         {% if product.has_discount %}
-                        <span style="text-decoration: line-through; color: var(--warm-gray); font-size: 1rem; margin-left: 10px;">{{ product.price|floatformat:0 }}</span>                        {{ product.get_discount_price|floatformat:0 }} تومان
+                        <span style="text-decoration: line-through; color: var(--warm-gray); font-size: 1rem; margin-left: 10px;">{{ product.price|fa_currency }}</span>
                         {% else %}
-                        {{ product.price|floatformat:0 }} تومان
+                        {{ product.price|fa_currency }}
                         {% endif %}
                     </div>
                     <div class="product-actions">

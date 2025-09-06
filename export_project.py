@@ -57,6 +57,7 @@ INCLUDED_PATHS = [
     'products',
     'static/chat',
     'static/css',
+    'static/js',
     'static/fonts',
     'templates',
 ]

@@ -1,5 +1,6 @@
 {% extends 'base/base.html' %}
 {% load static %}
+{% load currency_filters %} {# تغییر: اضافه کردن لود فیلترهای ارز #}
 
 {% block title %}سفارش‌های من | زیما{% endblock %}
 
@@ -106,7 +107,7 @@
                                                         <div class="item-quantity">تعداد: {{ item.quantity }}</div>
                                                     </div>
                                                     <div class="item-price">
-                                                        {{ item.price|floatformat:0 }} تومان
+                                                        {{ item.price|fa_currency}} تومان
                                                     </div>
                                                 </div>
                                             {% endfor %}
@@ -114,7 +115,7 @@
                                         
                                         <div class="order-summary">
                                             <div class="order-total">
-                                                مجموع: {{ order.total_amount|floatformat:0 }} تومان
+                                                مجموع: {{ order.final_amount|fa_currency }} تومان
                                             </div>
                                             <div class="order-actions">
                                                 <a href="{% url 'orders:detail' order.id %}" class="btn-view">
