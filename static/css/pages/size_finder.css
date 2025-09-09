@@ -1,0 +1,689 @@
+/* Size Finder Modal - ابزار پیدا کننده سایز زیما */
+
+/* متغیرهای رنگی */
+:root {
+  --finder-overlay: rgba(44, 24, 16, 0.8);
+  --finder-bg: linear-gradient(135deg, #FFFFFF 0%, #FFF8DC 100%);
+  --finder-primary: #FF6B6B;
+  --finder-secondary: #DAA520;
+  --finder-success: #28a745;
+  --finder-border: #EAE0C8;
+  --finder-text: #2C1810;
+  --finder-text-light: #8B4513;
+  --finder-shadow: 0 20px 60px rgba(44, 24, 16, 0.3);
+}
+
+/* Overlay و Modal Container */
+.size-finder-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--finder-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+}
+
+.size-finder-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.size-finder-modal {
+  background: var(--finder-bg);
+  border-radius: 25px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--finder-shadow);
+  transform: scale(0.8) translateY(50px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 3px solid var(--finder-border);
+  position: relative;
+}
+
+.size-finder-overlay.active .size-finder-modal {
+  transform: scale(1) translateY(0);
+}
+
+/* Header Modal */
+.finder-header {
+  background: linear-gradient(135deg, var(--finder-primary), var(--finder-secondary));
+  color: white;
+  padding: 25px 30px;
+  border-radius: 22px 22px 0 0;
+  text-align: center;
+  position: relative;
+}
+
+.finder-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='20' cy='20' r='3'/%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.finder-title {
+  font-family: 'Zima-Bold', sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin: 0 0 8px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.finder-subtitle {
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  opacity: 0.9;
+  margin: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.finder-close {
+  position: absolute;
+  top: 20px;
+  left: 25px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+  z-index: 3;
+}
+
+.finder-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+/* محتوای Modal */
+.finder-content {
+  padding: 40px 30px;
+}
+
+/* مراحل */
+.finder-step {
+  display: none;
+  animation: slideIn 0.5s ease;
+}
+
+.finder-step.active {
+  display: block;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.step-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.step-number {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, var(--finder-primary), var(--finder-secondary));
+  color: white;
+  border-radius: 50%;
+  line-height: 50px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+}
+
+.step-title {
+  font-family: 'Zima-Bold', sans-serif;
+  font-size: clamp(1.3rem, 2.5vw, 1.6rem);
+  color: var(--finder-text);
+  margin: 0 0 10px 0;
+}
+
+.step-description {
+  color: var(--finder-text-light);
+  font-size: clamp(0.9rem, 1.3vw, 1.1rem);
+  margin: 0;
+}
+
+/* انتخاب محصول */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.product-option {
+  background: white;
+  border: 3px solid var(--finder-border);
+  border-radius: 20px;
+  padding: 20px 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.6s ease;
+}
+
+.product-option:hover::before {
+  left: 100%;
+}
+
+.product-option:hover,
+.product-option.selected {
+  border-color: var(--finder-primary);
+  background: linear-gradient(135deg, #FFF0F5, #FFF8DC);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(255, 107, 107, 0.2);
+}
+
+.product-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--finder-primary), var(--finder-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.product-name {
+  font-family: 'Zima-Bold', sans-serif;
+  font-size: 1rem;
+  color: var(--finder-text);
+  margin: 0;
+}
+
+/* فرم اندازه‌گیری */
+.measurements-form {
+  display: grid;
+  gap: 20px;
+}
+
+.measurement-group {
+  background: white;
+  border: 2px solid var(--finder-border);
+  border-radius: 15px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.measurement-group:focus-within {
+  border-color: var(--finder-primary);
+  box-shadow: 0 5px 15px rgba(255, 107, 107, 0.1);
+}
+
+.measurement-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-family: 'Zima-Bold', sans-serif;
+  color: var(--finder-text);
+  font-size: 1.1rem;
+}
+
+.measurement-icon {
+  font-size: 1.3rem;
+  color: var(--finder-primary);
+  width: 25px;
+  text-align: center;
+}
+
+.measurement-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.measurement-input {
+  flex: 1;
+  border: 2px solid var(--finder-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 1.1rem;
+  font-family: 'Vazirmatn', sans-serif;
+  transition: all 0.3s ease;
+  text-align: center;
+  background: #FAFAFA;
+}
+
+.measurement-input:focus {
+  outline: none;
+  border-color: var(--finder-primary);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+.measurement-unit {
+  background: var(--finder-border);
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: var(--finder-text-light);
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: center;
+}
+
+.measurement-tip {
+  font-size: 0.85rem;
+  color: var(--finder-text-light);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.measurement-tip i {
+  color: var(--finder-secondary);
+}
+
+/* نتیجه */
+.result-container {
+  text-align: center;
+  background: white;
+  border: 3px solid var(--finder-success);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(135deg, var(--finder-success), #20c997);
+}
+
+.result-icon {
+  font-size: 4rem;
+  color: var(--finder-success);
+  margin-bottom: 20px;
+  animation: bounce 1s ease;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-20px); }
+  60% { transform: translateY(-10px); }
+}
+
+.result-title {
+  font-family: 'Zima-Bold', sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  color: var(--finder-text);
+  margin: 0 0 15px 0;
+}
+
+.result-size {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--finder-primary), var(--finder-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 15px 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.result-description {
+  color: var(--finder-text-light);
+  font-size: 1.1rem;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.result-details {
+  background: #F8F9FA;
+  border-radius: 15px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: right;
+}
+
+.result-details h4 {
+  font-family: 'Zima-Bold', sans-serif;
+  color: var(--finder-text);
+  margin: 0 0 15px 0;
+  font-size: 1.2rem;
+}
+
+.result-details ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.result-details li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--finder-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.result-details li:last-child {
+  border-bottom: none;
+}
+
+.result-details .label {
+  color: var(--finder-text-light);
+  font-size: 0.95rem;
+}
+
+.result-details .value {
+  font-weight: 600;
+  color: var(--finder-text);
+}
+
+/* دکمه‌های عملیات */
+.finder-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+
+.finder-btn {
+  font-family: 'ZimaFont', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 15px 30px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 140px;
+  position: relative;
+  overflow: hidden;
+}
+
+.finder-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.finder-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.finder-btn.primary {
+  background: linear-gradient(135deg, var(--finder-primary), var(--finder-secondary));
+  color: white;
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+}
+
+.finder-btn.primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(255, 107, 107, 0.4);
+}
+
+.finder-btn.secondary {
+  background: white;
+  color: var(--finder-text);
+  border: 2px solid var(--finder-border);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.finder-btn.secondary:hover {
+  background: var(--finder-border);
+  transform: translateY(-2px);
+}
+
+.finder-btn.ghost {
+  background: transparent;
+  color: var(--finder-text-light);
+  border: 2px solid transparent;
+  box-shadow: none;
+}
+
+.finder-btn.ghost:hover {
+  color: var(--finder-primary);
+  border-color: var(--finder-primary);
+}
+
+/* Progress Bar */
+.finder-progress {
+  background: var(--finder-border);
+  height: 6px;
+  border-radius: 3px;
+  margin: 20px 0;
+  overflow: hidden;
+}
+
+.finder-progress-bar {
+  background: linear-gradient(135deg, var(--finder-primary), var(--finder-secondary));
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+
+.finder-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Error States */
+.error-message {
+  background: #fff5f5;
+  border: 2px solid #feb2b2;
+  border-radius: 12px;
+  padding: 15px;
+  color: #c53030;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  display: none;
+}
+
+.error-message.show {
+  display: block;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.measurement-input.error {
+  border-color: #feb2b2;
+  background: #fff5f5;
+}
+
+/* Loading State */
+.finder-loading {
+  display: none;
+  text-align: center;
+  padding: 40px;
+}
+
+.finder-loading.show {
+  display: block;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--finder-border);
+  border-top: 4px solid var(--finder-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: var(--finder-text-light);
+  font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .size-finder-modal {
+    width: 95%;
+    max-height: 95vh;
+    margin: 20px;
+  }
+
+  .finder-header {
+    padding: 20px 25px;
+  }
+
+  .finder-content {
+    padding: 30px 20px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .finder-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .finder-btn {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .measurement-input-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .measurement-unit {
+    align-self: center;
+    min-width: auto;
+    padding: 8px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .finder-title {
+    font-size: 1.3rem;
+  }
+
+  .finder-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-option {
+    padding: 15px;
+  }
+
+  .product-icon {
+    font-size: 2rem;
+  }
+
+  .result-size {
+    font-size: 2.5rem;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus styles for keyboard navigation */
+.finder-btn:focus,
+.measurement-input:focus,
+.product-option:focus {
+  outline: 3px solid rgba(255, 107, 107, 0.5);
+  outline-offset: 2px;
+}
+
+.finder-close:focus {
+  outline: 3px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}

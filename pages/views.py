@@ -79,3 +79,9 @@ def newsletter(request):
 
     from django.shortcuts import redirect
     return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+def size_guide_view(request):
+    """
+    Renders the Zima size guide page.
+    """
+    return render(request, 'pages/size_guide.html')

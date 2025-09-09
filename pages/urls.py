@@ -12,6 +12,7 @@ urlpatterns = [
     path('newsletter/', views.newsletter, name='newsletter'),
     path('privacy/', views.privacy, name='privacy'),
     path('returns/', views.returns, name='returns'),
+    path('size-guide/', views.size_guide_view, name='size-guide'),
 
     path('shipping/', views.shipping, name='shipping'),
 ]

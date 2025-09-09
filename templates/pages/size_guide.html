@@ -1,0 +1,943 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}راهنمای جامع سایز لباس زیر زنانه - زیما{% endblock %}
+
+{% block meta_description %}راهنمای کامل انتخاب سایز مناسب لباس زیر زنانه زیما. جداول سایز دقیق، نکات اندازه‌گیری و مشاوره رایگان.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/size_guide.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/size_finder.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="size-guide-container">
+
+  <!-- بخش هیرو -->
+  <section class="hero-banner">
+    <div class="hero-content">
+      <div class="hero-text fade-in">
+        <h1 class="hero-title">راهنمای جامع سایز زیما</h1>
+        <p class="hero-subtitle">
+          با راهنمای تخصصی ما، سایز ایده‌آل خود را پیدا کنید و با اطمینان کامل خرید کنید.
+          زیبایی از انتخاب درست شروع می‌شود.
+        </p>
+        <button class="hero-cta" onclick="scrollToSection('quick-selector')">
+          <i class="fas fa-search"></i>
+          پیدا کردن سایز من
+        </button>
+      </div>
+      <div class="hero-image fade-in">
+        <img src="{% static 'images/size_guide/hero-measuring-tape.jpg' %}"
+             alt="راهنمای اندازه‌گیری زیما" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- سلکتور سریع -->
+  <section id="quick-selector" class="quick-selector">
+    <div class="quick-selector-container">
+      <h2 class="quick-title fade-in">انتخاب سریع دسته‌بندی</h2>
+      <div class="category-tabs">
+  <button class="tab-button active fade-in" data-category="bra">
+    <i class="fas fa-heart"></i>
+    سوتین
+  </button>
+  <button class="tab-button fade-in" data-category="panties">
+    <i class="fas fa-female"></i>
+    شورت
+  </button>
+  <button class="tab-button fade-in" data-category="nightwear">
+    <i class="fas fa-moon"></i>
+    لباس خواب
+  </button>
+  <button class="tab-button fade-in" data-category="sportswear">
+    <i class="fas fa-running"></i>
+    لباس ورزشی
+  </button>
+</div>
+    </div>
+  </section>
+
+  <!-- راهنمای اندازه‌گیری -->
+  <section class="measurement-guide">
+    <div class="measurement-container">
+      <h2 class="section-title fade-in">چگونه اندازه‌گیری کنیم؟</h2>
+      <p class="section-subtitle fade-in">
+        برای دقت بیشتر، از متر نخی استفاده کرده و در حالت ایستاده اندازه‌گیری کنید
+      </p>
+
+      <div class="measurement-steps">
+        <div class="step-card fade-in">
+          <div class="step-number">1</div>
+          <h3 class="step-title">دور سینه</h3>
+          <p class="step-description">
+            متر را از روی برجسته‌ترین قسمت سینه‌ها، موازی با زمین عبور دهید
+          </p>
+          <div class="step-image">
+            <img src="{% static 'images/size_guide/bust-measurement.jpg' %}"
+                 alt="اندازه‌گیری دور سینه" loading="lazy">
+          </div>
+        </div>
+
+        <div class="step-card fade-in">
+          <div class="step-number">2</div>
+          <h3 class="step-title">زیر سینه</h3>
+          <p class="step-description">
+            متر را درست زیر سینه‌ها، محکم اما راحت دور بدن بپیچید
+          </p>
+          <div class="step-image">
+            <img src="{% static 'images/size_guide/underbust-measurement.jpg' %}"
+                 alt="اندازه‌گیری زیر سینه" loading="lazy">
+          </div>
+        </div>
+
+        <div class="step-card fade-in">
+          <div class="step-number">3</div>
+          <h3 class="step-title">دور کمر</h3>
+          <p class="step-description">
+            باریک‌ترین قسمت کمر، معمولاً چند سانتی بالاتر از ناف را اندازه‌گیری کنید
+          </p>
+          <div class="step-image">
+            <img src="{% static 'images/size_guide/waist-measurement.jpg' %}"
+                 alt="اندازه‌گیری دور کمر" loading="lazy">
+          </div>
+        </div>
+
+        <div class="step-card fade-in">
+          <div class="step-number">4</div>
+          <h3 class="step-title">دور باسن</h3>
+          <p class="step-description">
+            از روی برجسته‌ترین قسمت باسن، موازی با زمین اندازه‌گیری کنید
+          </p>
+          <div class="step-image">
+            <img src="{% static 'images/size_guide/hips-measurement.jpg' %}"
+                 alt="اندازه‌گیری دور باسن" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- جداول سایز -->
+  <section class="size-charts">
+    <div class="charts-container">
+
+      <!-- جدول سوتین -->
+      <div class="chart-section active" id="bra-chart">
+        <div class="chart-header fade-in">
+          <h2 class="chart-title">راهنمای سایز سوتین</h2>
+          <p class="chart-description">
+            سایز سوتین از ترکیب اندازه بند (زیر سینه) و کاپ (حجم سینه) تشکیل می‌شود
+          </p>
+        </div>
+
+        <!-- جدول بند سوتین -->
+        <div class="size-table-container fade-in">
+          <table class="size-table">
+            <thead>
+              <tr>
+                <th>دور زیر سینه (سانتی‌متر)</th>
+                <th>سایز بند</th>
+                <th>نمونه تصویری</th>
+                <th>توضیحات</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>63 - 67</td>
+                <td><span class="size-highlight">65</span></td>
+                <td>
+                  <img src="{% static 'images/size_guide/bra-band-65.jpg' %}"
+                       alt="بند سایز 65" class="size-example-img">
+                </td>
+                <td>برای اندام‌های ظریف</td>
+              </tr>
+              <tr>
+                <td>68 - 72</td>
+                <td><span class="size-highlight">70</span></td>
+                <td>
+                  <img src="{% static 'images/size_guide/bra-band-70.jpg' %}"
+                       alt="بند سایز 70" class="size-example-img">
+                </td>
+                <td>محبوب‌ترین سایز</td>
+              </tr>
+              <tr>
+                <td>73 - 77</td>
+                <td><span class="size-highlight">75</span></td>
+                <td>
+                  <img src="{% static 'images/size_guide/bra-band-75.jpg' %}"
+                       alt="بند سایز 75" class="size-example-img">
+                </td>
+                <td>مناسب اندام متوسط</td>
+              </tr>
+              <tr>
+                <td>78 - 82</td>
+                <td><span class="size-highlight">80</span></td>
+                <td>
+                  <img src="{% static 'images/size_guide/bra-band-80.jpg' %}"
+                       alt="بند سایز 80" class="size-example-img">
+                </td>
+                <td>برای اندام‌های متوسط</td>
+              </tr>
+              <tr>
+                <td>83 - 87</td>
+                <td><span class="size-highlight">85</span></td>
+                <td>
+                  <img src="{% static 'images/size_guide/bra-band-85.jpg' %}"
+                       alt="بند سایز 85" class="size-example-img">
+                </td>
+                <td>مناسب اندام‌های بزرگ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- جدول کاپ سوتین -->
+        <div class="size-table-container fade-in">
+          <table class="size-table">
+            <thead>
+              <tr>
+                <th>تفاوت (دور سینه - زیر سینه)</th>
+                <th>سایز کاپ</th>
+                <th>نمونه تصویری</th>
+                <th>توصیف</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>12 - 13 سانتی‌متر</td>
+                <td><span class="cup-size-badge cup-a">A</span></td>
+                <td>
+                  <img src="{% static 'images/size_guide/cup-a-example.jpg' %}"
+                       alt="کاپ A" class="size-example-img">
+                </td>
+                <td>سینه‌های کوچک و ظریف</td>
+              </tr>
+              <tr>
+                <td>14 - 15 سانتی‌متر</td>
+                <td><span class="cup-size-badge cup-b">B</span></td>
+                <td>
+                  <img src="{% static 'images/size_guide/cup-b-example.jpg' %}"
+                       alt="کاپ B" class="size-example-img">
+                </td>
+                <td>سینه‌های متوسط</td>
+              </tr>
+              <tr>
+                <td>16 - 17 سانتی‌متر</td>
+                <td><span class="cup-size-badge cup-c">C</span></td>
+                <td>
+                  <img src="{% static 'images/size_guide/cup-c-example.jpg' %}"
+                       alt="کاپ C" class="size-example-img">
+                </td>
+                <td>سینه‌های پر و زیبا</td>
+              </tr>
+              <tr>
+                <td>18 - 19 سانتی‌متر</td>
+                <td><span class="cup-size-badge cup-d">D</span></td>
+                <td>
+                  <img src="{% static 'images/size_guide/cup-d-example.jpg' %}"
+                       alt="کاپ D" class="size-example-img">
+                </td>
+                <td>سینه‌های بزرگ</td>
+              </tr>
+              <tr>
+                <td>20+ سانتی‌متر</td>
+                <td><span class="cup-size-badge cup-dd">DD</span></td>
+                <td>
+                  <img src="{% static 'images/size_guide/cup-dd-example.jpg' %}"
+                       alt="کاپ DD" class="size-example-img">
+                </td>
+                <td>سینه‌های خیلی بزرگ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- جدول شورت -->
+      <div class="chart-section" id="panties-chart">
+        <div class="chart-header fade-in">
+          <h2 class="chart-title">راهنمای سایز شورت</h2>
+          <p class="chart-description">
+            برای انتخاب سایز مناسب شورت، دور کمر و باسن را اندازه‌گیری کنید
+          </p>
+        </div>
+
+        <div class="size-table-container fade-in">
+          <table class="size-table">
+            <thead>
+              <tr>
+                <th>سایز</th>
+                <th>دور کمر (سانتی‌متر)</th>
+                <th>دور باسن (سانتی‌متر)</th>
+                <th>نمونه تصویری</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="size-highlight">XS</span></td>
+                <td>58 - 62</td>
+                <td>82 - 86</td>
+                <td>
+                  <img src="{% static 'images/size_guide/panties-xs.jpg' %}"
+                       alt="شورت سایز XS" class="size-example-img">
+                </td>
+              </tr>
+              <tr>
+                <td><span class="size-highlight">S</span></td>
+                <td>63 - 67</td>
+                <td>87 - 91</td>
+                <td>
+                  <img src="{% static 'images/size_guide/panties-s.jpg' %}"
+                       alt="شورت سایز S" class="size-example-img">
+                </td>
+              </tr>
+              <tr>
+                <td><span class="size-highlight">M</span></td>
+                <td>68 - 72</td>
+                <td>92 - 96</td>
+                <td>
+                  <img src="{% static 'images/size_guide/panties-m.jpg' %}"
+                       alt="شورت سایز M" class="size-example-img">
+                </td>
+              </tr>
+              <tr>
+                <td><span class="size-highlight">L</span></td>
+                <td>73 - 77</td>
+                <td>97 - 101</td>
+                <td>
+                  <img src="{% static 'images/size_guide/panties-l.jpg' %}"
+                       alt="شورت سایز L" class="size-example-img">
+                </td>
+              </tr>
+              <tr>
+                <td><span class="size-highlight">XL</span></td>
+                <td>78 - 82</td>
+                <td>102 - 106</td>
+                <td>
+                  <img src="{% static 'images/size_guide/panties-xl.jpg' %}"
+                       alt="شورت سایز XL" class="size-example-img">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- جدول لباس خواب -->
+      <div class="chart-section" id="nightwear-chart">
+        <div class="chart-header fade-in">
+          <h2 class="chart-title">راهنمای سایز لباس خواب</h2>
+          <p class="chart-description">
+            لباس‌های خواب زیما برای راحتی کامل شما طراحی شده‌اند
+          </p>
+        </div>
+
+        <div class="size-table-container fade-in">
+          <table class="size-table">
+            <thead>
+              <tr>
+                <th>سایز</th>
+                <th>دور سینه (سانتی‌متر)</th>
+                <th>دور کمر (سانتی‌متر)</th>
+                <th>دور باسن (سانتی‌متر)</th>
+                <th>نمونه</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="size-highlight">S</span></td>
+                <td>82 - 86</td>
+                <td>63 - 67</td>
+                <td>87 - 91</td>
+                <td>
+                  <img src="{% static 'images/size_guide/nightwear-s.jpg' %}"
+                       alt="لباس خواب S" class="size-example-img">
+                </td>
+              </tr>
+              <tr>
+                <td><span class="size-highlight">M</span></td>
+                <td>87 - 91</td>
+                <td>68 - 72</td>
+                <td>92 - 96</td>
+                <td>
+                  <img src="{% static 'images/size_guide/nightwear-m.jpg' %}"
+                       alt="لباس خواب M" class="size-example-img">
+                </td>
+              </tr>
+              <tr>
+                <td><span class="size-highlight">L</span></td>
+                <td>92 - 96</td>
+                <td>73 - 77</td>
+                <td>97 - 101</td>
+                <td>
+                  <img src="{% static 'images/size_guide/nightwear-l.jpg' %}"
+                       alt="لباس خواب L" class="size-example-img">
+                </td>
+              </tr>
+              <tr>
+                <td><span class="size-highlight">XL</span></td>
+                <td>97 - 101</td>
+                <td>78 - 82</td>
+                <td>102 - 106</td>
+                <td>
+                  <img src="{% static 'images/size_guide/nightwear-xl.jpg' %}"
+                       alt="لباس خواب XL" class="size-example-img">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- جدول گن -->
+      <!-- جدول لباس ورزشی -->
+<div class="chart-section" id="sportswear-chart">
+  <div class="chart-header fade-in">
+    <h2 class="chart-title">راهنمای سایز لباس ورزشی زنانه</h2>
+    <p class="chart-description">
+      لباس‌های ورزشی زیما برای حداکثر راحتی و انعطاف‌پذیری در حین تمرین طراحی شده‌اند
+    </p>
+  </div>
+
+  <!-- جدول سوتین ورزشی -->
+  <div class="size-table-container fade-in">
+    <h3 style="text-align: right; margin-bottom: 20px; font-family: 'Zima-Bold', sans-serif; font-size: 1.5rem; color: var(--zima-deep);">
+      🏃‍♀️ سوتین ورزشی
+    </h3>
+    <table class="size-table">
+      <thead>
+        <tr>
+          <th>سایز</th>
+          <th>دور زیر سینه (سانتی‌متر)</th>
+          <th>دور سینه (سانتی‌متر)</th>
+          <th>کاپ معادل</th>
+          <th>نمونه تصویری</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="size-highlight">XS</span></td>
+          <td>63 - 67</td>
+          <td>78 - 82</td>
+          <td>A-B</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-bra-xs.jpg' %}"
+                 alt="سوتین ورزشی XS" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">S</span></td>
+          <td>68 - 72</td>
+          <td>83 - 87</td>
+          <td>B-C</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-bra-s.jpg' %}"
+                 alt="سوتین ورزشی S" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">M</span></td>
+          <td>73 - 77</td>
+          <td>88 - 92</td>
+          <td>C-D</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-bra-m.jpg' %}"
+                 alt="سوتین ورزشی M" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">L</span></td>
+          <td>78 - 82</td>
+          <td>93 - 97</td>
+          <td>D-DD</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-bra-l.jpg' %}"
+                 alt="سوتین ورزشی L" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">XL</span></td>
+          <td>83 - 87</td>
+          <td>98 - 102</td>
+          <td>DD+</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-bra-xl.jpg' %}"
+                 alt="سوتین ورزشی XL" class="size-example-img">
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- جدول لگ و شلوار ورزشی -->
+  <div class="size-table-container fade-in">
+    <h3 style="text-align: right; margin-bottom: 20px; font-family: 'Zima-Bold', sans-serif; font-size: 1.5rem; color: var(--zima-deep);">
+      🩱 لگ و شلوار ورزشی
+    </h3>
+    <table class="size-table">
+      <thead>
+        <tr>
+          <th>سایز</th>
+          <th>دور کمر (سانتی‌متر)</th>
+          <th>دور باسن (سانتی‌متر)</th>
+          <th>طول پا (سانتی‌متر)</th>
+          <th>نمونه تصویری</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="size-highlight">XS</span></td>
+          <td>60 - 64</td>
+          <td>85 - 89</td>
+          <td>95 - 98</td>
+          <td>
+            <img src="{% static 'images/size_guide/leggings-xs.jpg' %}"
+                 alt="لگ ورزشی XS" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">S</span></td>
+          <td>65 - 69</td>
+          <td>90 - 94</td>
+          <td>99 - 102</td>
+          <td>
+            <img src="{% static 'images/size_guide/leggings-s.jpg' %}"
+                 alt="لگ ورزشی S" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">M</span></td>
+          <td>70 - 74</td>
+          <td>95 - 99</td>
+          <td>103 - 106</td>
+          <td>
+            <img src="{% static 'images/size_guide/leggings-m.jpg' %}"
+                 alt="لگ ورزشی M" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">L</span></td>
+          <td>75 - 79</td>
+          <td>100 - 104</td>
+          <td>107 - 110</td>
+          <td>
+            <img src="{% static 'images/size_guide/leggings-l.jpg' %}"
+                 alt="لگ ورزشی L" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">XL</span></td>
+          <td>80 - 84</td>
+          <td>105 - 109</td>
+          <td>111 - 114</td>
+          <td>
+            <img src="{% static 'images/size_guide/leggings-xl.jpg' %}"
+                 alt="لگ ورزشی XL" class="size-example-img">
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- جدول تاپ و تی‌شرت ورزشی -->
+  <div class="size-table-container fade-in">
+    <h3 style="text-align: right; margin-bottom: 20px; font-family: 'Zima-Bold', sans-serif; font-size: 1.5rem; color: var(--zima-deep);">
+      👕 تاپ و تی‌شرت ورزشی
+    </h3>
+    <table class="size-table">
+      <thead>
+        <tr>
+          <th>سایز</th>
+          <th>دور سینه (سانتی‌متر)</th>
+          <th>طول تنه (سانتی‌متر)</th>
+          <th>عرض شانه (سانتی‌متر)</th>
+          <th>نمونه تصویری</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="size-highlight">XS</span></td>
+          <td>78 - 82</td>
+          <td>58 - 60</td>
+          <td>35 - 37</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-top-xs.jpg' %}"
+                 alt="تاپ ورزشی XS" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">S</span></td>
+          <td>83 - 87</td>
+          <td>61 - 63</td>
+          <td>38 - 40</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-top-s.jpg' %}"
+                 alt="تاپ ورزشی S" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">M</span></td>
+          <td>88 - 92</td>
+          <td>64 - 66</td>
+          <td>41 - 43</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-top-m.jpg' %}"
+                 alt="تاپ ورزشی M" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">L</span></td>
+          <td>93 - 97</td>
+          <td>67 - 69</td>
+          <td>44 - 46</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-top-l.jpg' %}"
+                 alt="تاپ ورزشی L" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">XL</span></td>
+          <td>98 - 102</td>
+          <td>70 - 72</td>
+          <td>47 - 49</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-top-xl.jpg' %}"
+                 alt="تاپ ورزشی XL" class="size-example-img">
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- جدول ست‌های ورزشی کامل -->
+  <div class="size-table-container fade-in">
+    <h3 style="text-align: right; margin-bottom: 20px; font-family: 'Zima-Bold', sans-serif; font-size: 1.5rem; color: var(--zima-deep);">
+      🏋️‍♀️ ست‌های ورزشی کامل
+    </h3>
+    <table class="size-table">
+      <thead>
+        <tr>
+          <th>سایز ست</th>
+          <th>شامل</th>
+          <th>سایز‌های تشکیل‌دهنده</th>
+          <th>مناسب برای</th>
+          <th>نمونه تصویری</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="size-highlight">XS</span></td>
+          <td>سوتین + لگ + تاپ</td>
+          <td>همه XS</td>
+          <td>قد ۱۵۰-۱۶۰، وزن ۴۵-۵۰</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-set-xs.jpg' %}"
+                 alt="ست ورزشی XS" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">S</span></td>
+          <td>سوتین + لگ + تاپ</td>
+          <td>همه S</td>
+          <td>قد ۱۶۰-۱۶۵، وزن ۵۰-۵۷</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-set-s.jpg' %}"
+                 alt="ست ورزشی S" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">M</span></td>
+          <td>سوتین + لگ + تاپ</td>
+          <td>همه M</td>
+          <td>قد ۱۶۵-۱۷۰، وزن ۵۷-۶۵</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-set-m.jpg' %}"
+                 alt="ست ورزشی M" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">L</span></td>
+          <td>سوتین + لگ + تاپ</td>
+          <td>همه L</td>
+          <td>قد ۱۷۰-۱۷۵، وزن ۶۵-۷۳</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-set-l.jpg' %}"
+                 alt="ست ورزشی L" class="size-example-img">
+          </td>
+        </tr>
+        <tr>
+          <td><span class="size-highlight">XL</span></td>
+          <td>سوتین + لگ + تاپ</td>
+          <td>همه XL</td>
+          <td>قد ۱۷۵+، وزن ۷۳+</td>
+          <td>
+            <img src="{% static 'images/size_guide/sports-set-xl.jpg' %}"
+                 alt="ست ورزشی XL" class="size-example-img">
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- نکات ویژه لباس ورزشی -->
+  <div style="background: var(--gradient-card); border-radius: 20px; padding: 30px; margin-top: 40px; border: 2px solid var(--zima-pearl);">
+    <h3 style="font-family: 'Zima-Bold', sans-serif; color: var(--zima-deep); margin-bottom: 20px; text-align: center;">
+      💡 نکات مهم انتخاب لباس ورزشی
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; margin-bottom: 10px;">🏃‍♀️</div>
+        <h4 style="color: var(--zima-brown); margin-bottom: 8px;">انعطاف‌پذیری</h4>
+        <p style="font-size: 0.9rem; color: var(--zima-brown);">پارچه کشسان برای حرکت راحت</p>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; margin-bottom: 10px;">💧</div>
+        <h4 style="color: var(--zima-brown); margin-bottom: 8px;">تنفس پذیری</h4>
+        <p style="font-size: 0.9rem; color: var(--zima-brown);">جذب عرق و خشک شدن سریع</p>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; margin-bottom: 10px;">🎯</div>
+        <h4 style="color: var(--zima-brown); margin-bottom: 8px;">تناسب اندام</h4>
+        <p style="font-size: 0.9rem; color: var(--zima-brown);">فیت مناسب بدون فشار اضافی</p>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; margin-bottom: 10px;">🏆</div>
+        <h4 style="color: var(--zima-brown); margin-bottom: 8px;">پشتیبانی</h4>
+        <p style="font-size: 0.9rem; color: var(--zima-brown);">ساپورت مناسب برای ورزش</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+    </div>
+  </section>
+
+  <!-- نکات مفید -->
+  <section class="fitting-tips">
+    <div class="tips-container">
+      <h2 class="section-title fade-in">نکات مهم برای انتخاب بهترین سایز</h2>
+      <div class="tips-grid">
+        <div class="tip-card fade-in">
+          <div class="tip-icon">📏</div>
+          <h3 class="tip-title">اندازه‌گیری دقیق</h3>
+          <p class="tip-text">
+            برای بهترین نتیجه، اندازه‌گیری را در حالت ایستاده و بدون لباس انجام دهید
+          </p>
+        </div>
+        <div class="tip-card fade-in">
+          <div class="tip-icon">🔄</div>
+          <h3 class="tip-title">بین دو سایز؟</h3>
+          <p class="tip-text">
+            اگر بین دو سایز قرار دارید، معمولاً سایز بزرگتر راحت‌تر خواهد بود
+          </p>
+        </div>
+        <div class="tip-card fade-in">
+          <div class="tip-icon">⏰</div>
+          <h3 class="tip-title">بهترین زمان</h3>
+          <p class="tip-text">
+            اندازه‌گیری را در اواسط روز انجام دهید، نه صبح زود یا شب دیر
+          </p>
+        </div>
+        <div class="tip-card fade-in">
+          <div class="tip-icon">💎</div>
+          <h3 class="tip-title">کیفیت مهم است</h3>
+          <p class="tip-text">
+            سایز مناسب تنها بخشی از راحتی است، کیفیت پارچه نیز بسیار مهم است
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- بخش پشتیبانی -->
+  <section class="support-section">
+    <div class="support-container">
+      <h2 class="support-title fade-in">نیاز به راهنمایی بیشتر دارید؟</h2>
+      <p class="support-text fade-in">
+        کارشناسان زیما آماده کمک به شما برای انتخاب بهترین سایز هستند
+      </p>
+      <div class="support-buttons">
+        <a href="{% url 'pages:contact' %}" class="support-btn primary fade-in">
+          <i class="fas fa-phone"></i>
+          تماس با ما
+        </a>
+        {% if user.is_authenticated %}
+          <a href="{% if user.is_staff %}{% url 'chat:admin_dashboard' %}{% else %}{% url 'chat:chat_list' %}{% endif %}"
+             class="support-btn fade-in">
+            <i class="fas fa-comments"></i>
+            چت آنلاین
+          </a>
+        {% else %}
+          <a href="{% url 'users:login' %}?next={% url 'chat:chat_list' %}"
+             class="support-btn fade-in">
+            <i class="fas fa-comments"></i>
+            چت آنلاین
+          </a>
+        {% endif %}
+        <a href="tel:+982177889900" class="support-btn fade-in">
+          <i class="fas fa-headset"></i>
+          ۰۲۱-۷۷۸۸۹۹۰۰
+        </a>
+      </div>
+      <div class="support-info fade-in">
+        <div class="info-item">
+          <i class="fas fa-clock"></i>
+          <span>ساعات کاری: شنبه تا پنجشنبه ۹ الی ۱۸</span>
+        </div>
+        <div class="info-item">
+          <i class="fas fa-bolt"></i>
+          <span>پاسخگویی سریع در کمتر از ۵ دقیقه</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Image Zoom Modal Structure -->
+<div class="image-modal-overlay" id="imageZoomModal">
+    <div class="image-modal-content">
+        <button class="image-modal-close" onclick="closeImageZoom()">
+            <i class="fas fa-times"></i>
+        </button>
+        <img src="" alt="تصویر بزرگ شده" class="image-modal-image" id="zoomedImage">
+        <p class="image-modal-disclaimer">
+            <strong>توجه:</strong> تصاویر ارائه شده صرفاً جهت راهنمایی بصری و نمایش تقریبی هستند. برای انتخاب دقیق و اطمینان از تناسب کامل محصول، لطفاً به جداول سایزبندی و راهنمای اندازه‌گیری دقیق مراجعه فرمایید.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/size_finder.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // تب‌های دسته‌بندی
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const chartSections = document.querySelectorAll('.chart-section');
+
+  tabButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const category = this.getAttribute('data-category');
+
+      // حذف کلاس active از همه تب‌ها و بخش‌ها
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      chartSections.forEach(section => section.classList.remove('active'));
+
+      // اضافه کردن کلاس active به تب و بخش انتخاب شده
+      this.classList.add('active');
+      document.getElementById(category + '-chart').classList.add('active');
+
+      // اسکرول نرم به بخش جداول
+      document.querySelector('.size-charts').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    });
+  });
+
+  // اسکرول نرم
+  window.scrollToSection = function(sectionId) {
+    document.getElementById(sectionId).scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  };
+
+  // انیمیشن ورود عناصر
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // تنها در صورتی که عنصر هنوز انیمیشن fade-in را دریافت نکرده باشد
+        if (!entry.target.classList.contains('fade-in-applied')) {
+            entry.target.style.animationDelay = '0s'; // برای اطمینان از شروع فوری
+            entry.target.classList.add('fade-in');
+            entry.target.classList.add('fade-in-applied'); // جلوگیری از اجرای مجدد
+        }
+      } else {
+        // اگر عنصر از دید خارج شد، می‌توانید کلاس انیمیشن را بردارید تا مجدداً اجرا شود
+        // entry.target.classList.remove('fade-in', 'fade-in-applied');
+      }
+    });
+  }, observerOptions);
+
+  // مشاهده همه عناصر با کلاس fade-in (که هنوز fade-in-applied ندارند)
+  document.querySelectorAll('.fade-in:not(.fade-in-applied)').forEach(el => {
+    observer.observe(el);
+  });
+
+  // بهبود تجربه کاربری جداول در موبایل
+  if (window.innerWidth <= 768) {
+    const tables = document.querySelectorAll('.size-table');
+    tables.forEach(table => {
+      table.addEventListener('touchstart', function() {
+        this.style.transform = 'scale(1.02)';
+      });
+      table.addEventListener('touchend', function() {
+        this.style.transform = 'scale(1)';
+      });
+    });
+  }
+
+  // ===========================================
+  // === Image Zoom Functionality (New) ===
+  // ===========================================
+  const imageZoomModal = document.getElementById('imageZoomModal');
+  const zoomedImage = document.getElementById('zoomedImage');
+
+  // Open modal on image click
+  document.querySelectorAll('.step-image img, .size-example-img').forEach(img => {
+      img.addEventListener('click', function() {
+          zoomedImage.src = this.src; // Set the source of the modal image
+          imageZoomModal.classList.add('active'); // Show the modal
+          document.body.style.overflow = 'hidden'; // Prevent body scroll
+      });
+  });
+
+  // Close modal functions
+  window.closeImageZoom = function() {
+      imageZoomModal.classList.remove('active');
+      document.body.style.overflow = ''; // Restore body scroll
+      zoomedImage.src = ''; // Clear image source
+  };
+
+  // Close modal on overlay click
+  imageZoomModal.addEventListener('click', function(e) {
+      if (e.target.id === 'imageZoomModal') { // Check if clicked on overlay itself
+          closeImageZoom();
+      }
+  });
+
+  // Close modal on Escape key press
+  document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && imageZoomModal.classList.contains('active')) {
+          closeImageZoom();
+      }
+  });
+
+});
+
+// بهینه‌سازی عملکرد (lazy loading)
+if ('loading' in HTMLImageElement.prototype) {
+  // مرورگر از lazy loading بومی پشتیبانی می‌کند، نیازی به اسکریپت اضافی نیست
+  // تصاویر قبلاً با loading="lazy" تعریف شده‌اند
+} else {
+  // Fallback برای مرورگرهای قدیمی‌تر که از lazy loading بومی پشتیبانی نمی‌کنند
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js';
+  script.onload = function() {
+    const observer = lozad();
+    observer.observe();
+  };
+  document.head.appendChild(script);
+}
+</script>
+{% endblock %}
