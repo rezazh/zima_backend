@@ -84,7 +84,48 @@
         </div>
     </div>
 </section>
+<!-- ==================================================== -->
+<!-- == Family Collections Showcase Section == -->
+<!-- ==================================================== -->
+<section class="family-showcase fade-in">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-badge">برای تمام خانواده</span>
+            <h2 class="section-title">کلکسیون‌های <span class="script">منتخب</span> ما</h2>
+            <p class="section-description">محصولات ما برای هر عضو خانواده شما با دقت و عشق طراحی شده‌اند. دسته‌بندی مورد نظر خود را برای شروع کاوش انتخاب کنید.</p>
+        </div>
 
+        <!-- ✅ کانتینر جدید برای چیدمان دو ستونی -->
+        <div class="family-showcase-layout">
+
+            <!-- ستون چپ: گرید کارت‌های کلکسیون -->
+            <div class="family-grid">
+                <a href="#" class="family-collection-card">
+                    <img src="{% static 'images/family/man.png' %}" alt="کلکسیون مردانه">
+                    <div class="card-overlay"><h3>مردانه</h3></div>
+                </a>
+                <a href="#" class="family-collection-card">
+                    <img src="{% static 'images/family/woman.png' %}" alt="کلکسیون زنانه">
+                    <div class="card-overlay"><h3>زنانه</h3></div>
+                </a>
+                <a href="#" class="family-collection-card">
+                    <img src="{% static 'images/family/boy.png' %}" alt="کلکسیون پسرانه">
+                    <div class="card-overlay"><h3>پسرانه</h3></div>
+                </a>
+                <a href="#" class="family-collection-card">
+                    <img src="{% static 'images/family/girl.png' %}" alt="کلکسیون دخترانه">
+                    <div class="card-overlay"><h3>دخترانه</h3></div>
+                </a>
+            </div>
+
+            <!-- ستون راست: تصویر اصلی خانواده -->
+            <div class="main-family-photo">
+                <img src="{% static 'images/family/family-complete.png' %}" alt="خانواده زیما">
+            </div>
+
+        </div>
+    </div>
+</section>
 <!-- Collections Section -->
 <section class="collections fade-in">
     <div class="section-header">
@@ -257,6 +298,34 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.family-nav-link');
+    const focusImages = document.querySelectorAll('.family-member-focus');
+    const familyVisuals = document.querySelector('.family-visuals');
+
+    navLinks.forEach(link => {
+        link.addEventListener('mouseenter', () => {
+            const memberName = link.dataset.member;
+
+            focusImages.forEach(img => {
+                if (img.dataset.member === memberName) {
+                    img.classList.add('active');
+                } else {
+                    img.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    familyVisuals.addEventListener('mouseleave', () => {
+        // وقتی موس از کل کادر تصویر خارج شد، همه هاله‌ها محو شوند
+        focusImages.forEach(img => {
+            img.classList.remove('active');
+        });
+    });
+});
+</script>
 <script>
     // تابع افزودن به سبد خرید برای صفحه اصلی (فقط نمایش Toast)
     function addToCartHome(productId) {

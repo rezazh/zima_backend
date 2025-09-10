@@ -1,4 +1,4 @@
-/* static/css/pages/home.css */
+/* static/css/pages/home.css (نسخه کامل و به‌روز شده) */
 
 /* ---------------------------------------------------- */
 /* == Hero Section == */
@@ -9,18 +9,9 @@
     display: flex;
     align-items: center;
     overflow: hidden;
-    padding-top: 100px;
-    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
+    padding-top: 0px;
+    background: transparent;
 }
-
-/* ❌ حذف شد: hero-shapes و shape دیگر نیازی نیستند چون افکت‌های global جایگزین شدند */
-/* .hero-shapes { ... } */
-/* .shape { ... } */
-/* .shape:nth-child(1) { ... } */
-/* .shape:nth-child(2) { ... } */
-/* .shape:nth-child(3) { ... } */
-/* @keyframes float { ... } */
-
 
 .hero-container {
     max-width: 1400px;
@@ -31,7 +22,7 @@
     align-items: center;
     gap: 80px;
     position: relative;
-    z-index: 2; /* ✅ اضافه شد: برای اینکه محتوای Hero روی پس‌زمینه باشد */
+    z-index: 2;
 }
 
 .hero-content {
@@ -158,21 +149,13 @@
     box-shadow: 0 30px 60px var(--shadow-soft);
 }
 
-/* ❌ حذف شد: floating-elements دیگر نیازی نیستند چون افکت‌های global جایگزین شدند */
-/* .floating-elements { ... } */
-/* .floating-element { ... } */
-/* .floating-element:nth-child(1) { ... } */
-/* .floating-element:nth-child(2) { ... } */
-/* @keyframes gentleFloat { ... } */
-
-
 /* ---------------------------------------------------- */
 /* == Collections Section == */
 /* ---------------------------------------------------- */
 .collections {
     padding: 120px 0;
-    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
-    position: relative; /* ✅ اضافه شد: برای اینکه محتوای Collections روی پس‌زمینه باشد */
+    background: transparent;
+    position: relative;
     z-index: 2;
 }
 
@@ -298,13 +281,102 @@
     gap: 15px;
 }
 
+
+/* ✅ بخش جدید: کاملاً هماهنگ با استایل سایت شما */
+/* ---------------------------------------------------- */
+/* == Family Collections Showcase == */
+/* ---------------------------------------------------- */
+.family-showcase {
+    padding: 120px 0;
+    background: transparent;
+    position: relative;
+    z-index: 2;
+}
+
+/* ✅ کانتینر اصلی چیدمان شبکه‌ای */
+.family-showcase-layout {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* دو ستون با عرض برابر */
+    gap: 40px;
+    align-items: center; /* تراز عمودی محتوای دو ستون */
+}
+
+/* ✅ ستون راست: عکس اصلی */
+.main-family-photo {
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px var(--shadow-soft);
+    /* ❌ دیگر نیازی به max-width و aspect-ratio نیست */
+}
+
+.main-family-photo img {
+    width: 100%;
+    display: block;
+    /* ✅ حذف height و object-fit برای نمایش کامل تصویر */
+}
+
+/* ✅ ستون چپ: گرید کارت‌ها */
+.family-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* گرید 2x2 */
+    gap: 30px;
+}
+
+.family-collection-card {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 25px;
+    box-shadow: 0 15px 40px var(--shadow-soft);
+    text-decoration: none;
+    transition: all 0.4s ease;
+    aspect-ratio: 1 / 1; /* ✅ کارت‌های مربعی برای زیبایی و نظم بیشتر */
+}
+
+.family-collection-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 25px 60px var(--shadow-medium);
+}
+
+.family-collection-card img {
+    width: 100%;
+    height: 100%; /* ✅ برای پر کردن کامل کارت مربعی */
+    object-fit: cover; /* ✅ برای برش زیبا و بدون دفورمگی عکس‌های کارت */
+    transition: transform 0.6s ease;
+}
+
+.family-collection-card:hover img {
+    transform: scale(1.05);
+}
+
+.card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 30px 20px 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+    transition: background 0.4s ease;
+}
+
+.card-overlay h3 {
+    color: white;
+    font-size: 1.6rem; /* کمی کوچک‌تر برای تناسب با کارت‌های جدید */
+    font-weight: 600;
+    margin: 0;
+    text-align: right;
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
+}
 /* ---------------------------------------------------- */
 /* == Featured Products Section == */
 /* ---------------------------------------------------- */
 .featured {
     padding: 120px 0;
-    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
-    position: relative; /* ✅ اضافه شد: برای اینکه محتوای Featured روی پس‌زمینه باشد */
+    background: transparent;
+    position: relative;
     z-index: 2;
 }
 
@@ -319,8 +391,8 @@
 /* ---------------------------------------------------- */
 .testimonials {
     padding: 120px 0;
-    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
-    position: relative; /* ✅ اضافه شد: برای اینکه محتوای Testimonials روی پس‌زمینه باشد */
+    background: transparent;
+    position: relative;
     z-index: 2;
 }
 
@@ -412,7 +484,7 @@
         padding: 0 20px;
     }
     .hero-image {
-        order: -1; /* تصویر در موبایل بالا قرار گیرد */
+        order: -1;
     }
     .hero-title {
         font-size: clamp(2.5rem, 5vw, 3.5rem);
@@ -421,7 +493,7 @@
         font-size: 1.1rem;
     }
     .hero-cta {
-        justify-content: center; /* دکمه‌ها در موبایل وسط چین شوند */
+        justify-content: center;
     }
     .collections-grid {
         grid-template-columns: 1fr;
@@ -433,6 +505,16 @@
     }
     .testimonials-container {
         padding: 0 20px;
+    }
+
+    /* ✅ واکنش‌گرایی بخش جدید */
+    .main-family-photo {
+        padding: 0 20px;
+    }
+    .family-grid {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0 20px;
+        gap: 30px;
     }
 }
 
@@ -469,7 +551,7 @@
         padding: 15px 30px;
         font-size: 0.9rem;
     }
-    .collections, .featured, .testimonials {
+    .collections, .featured, .testimonials, .family-showcase { /* ✅ اضافه شد */
         padding: 80px 0;
     }
     .section-title {
@@ -487,5 +569,13 @@
     }
     .testimonials-slider {
         gap: 20px;
+    }
+
+    /* ✅ واکنش‌گرایی بخش جدید برای موبایل‌های کوچک */
+    .family-grid {
+        grid-template-columns: 1fr;
+    }
+    .card-overlay h3 {
+        font-size: 1.5rem;
     }
 }
