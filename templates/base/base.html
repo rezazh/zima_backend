@@ -17,6 +17,8 @@
     {# استایل‌های مربوط به محصولات #}
     <link rel="stylesheet" href="{% static 'css/products.css' %}">
     {# برای استایل‌های خاص هر صفحه (بعدا اضافه می‌شود) #}
+    <link rel="stylesheet" href="{% static 'css/pages/quick-view.css' %}">
+
     {% block extra_css %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -43,7 +45,18 @@
         <i class="fas fa-star star-icon"></i>
     </div>
     <!-- ✅ END: لایه‌های پس‌زمینه متحرک -->
-
+     <!-- ✅ START: Quick View Modal Container (جدید) -->
+    <div class="quick-view-modal" id="quickViewModal">
+        <div class="modal-content-qv">
+            <button class="modal-close" onclick="closeQuickView()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="quickViewModalContent">
+                <!-- محتوای Quick View از طریق AJAX در اینجا بارگذاری می‌شود -->
+            </div>
+        </div>
+    </div>
+    <!-- ✅ END: Quick View Modal Container -->
     <!-- Loading Screen -->
     <div class="loader" id="loader">
         <div class="loader-content">

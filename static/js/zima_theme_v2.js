@@ -1,4 +1,559 @@
 // static/js/zima_theme_v2.js
+
+// ✅ متغیرهای سراسری Quick View
+let productDataQv = {};
+let inventoryMappingQv = {};
+let selectedColorQv = null;
+let selectedSizeQv = null;
+let currentStockQv = 0;
+
+// ✅ توابع سراسری که باید قبل از DOMContentLoaded باشند
+window.increaseQuantityQv = function() {
+    const input = document.getElementById('quantityInputQv');
+    if (input && parseInt(input.value) < parseInt(input.max)) {
+        input.value = parseInt(input.value) + 1;
+    }
+};
+
+window.decreaseQuantityQv = function() {
+    const input = document.getElementById('quantityInputQv');
+    if (input && parseInt(input.value) > 1) {
+        input.value = parseInt(input.value) - 1;
+    }
+};
+
+window.changeImageQv = function(thumbnail) {
+    const mainImage = document.getElementById('mainImageQv');
+    if (mainImage && thumbnail) {
+        mainImage.src = thumbnail.src;
+
+        document.querySelectorAll('.thumbnail-qv').forEach(thumb => {
+            thumb.classList.remove('active');
+        });
+
+        thumbnail.classList.add('active');
+    }
+};
+
+window.closeQuickViewModal = function() {
+    const modal = document.getElementById('quickViewModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+};
+
+// ✅ تابع اصلی initialization Quick View
+window.initQuickViewModalContent = function(dataFromAjax) {
+    console.log('🔄 initQuickViewModalContent called with data:', dataFromAjax);
+
+    // تنظیم متغیرهای سراسری
+    productDataQv = dataFromAjax;
+    inventoryMappingQv = dataFromAjax.inventoryMapping || {};
+    currentStockQv = productDataQv.stock || 0;
+
+    // ریست کردن انتخاب‌ها
+    selectedColorQv = null;
+    selectedSizeQv = null;
+
+    console.log('📊 Inventory Mapping:', inventoryMappingQv);
+
+    // رندر کردن گزینه‌ها
+    renderQuickViewOptions();
+
+    // نمایش یا مخفی کردن بخش‌ها
+    toggleQuickViewSections();
+
+    // همه گزینه‌ها در ابتدا فعال هستند
+    resetAllOptionsAvailability();
+    updateQuickViewAddToCartButton();
+
+    console.log('✅ Quick View initialized successfully');
+};
+
+// ✅ تابع رندر کردن گزینه‌های رنگ و سایز
+function renderQuickViewOptions() {
+    console.log('🎨 Rendering Quick View options...');
+
+    const colorContainer = document.getElementById('modalColorOptionsQv');
+    const sizeContainer = document.getElementById('modalSizeOptionsQv');
+
+    if (!colorContainer || !sizeContainer) {
+        console.error('❌ Quick View containers not found');
+        return;
+    }
+
+    // پاک کردن محتوای قبلی
+    colorContainer.innerHTML = '';
+    sizeContainer.innerHTML = '';
+
+    // رندر کردن رنگ‌ها
+    if (productDataQv.availableColors && productDataQv.availableColors.length > 0) {
+        productDataQv.availableColors.forEach(color => {
+            const colorElement = document.createElement('label');
+            colorElement.className = 'color-option-qv';
+            colorElement.setAttribute('data-color-id', color.id);
+            colorElement.setAttribute('data-color-name', color.name);
+            colorElement.setAttribute('title', color.name);
+
+            const colorCode = color.hex_code || '#CCCCCC';
+            colorElement.style.backgroundColor = colorCode;
+
+            // border برای رنگ‌های روشن
+            if (colorCode.toUpperCase() === '#FFFFFF') {
+                colorElement.style.border = '2px solid #ddd';
+            }
+
+            colorElement.innerHTML = `<input type="radio" name="colorQv" value="${color.id}" style="display:none;">`;
+
+            colorElement.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!this.classList.contains('disabled')) {
+                    selectQuickViewColor(color.id, color.name);
+                }
+            });
+
+            colorContainer.appendChild(colorElement);
+        });
+    }
+
+    // رندر کردن سایزها
+    if (productDataQv.availableSizes && productDataQv.availableSizes.length > 0) {
+        productDataQv.availableSizes.forEach(size => {
+            const sizeElement = document.createElement('label');
+            sizeElement.className = 'size-option-qv';
+            sizeElement.setAttribute('data-size-id', size.id);
+            sizeElement.setAttribute('data-size-name', size.name);
+            sizeElement.innerHTML = `
+                <input type="radio" name="sizeQv" value="${size.id}" style="display:none;">
+                <span>${size.name}</span>
+            `;
+
+            sizeElement.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!this.classList.contains('disabled')) {
+                    selectQuickViewSize(size.id, size.name);
+                }
+            });
+
+            sizeContainer.appendChild(sizeElement);
+        });
+    }
+}
+
+// ✅ تابع انتخاب رنگ
+function selectQuickViewColor(colorId, colorName) {
+    console.log(`🎨 Selecting color: ${colorName} (${colorId})`);
+
+    // حذف انتخاب قبلی رنگ
+    document.querySelectorAll('.color-option-qv').forEach(el => {
+        el.classList.remove('active');
+    });
+
+    // اضافه کردن active به رنگ انتخابی
+    const selectedColorElement = document.querySelector(`[data-color-id="${colorId}"]`);
+    if (selectedColorElement) {
+        selectedColorElement.classList.add('active');
+    }
+
+    // تنظیم متغیر
+    selectedColorQv = colorId;
+
+    // به‌روزرسانی نام رنگ
+    const colorNameElement = document.getElementById('selectedColorNameQv');
+    if (colorNameElement) {
+        colorNameElement.textContent = colorName;
+    }
+
+    // اگر سایزی انتخاب شده بود، بررسی کن آیا با رنگ جدید سازگار است
+    if (selectedSizeQv) {
+        const isCompatible = checkColorSizeCompatibility(colorId, selectedSizeQv);
+        if (!isCompatible) {
+            deselectSize();
+        }
+    }
+
+    // فعال کردن مجدد همه رنگ‌ها
+    enableAllColors();
+
+    // به‌روزرسانی سایزهای قابل انتخاب بر اساس رنگ
+    updateSizeAvailabilityBasedOnColor(colorId);
+
+    // به‌روزرسانی موجودی و دکمه
+    updateQuickViewStock();
+    updateQuickViewAddToCartButton();
+}
+
+// ✅ تابع انتخاب سایز
+function selectQuickViewSize(sizeId, sizeName) {
+    console.log(`📏 Selecting size: ${sizeName} (${sizeId})`);
+
+    // حذف انتخاب قبلی سایز
+    document.querySelectorAll('.size-option-qv').forEach(el => {
+        el.classList.remove('active');
+    });
+
+    // اضافه کردن active به سایز انتخابی
+    const selectedSizeElement = document.querySelector(`[data-size-id="${sizeId}"]`);
+    if (selectedSizeElement) {
+        selectedSizeElement.classList.add('active');
+    }
+
+    // تنظیم متغیر
+    selectedSizeQv = sizeId;
+
+    // به‌روزرسانی نام سایز
+    const sizeNameElement = document.getElementById('selectedSizeNameQv');
+    if (sizeNameElement) {
+        sizeNameElement.textContent = sizeName;
+    }
+
+    // اگر رنگی انتخاب شده بود، بررسی کن آیا با سایز جدید سازگار است
+    if (selectedColorQv) {
+        const isCompatible = checkColorSizeCompatibility(selectedColorQv, sizeId);
+        if (!isCompatible) {
+            deselectColor();
+        }
+    }
+
+    // فعال کردن مجدد همه سایزها
+    enableAllSizes();
+
+    // به‌روزرسانی رنگ‌های قابل انتخاب بر اساس سایز
+    updateColorAvailabilityBasedOnSize(sizeId);
+
+    // به‌روزرسانی موجودی و دکمه
+    updateQuickViewStock();
+    updateQuickViewAddToCartButton();
+}
+
+// ✅ توابع کمکی Quick View
+function checkColorSizeCompatibility(colorId, sizeId) {
+    const colorKey = colorId.toString();
+    const sizeKey = sizeId.toString();
+
+    return inventoryMappingQv[colorKey] &&
+           inventoryMappingQv[colorKey][sizeKey] &&
+           inventoryMappingQv[colorKey][sizeKey].quantity > 0;
+}
+
+function deselectColor() {
+    selectedColorQv = null;
+    document.querySelectorAll('.color-option-qv').forEach(el => {
+        el.classList.remove('active');
+    });
+
+    const colorNameElement = document.getElementById('selectedColorNameQv');
+    if (colorNameElement) {
+        colorNameElement.textContent = 'انتخاب کنید';
+    }
+}
+
+function deselectSize() {
+    selectedSizeQv = null;
+    document.querySelectorAll('.size-option-qv').forEach(el => {
+        el.classList.remove('active');
+    });
+
+    const sizeNameElement = document.getElementById('selectedSizeNameQv');
+    if (sizeNameElement) {
+        sizeNameElement.textContent = 'انتخاب کنید';
+    }
+}
+
+function enableAllColors() {
+    document.querySelectorAll('.color-option-qv').forEach(el => {
+        el.classList.remove('disabled');
+        el.style.opacity = '1';
+        el.style.pointerEvents = 'auto';
+    });
+}
+
+function enableAllSizes() {
+    document.querySelectorAll('.size-option-qv').forEach(el => {
+        el.classList.remove('disabled');
+        el.style.opacity = '1';
+        el.style.pointerEvents = 'auto';
+    });
+}
+
+function updateSizeAvailabilityBasedOnColor(colorId) {
+    const colorKey = colorId.toString();
+    const availableForColor = inventoryMappingQv[colorKey] || {};
+
+    console.log(`📏 Updating sizes for color ${colorId}:`, availableForColor);
+
+    document.querySelectorAll('.size-option-qv').forEach(sizeOption => {
+        const sizeId = sizeOption.getAttribute('data-size-id');
+        const sizeKey = sizeId.toString();
+
+        const isAvailable = availableForColor[sizeKey] && availableForColor[sizeKey].quantity > 0;
+
+        if (isAvailable) {
+            sizeOption.classList.remove('disabled');
+            sizeOption.style.opacity = '1';
+            sizeOption.style.pointerEvents = 'auto';
+        } else {
+            sizeOption.classList.add('disabled');
+            sizeOption.style.opacity = '0.3';
+            sizeOption.style.pointerEvents = 'none';
+        }
+    });
+}
+
+function updateColorAvailabilityBasedOnSize(sizeId) {
+    const sizeKey = sizeId.toString();
+
+    console.log(`🎨 Updating colors for size ${sizeId}`);
+
+    document.querySelectorAll('.color-option-qv').forEach(colorOption => {
+        const colorId = colorOption.getAttribute('data-color-id');
+        const colorKey = colorId.toString();
+
+        const isAvailable = inventoryMappingQv[colorKey] &&
+                           inventoryMappingQv[colorKey][sizeKey] &&
+                           inventoryMappingQv[colorKey][sizeKey].quantity > 0;
+
+        if (isAvailable) {
+            colorOption.classList.remove('disabled');
+            colorOption.style.opacity = '1';
+            colorOption.style.pointerEvents = 'auto';
+        } else {
+            colorOption.classList.add('disabled');
+            colorOption.style.opacity = '0.3';
+            colorOption.style.pointerEvents = 'none';
+        }
+    });
+}
+
+function resetAllOptionsAvailability() {
+    enableAllColors();
+    enableAllSizes();
+}
+
+function updateQuickViewStock() {
+    if (!selectedColorQv || !selectedSizeQv) {
+        currentStockQv = productDataQv.stock || 0;
+        return;
+    }
+
+    const colorKey = selectedColorQv.toString();
+    const sizeKey = selectedSizeQv.toString();
+
+    if (inventoryMappingQv[colorKey] && inventoryMappingQv[colorKey][sizeKey]) {
+        const stock = inventoryMappingQv[colorKey][sizeKey].quantity;
+        currentStockQv = stock;
+
+        const quantityInput = document.getElementById('quantityInputQv');
+        if (quantityInput) {
+            quantityInput.max = stock;
+            if (parseInt(quantityInput.value) > stock) {
+                quantityInput.value = Math.min(stock, 1);
+            }
+        }
+
+        console.log(`📦 Updated stock for ${colorKey}-${sizeKey}: ${stock}`);
+    } else {
+        currentStockQv = 0;
+    }
+}
+
+function toggleQuickViewSections() {
+    const colorSection = document.getElementById('colorOptionGroupQv');
+    const sizeSection = document.getElementById('sizeOptionGroupQv');
+
+    if (colorSection) {
+        if (productDataQv.availableColors && productDataQv.availableColors.length > 0) {
+            colorSection.style.display = 'block';
+        } else {
+            colorSection.style.display = 'none';
+            selectedColorQv = 'null';
+        }
+    }
+
+    if (sizeSection) {
+        if (productDataQv.availableSizes && productDataQv.availableSizes.length > 0) {
+            sizeSection.style.display = 'block';
+        } else {
+            sizeSection.style.display = 'none';
+            selectedSizeQv = 'null';
+        }
+    }
+}
+
+function updateQuickViewAddToCartButton() {
+    const addButton = document.getElementById('addToCartBtnQv');
+    if (!addButton) return;
+
+    const needsColor = productDataQv.availableColors && productDataQv.availableColors.length > 0;
+    const needsSize = productDataQv.availableSizes && productDataQv.availableSizes.length > 0;
+
+    const hasRequiredColor = !needsColor || selectedColorQv;
+    const hasRequiredSize = !needsSize || selectedSizeQv;
+
+    if (hasRequiredColor && hasRequiredSize && currentStockQv > 0) {
+        addButton.disabled = false;
+        addButton.classList.remove('disabled');
+        addButton.innerHTML = '<i class="fas fa-shopping-bag"></i> افزودن به سبد خرید';
+    } else {
+        addButton.disabled = true;
+        addButton.classList.add('disabled');
+
+        if (needsColor && !selectedColorQv) {
+            addButton.innerHTML = '<i class="fas fa-shopping-bag"></i> ابتدا رنگ را انتخاب کنید';
+        } else if (needsSize && !selectedSizeQv) {
+            addButton.innerHTML = '<i class="fas fa-shopping-bag"></i> ابتدا سایز را انتخاب کنید';
+        } else if (currentStockQv <= 0) {
+            addButton.innerHTML = '<i class="fas fa-shopping-bag"></i> ناموجود';
+        }
+    }
+}
+
+// ✅ تابع افزودن به سبد خرید از Modal
+window.addToCartFromModal = function(productId) {
+    console.log('🛒 Adding to cart from modal...');
+
+    const quantity = parseInt(document.getElementById('quantityInputQv').value) || 1;
+
+    // بررسی انتخاب رنگ
+    if (productDataQv.availableColors && productDataQv.availableColors.length > 0 && !selectedColorQv) {
+        alert('لطفاً رنگ مورد نظر را انتخاب کنید');
+        return;
+    }
+
+    // بررسی انتخاب سایز
+    if (productDataQv.availableSizes && productDataQv.availableSizes.length > 0 && !selectedSizeQv) {
+        alert('لطفاً سایز مورد نظر را انتخاب کنید');
+        return;
+    }
+
+    // بررسی موجودی
+    if (currentStockQv <= 0) {
+        alert('این محصول موجود نیست');
+        return;
+    }
+
+    if (quantity > currentStockQv) {
+        alert(`تنها ${currentStockQv} عدد از این محصول موجود است`);
+        return;
+    }
+
+    const cartData = {
+        product_id: productId,
+        color_id: selectedColorQv || null,
+        size_id: selectedSizeQv || null,
+        quantity: quantity
+    };
+
+    console.log('🛒 Cart data:', cartData);
+
+    // نمایش loading
+    const addButton = document.getElementById('addToCartBtnQv');
+    const originalText = addButton.innerHTML;
+    addButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال افزودن...';
+    addButton.disabled = true;
+
+    // ارسال درخواست AJAX
+    fetch('/products/add-to-cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(cartData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccessMessage(data.message || 'محصول با موفقیت به سبد خرید اضافه شد');
+
+            if (data.cart_items_count) {
+                updateCartCount(data.cart_items_count);
+            }
+
+            setTimeout(() => {
+                closeQuickViewModal();
+            }, 1000);
+        } else {
+            alert(data.error || 'خطا در افزودن به سبد خرید');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding to cart:', error);
+        alert('خطا در افزودن به سبد خرید');
+    })
+    .finally(() => {
+        addButton.innerHTML = originalText;
+        addButton.disabled = false;
+    });
+};
+
+// ✅ توابع کمکی
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showSuccessMessage(message) {
+    const toast = document.createElement('div');
+    toast.className = 'success-toast';
+    toast.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>${message}</span>
+    `;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 5px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        animation: slideInRight 0.3s ease;
+        font-family: 'IRANSans', sans-serif;
+        direction: rtl;
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
+function updateCartCount(count) {
+    const cartCountElements = document.querySelectorAll('.cart-count, .cart-counter, #cart-count');
+    cartCountElements.forEach(element => {
+        element.textContent = count;
+        if (count > 0) {
+            element.style.display = 'inline';
+        }
+    });
+}
+
+// ✅ DOMContentLoaded شروع می‌شود
 document.addEventListener('DOMContentLoaded', () => {
     // Romantic Loading Animation
     window.addEventListener('load', () => {
@@ -7,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (loader) {
                 loader.classList.add('hidden');
             }
-        }, 1000); // 2 ثانیه
+        }, 1000);
     });
 
     // Elegant Custom Cursor System
@@ -19,11 +574,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
-
-            // Create sparkle effect randomly (from home page template) - only for home page
-            // if (Math.random() > 0.95 && document.body.classList.contains('home-page')) { // فرض بر اینکه صفحه اصلی کلاس 'home-page' دارد
-            //     createSparkle(e.clientX, e.clientY);
-            // }
         });
 
         function animateCursor() {
@@ -38,20 +588,25 @@ document.addEventListener('DOMContentLoaded', () => {
             requestAnimationFrame(animateCursor);
         }
         animateCursor();
+
         // Hover Effects for Cursor
         document.querySelectorAll('a, button, .product-card, .collection-card, .size-btn, .color-option, .material-tag, .page-btn, .social-link, .btn, .nav-icon, .filter-header').forEach(el => {
-            el.addEventListener('mouseenter', () => {
-                cursor.classList.add('hover'); // نام کلاس به hover تغییر یافت
-            });
+            try {
+                el.addEventListener('mouseenter', () => {
+                    cursor.classList.add('hover');
+                });
 
-            el.addEventListener('mouseleave', () => {
-                cursor.classList.remove('hover'); // نام کلاس به hover تغییر یافت
-            });
+                el.addEventListener('mouseleave', () => {
+                    cursor.classList.remove('hover');
+                });
+            } catch (e) {
+                console.warn("Could not add event listener to element:", el, e);
+            }
         });
     }
 
-    // Sparkle Effect (from home page template)
-    function createSparkle(x, y) {
+    // Sparkle Effect
+    window.createSparkle = function(x, y) {
         const sparkle = document.createElement('div');
         sparkle.className = 'sparkle';
         sparkle.style.left = x + 'px';
@@ -61,7 +616,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             sparkle.remove();
         }, 1000);
-    }
+    };
+
     // Navbar Scroll Effect
     window.addEventListener('scroll', () => {
         const navbar = document.getElementById('navbar');
@@ -74,10 +630,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Fade In Animation (Intersection Observer)
+    // Fade In Animation
     const observerOptions = {
         threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px' // شروع زودتر انیمیشن
+        rootMargin: '0px 0px -50px 0px'
     };
 
     const observer = new IntersectionObserver((entries) => {
@@ -87,42 +643,42 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }, observerOptions);
+
     document.querySelectorAll('.fade-in').forEach(el => {
         observer.observe(el);
     });
 
-    // Heart Animation on Product Favorite (Moved from home page and product list)
-    // This function will be called directly in product_list.html and home.html
+    // Heart Animation on Product Favorite
     window.toggleWishlist = function(button, productId) {
         const icon = button.querySelector('i');
         const isActive = icon.classList.contains('fas');
 
-        // Simulate API call or actual AJAX request
         showLoading();
-        fetch('/products/toggle-wishlist/', { //  مسیر واقعی در urls.py شما
+        fetch('/products/toggle-wishlist/', {
             method: 'POST',
-            headers: {                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken') // Function to get CSRF token
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
             },
             body: JSON.stringify({ product_id: productId, action: isActive ? 'remove' : 'add' })
         })
         .then(response => response.json())
         .then(data => {
             hideLoading();
-            if (data.success) {                if (isActive) {
+            if (data.success) {
+                if (isActive) {
                     icon.classList.remove('fas');
                     icon.classList.add('far');
-                    button.classList.remove('active'); // اضافه شده برای حذف کلاس active
+                    button.classList.remove('active');
                     showToast('محصول از علاقه‌مندی‌ها حذف شد', 'heart-broken');
                 } else {
                     icon.classList.remove('far');
                     icon.classList.add('fas');
-                    button.classList.add('active'); // اضافه شده برای افزودن کلاس active
+                    button.classList.add('active');
                     showToast('محصول به علاقه‌مندی‌ها اضافه شد', 'heart');
                 }
-                // Optional: Update favorite count
             } else {
-                showToast(data.error || 'خطا در تغییر علاقه‌مندی‌ها', 'exclamation-triangle');
+                showToast(data.message || 'خطا در تغییر علاقه‌مندی‌ها', 'exclamation-triangle');
             }
         })
         .catch(error => {
@@ -131,7 +687,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('خطا در ارتباط با سرور', 'times-circle');
         });
 
-        // Create floating heart effect (visual feedback)
         createFloatingHeart(button.getBoundingClientRect().left + button.offsetWidth / 2, button.getBoundingClientRect().top + button.offsetHeight / 2);
     };
 
@@ -151,7 +706,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(heart);
         setTimeout(() => heart.remove(), 2000);
     }
-    // Add floating heart animation style (directly to head)
+
+    // Add floating heart animation style
     if (!document.getElementById('floatingHeartAnimStyle')) {
         const style = document.createElement('style');
         style.id = 'floatingHeartAnimStyle';
@@ -161,13 +717,14 @@ document.addEventListener('DOMContentLoaded', () => {
             100% { opacity: 0; transform: translateY(-100px) scale(1.5); }
         }
         `;
-        document.head.appendChild(style);    }
+        document.head.appendChild(style);
+    }
 
-    // Add to Cart Logic (Unified for all product cards, from home and product list templates)
-    window.addToCart = function(productId, quantity = 1, colorId = null, sizeId = null, inventoryId = null) {
+    // Add to Cart Logic
+    window.addToCart = function(productId, quantity = 1, colorId = null, sizeId = null) {
         showLoading();
 
-        fetch('/cart/add/', { // مطمئن شوید این URL به درستی تعریف شده است
+        fetch('/products/add-to-cart/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -175,9 +732,9 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             body: JSON.stringify({
                 product_id: productId,
-                quantity: quantity,                color_id: colorId,
-                size_id: sizeId,
-                inventory_id: inventoryId
+                quantity: quantity,
+                color_id: colorId,
+                size_id: sizeId
             })
         })
         .then(response => response.json())
@@ -185,13 +742,12 @@ document.addEventListener('DOMContentLoaded', () => {
             hideLoading();
             if (data.success) {
                 showToast('محصول به سبد خرید اضافه شد.', 'check');
-                updateCartBadge(data.cart_items_count); // Update cart count in header
+                updateCartBadge(data.cart_items_count);
                 if (data.redirect) {
-                    // Redirect if required (e.g., if user not logged in for certain actions)
                     window.location.href = data.redirect;
                 }
             } else {
-                showToast(data.error || 'خطا در افزودن محصول به سبد خرید.', 'exclamation-triangle');
+                showToast(data.message || 'خطا در افزودن محصول به سبد خرید.', 'exclamation-triangle');
                 if (data.redirect) {
                     window.location.href = data.redirect;
                 }
@@ -216,10 +772,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Quick View Modal Logic (For product_list.html and related pages)
+    // Quick View Modal Logic
     window.openQuickView = function(productId) {
         showLoading();
-        fetch(`/products/${productId}/quick-view/`) // URL برای دریافت جزئیات محصول با AJAX
+        fetch(`/products/${productId}/quick-view/`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -228,10 +784,32 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(html => {
                 hideLoading();
-                document.getElementById('quickViewModalContent').innerHTML = html; // محتوای Quick View در این ID قرار می‌گیرد
-                const modal = document.getElementById('quickViewModal');
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden'; // جلوگیری از اسکرول صفحه
+                const quickViewModalContentDiv = document.getElementById('quickViewModalContent');
+                if (quickViewModalContentDiv) {
+                    quickViewModalContentDiv.innerHTML = html;
+                    const modal = document.getElementById('quickViewModal');
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+
+                    const jsonDataElement = quickViewModalContentDiv.querySelector('#quickViewProductJsonData');
+                    if (jsonDataElement && jsonDataElement.textContent) {
+                        try {
+                            const productJsonData = JSON.parse(jsonDataElement.textContent);
+                            console.log('Parsed quickViewProductJsonData:', productJsonData);
+                            window.initQuickViewModalContent(productJsonData);
+                        } catch (e) {
+                            console.error("Error parsing quickViewProductJsonData:", e);
+                            showToast("خطا در پردازش اطلاعات محصول.", 'exclamation-triangle');
+                        }
+                    } else {
+                        console.error("quickViewProductJsonData element or its content not found in loaded HTML.");
+                        showToast("اطلاعات محصول یافت نشد. لطفاً صفحه را رفرش کنید.", 'exclamation-triangle');
+                    }
+
+                } else {
+                    console.error("quickViewModalContentDiv not found.");
+                    showToast("خطا: کانتینر مودال یافت نشد.", 'times-circle');
+                }
             })
             .catch(error => {
                 console.error('Error fetching quick view:', error);
@@ -241,167 +819,34 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.closeQuickView = function() {
-        const modal = document.getElementById('quickViewModal');
-        modal.classList.remove('active');
-        document.body.style.overflow = 'auto'; // بازگرداندن اسکرول صفحه
-        document.getElementById('quickViewModalContent').innerHTML = ''; // پاک کردن محتوا
+        closeQuickViewModal();
+        document.getElementById('quickViewModalContent').innerHTML = '';
+        // Reset Quick View specific variables
+        productDataQv = {};
+        inventoryMappingQv = {};
+        selectedColorQv = null;
+        selectedSizeQv = null;
+        currentStockQv = 0;
     };
 
-    // Change Image in Modal (For Quick View)
-    window.changeImage = function(thumbnail) {
-        const mainImage = document.getElementById('mainImageQv'); // ID تغییر یافته
-        mainImage.src = thumbnail.src;
-
-        document.querySelectorAll('.thumbnail-qv').forEach(thumb => { // کلاس تغییر یافته
-            thumb.classList.remove('active');
-        });
-        thumbnail.classList.add('active');
-    };
-
-    // Quantity Selector in Modal (For Quick View)
-    window.increaseQuantity = function() {
-        const input = document.getElementById('quantityInputQv'); // ID تغییر یافته
-        let value = parseInt(input.value);
-        const max = parseInt(input.getAttribute('max'));
-        if (value < max) {
-            input.value = value + 1;
-        }
-    };
-    window.decreaseQuantity = function() {
-        const input = document.getElementById('quantityInputQv'); // ID تغییر یافته
-        let value = parseInt(input.value);
-        if (value > 1) {
-            input.value = value - 1;
-        }
-    };    // Newsletter Form (already moved to base.html, this is just for the JS logic)
-    const newsletterForm = document.getElementById('newsletterForm'); // باید در base.html ID داشته باشد
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const input = e.target.querySelector('.newsletter-input');
-            const button = e.target.querySelector('.newsletter-submit');
-            // Simulate form submission
-            showLoading(); // تابع showLoading از همین فایل است
-            setTimeout(() => {
-                hideLoading(); // تابع hideLoading از همین فایل است
-                showToast('با موفقیت عضو خبرنامه شدید!', 'envelope'); // تابع showToast از همین فایل است
-                input.value = '';
-                button.innerHTML = '<i class="fas fa-heart"></i> ممنون!'; // تغییر متن دکمه
-                setTimeout(() => {
-                    button.textContent = 'عضویت';
-                }, 1500); // بازگرداندن متن دکمه پس از ۱.۵ ثانیه
-            }, 1500);
-
-            // در یک پروژه Django واقعی، شما فرم را از طریق fetch یا form.submit() ارسال می‌کنید
-            // e.g., this.submit();
-        });
-    }
-
-
-    // Testimonials Auto Scroll (from home page template)
-    const testimonialSlider = document.querySelector('.testimonials-slider');
-    if (testimonialSlider) {
-        let testimonialScrollAmount = 0;
-
-        setInterval(() => {
-            testimonialScrollAmount += 390; // عرض تقریبی کارت (350px) + gap (40px)
-            // اگر به انتهای اسلایدر رسیدیم، به ابتدا برگردیم
-            if (testimonialScrollAmount >= testimonialSlider.scrollWidth - testimonialSlider.clientWidth) {
-                testimonialScrollAmount = 0;
-            }
-            testimonialSlider.scrollTo({
-                left: testimonialScrollAmount,
-                behavior: 'smooth'
-            });
-        }, 4000); // هر 4 ثانیه
-    }
-
-    // Product Image Hover Effect (from home page template)
-    document.querySelectorAll('.product-card').forEach(card => {
-        const image = card.querySelector('.product-image');
-        if (image) { // اطمینان از وجود تصویر
-            card.addEventListener('mouseenter', () => {
-                image.style.filter = 'brightness(1.1) saturate(1.2)';
-            });
-
-            card.addEventListener('mouseleave', () => {
-                image.style.filter = '';
-            });
-        }
-    });
-
-    // Filter Toggle in Sidebar (for product pages)
-    document.querySelectorAll('.filter-header').forEach(header => {
-        header.addEventListener('click', () => {
-            const content = header.nextElementSibling;
-            const section = header.parentElement;
-            section.classList.toggle('collapsed');
-            toggle.classList.toggle('active'); // برای چرخش آیکون
-            if (section.classList.contains('collapsed')) {
-                content.style.maxHeight = '0px';
-                content.style.paddingTop = '0px';
-                content.style.paddingBottom = '0px';
-            } else {
-                content.style.maxHeight = content.scrollHeight + "px"; // باز کردن کامل
-                content.style.paddingTop = '15px';
-                content.style.paddingBottom = '20px';
-            }
-        });
-    });
-
-    // Mobile Filter Toggle (for product pages)
-    window.toggleMobileFilter = function() {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            sidebar.classList.toggle('mobile-active');
-        }
-    };
-    window.getColorCode = function(colorName) {
-    const colorMap = {
-        'سفید': '#FFFFFF', 'مشکی': '#000000', 'خاکستری': '#808080', 'نقره‌ای': '#C0C0C0',
-        'قرمز': '#FF0000', 'زرشکی': '#800000', 'صورتی': '#FFC0CB', 'گلبهی': '#FFB6C1',
-        'نارنجی': '#FFA500', 'هلویی': '#FFDAB9', 'طلایی': '#FFD700', 'زرد': '#FFFF00', 'لیمویی': '#BFFF00',
-        'سبز': '#00FF00', 'سبز لجنی': '#2F4F4F', 'سبز یشمی': '#00A86B', 'سبز زیتونی': '#808000',
-        'آبی': '#0000FF', 'آبی آسمانی': '#87CEEB', 'آبی نفتی': '#000080', 'فیروزه‌ای': '#40E0D0',
-        'بنفش': '#800080', 'یاسی': '#DDA0DD', 'ارغوانی': '#9370DB',
-        'قهوه‌ای': '#A52A2A', 'کرم': '#FFFDD0', 'بژ': '#F5F5DC', 'شکلاتی': '#5C4033', 'عنابی': '#722F37',
-        'مسی': '#B87333', 'برنزی': '#CD7F32', 'سرمه‌ای': '#191970', 'کالباسی': '#E34234', 'نباتی': '#FAEBD7', 'آجری': '#B22222',
-        'آبی_روشن': '#ADD8E6', 'طوسی': '#808080', 'جگری': '#8B0000', 'آبی_کاربنی': '#003366', 'بنفش_روشن': '#E0B4D6',
-        'زیتونی': '#808000', 'آلبالویی': '#8B0000', 'کاهویی': '#ADFF2F', 'آبی_ملایم': '#6495ED', 'بژ_روشن': '#F5F5DC',
-        'خاکی': '#C2B280', 'سیلور': '#C0C0C0', 'نارنجی_سیر': '#FF8C00', 'آبی_نفتی_تیره': '#000080', 'بنفش_پررنگ': '#8A2BE2',
-        'زرد_طلایی': '#FFD700', 'ارغوانی_روشن': '#D8BFD8', 'یشمی_روشن': '#7FFFD4', 'آبی_دریایی': '#000080', 'براق': '#E0E0E0',
-    };
-    return colorMap[colorName] || '#CCCCCC';
-};
-    // Close modal on outside click (for Quick View)
-    const quickViewModal = document.getElementById('quickViewModal');
-    if (quickViewModal) {
-        quickViewModal.addEventListener('click', function(e) {
-            if (e.target === this) {                closeQuickView();
-            }
-        });
-    }
-
-    // Close mobile filter on outside click
-    document.addEventListener('click', function(e) {
-        const sidebar = document.getElementById('sidebar');
-        const toggle = document.querySelector('.mobile-filter-toggle'); // این دکمه را باید در product_list.html ایجاد کنید
-
-        if (sidebar && toggle && sidebar.classList.contains('mobile-active') &&
-            !sidebar.contains(e.target) &&
-            !toggle.contains(e.target)) {
-            sidebar.classList.remove('mobile-active');
-        }
-    });
-
-
-    // Global Toast Notification (Accessible from other JS files)
+    // Global Toast Notification
     window.showToast = function(message, icon = 'check') {
+        document.querySelectorAll('.toast').forEach(t => t.classList.remove('show'));
+
         const toast = document.getElementById('toast');
         if (!toast) {
             console.error('Toast element not found!');
+            const fallbackToast = document.createElement('div');
+            fallbackToast.className = 'toast show';
+            fallbackToast.innerHTML = `<div class="toast-icon"><i class="fas fa-${icon}"></i></div><div class="toast-message">${message}</div>`;
+            document.body.appendChild(fallbackToast);
+            setTimeout(() => {
+                fallbackToast.classList.remove('show');
+                setTimeout(() => fallbackToast.remove(), 300);
+            }, 3000);
             return;
         }
+
         const toastIcon = toast.querySelector('.toast-icon i');
         const toastMessage = toast.querySelector('.toast-message');
 
@@ -415,13 +860,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     };
 
-    // Global Loading Spinner (Accessible from other JS files)
+    // Global Loading Spinner
     window.showLoading = function() {
         const spinner = document.getElementById('loadingSpinner');
         if (spinner) {
             spinner.style.display = 'block';
         }
     };
+
     window.hideLoading = function() {
         const spinner = document.getElementById('loadingSpinner');
         if (spinner) {
@@ -429,54 +875,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Django Messages Auto-Hide (if not already handled by main.js)
+    // Django Messages Auto-Hide
     const djangoMessagesContainer = document.querySelector('.django-messages');
     if (djangoMessagesContainer) {
         const alerts = djangoMessagesContainer.querySelectorAll('.alert');
         alerts.forEach(alert => {
             setTimeout(() => {
-                // Add fade-out class (if you have one in your CSS)
                 alert.style.opacity = '0';
                 alert.style.transition = 'opacity 0.5s ease';
                 setTimeout(() => {
                     alert.remove();
                 }, 500);
-            }, 5000); // Hide after 5 seconds
+            }, 5000);
         });
     }
 
-    // Helper function to get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
+    // Filter Toggle in Sidebar
     document.querySelectorAll('.filter-header').forEach(header => {
-        header.addEventListener('click', () => {
-            const content = header.nextElementSibling;
+        try {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const section = header.parentElement;
+                const toggleIcon = header.querySelector('.filter-toggle');
 
-            header.classList.toggle('active');
+                section.classList.toggle('collapsed');
+                if (toggleIcon) {
+                    toggleIcon.classList.toggle('active');
+                }
 
-            if (content.style.maxHeight && content.style.maxHeight !== '0px') {
-                // اگر باز است، آن را ببند
-                content.style.maxHeight = '0px';
-            } else {
-                // اگر بسته است، آن را باز کن
-                // ارتفاع را بر اساس محتوای واقعی داخل آن تنظیم کن
-                content.style.maxHeight = content.scrollHeight + "px";
-            }
-        });
+                if (section.classList.contains('collapsed')) {
+                    content.style.maxHeight = '0px';
+                    content.style.paddingTop = '0px';
+                    content.style.paddingBottom = '0px';
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    content.style.paddingTop = '15px';
+                    content.style.paddingBottom = '20px';
+                }
+            });
+        } catch (e) {
+            console.warn("Could not add event listener to filter header:", header, e);
+        }
     });
+
+    // Mobile Filter Toggle
+    window.toggleMobileFilter = function() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('mobile-active');
+        }
+    };
+
+    // Close mobile filter on outside click
+    document.addEventListener('click', function(e) {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.querySelector('.mobile-filter-toggle');
+
+        if (sidebar && toggle && sidebar.classList.contains('mobile-active') &&
+            !sidebar.contains(e.target) &&
+            !toggle.contains(e.target)) {
+            sidebar.classList.remove('mobile-active');
+        }
+    });
+
+    // Handle filter content maxHeight on window resize
     window.addEventListener('resize', () => {
         document.querySelectorAll('.filter-content').forEach(content => {
             if (content.style.maxHeight && content.style.maxHeight !== '0px') {
@@ -484,7 +946,63 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-    // Console Branding (از تمپلیت صفحه اصلی) - فونت تغییر یافت به Playfair Display
+
+    // Featured Products Slider Logic
+    const sliderContainer = document.querySelector('.slider-container');
+    if (sliderContainer) {
+        const productsSliderTrack = sliderContainer.querySelector('.products-slider-track');
+        const productSlides = productsSliderTrack.querySelectorAll('.product-slide');
+        const prevSlideBtn = sliderContainer.querySelector('.prev-slide');
+        const nextSlideBtn = sliderContainer.querySelector('.next-slide');
+        let currentSlideIndex = 0;
+
+        function updateSlider() {
+            productSlides.forEach(slide => {
+                slide.classList.remove('active');
+            });
+
+            if (productSlides[currentSlideIndex]) {
+                productSlides[currentSlideIndex].classList.add('active');
+            }
+
+            if (prevSlideBtn) {
+                if (currentSlideIndex === 0) {
+                    prevSlideBtn.classList.add('disabled');
+                } else {
+                    prevSlideBtn.classList.remove('disabled');
+                }
+            }
+            if (nextSlideBtn) {
+                if (currentSlideIndex === productSlides.length - 1) {
+                    nextSlideBtn.classList.add('disabled');
+                } else {
+                    nextSlideBtn.classList.remove('disabled');
+                }
+            }
+        }
+
+        if (prevSlideBtn) {
+            prevSlideBtn.addEventListener('click', () => {
+                if (currentSlideIndex > 0) {
+                    currentSlideIndex--;
+                    updateSlider();
+                }
+            });
+        }
+
+        if (nextSlideBtn) {
+            nextSlideBtn.addEventListener('click', () => {
+                if (currentSlideIndex < productSlides.length - 1) {
+                    currentSlideIndex++;
+                    updateSlider();
+                }
+            });
+        }
+
+        updateSlider();
+    }
+
+    // Console Branding
     console.log(`
 ████████╗██╗███╗ ███╗ █████╗
 ╚══██╔══╝██║████╗ ████║██╔══██╗

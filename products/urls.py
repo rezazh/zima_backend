@@ -25,7 +25,7 @@ urlpatterns = [
  path('add-review/<int:product_id>/', views.add_review, name='add_review'),
 
  # Quick View محصول
- path('<int:product_id>/quick-view/', views.quick_view_product, name='quick_view'),
+ path('<int:product_id>/quick-view/', views.quick_view, name='quick_view'),
 
  # جزئیات یک محصول خاص - نام‌های مختلف برای سازگاری
  path('<int:product_id>/', views.product_detail, name='detail'),

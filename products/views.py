@@ -1,16 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q, Avg, Count, Min, Max, Value, BooleanField
+from django.db.models import Q, Avg, Count, Min, Max, Value, BooleanField, Sum
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import json
+import logging
 
-from cart.models import WishlistItem
+from cart.models import WishlistItem, CartItem
 from .models import Product, Category, Color, Size, ProductInventory, ProductImage, Review
 
+logger = logging.getLogger(__name__)
 
 def _apply_filters_and_sort(request, products_queryset):
     """اعمال فیلترها و مرتب‌سازی بر روی کوئری محصولات"""
@@ -414,20 +416,108 @@ def add_review(request, product_id):
         })
 
 
-def quick_view_product(request, product_id):
-    """نمایش سریع محصول"""
-    product = get_object_or_404(Product, id=product_id)
-    if request.user.is_authenticated:
-        product.is_favorited = WishlistItem.objects.filter(user=request.user, product=product).exists()
-    else:
-        product.is_favorited = False
+def quick_view(request, product_id):
+    try:
+        logger.info(f"Quick view requested for product {product_id}")
 
-    context = {
-        'product': product,
-    }
-    return render(request, 'products/quick_view_modal_content.html', context)
+        # دریافت محصول
+        product = get_object_or_404(Product, id=product_id, is_active=True)
+        logger.info(f"Product found: {product.name}")
 
+        # دریافت موجودی‌ها
+        inventories = ProductInventory.objects.select_related('color', 'size').filter(
+            product=product,
+            quantity__gt=0  # فقط موجودی‌های بیشتر از صفر
+        ).order_by('color__name', 'size__name')
 
+        logger.info(f"Found {inventories.count()} inventory records")
+
+        # محاسبه موجودی کل - استفاده از property total_stock
+        total_stock = product.total_stock
+
+        # ساخت inventory mapping و جمع‌آوری رنگ‌ها و سایزها
+        inventory_mapping = {}
+        colors_dict = {}
+        sizes_dict = {}
+
+        for inv in inventories:
+            if not inv.color or not inv.size:
+                continue  # Skip if color or size is None
+
+            color_key = str(inv.color.id)
+            size_key = str(inv.size.id)
+
+            # اضافه کردن به inventory mapping
+            if color_key not in inventory_mapping:
+                inventory_mapping[color_key] = {}
+
+            inventory_mapping[color_key][size_key] = {
+                'quantity': inv.quantity,
+                'color_name': inv.color.name,
+                'color_hex': getattr(inv.color, 'hex_code', '#CCCCCC') or '#CCCCCC',
+                'size_name': inv.size.name
+            }
+
+            # جمع‌آوری رنگ‌ها و سایزها
+            if inv.color.id not in colors_dict:
+                colors_dict[inv.color.id] = {
+                    'id': inv.color.id,
+                    'name': inv.color.name,
+                    'hex_code': getattr(inv.color, 'hex_code', '#CCCCCC') or '#CCCCCC'
+                }
+
+            if inv.size.id not in sizes_dict:
+                sizes_dict[inv.size.id] = {
+                    'id': inv.size.id,
+                    'name': inv.size.name
+                }
+
+        # تبدیل dict به list و مرتب‌سازی
+        available_colors = list(colors_dict.values())
+        available_sizes = list(sizes_dict.values())
+
+        available_colors.sort(key=lambda x: x['name'])
+        available_sizes.sort(key=lambda x: x['name'])
+
+        logger.info(f"Available colors: {len(available_colors)}")
+        logger.info(f"Available sizes: {len(available_sizes)}")
+        logger.info(f"Total stock: {total_stock}")
+
+        # بررسی وضعیت علاقه‌مندی
+        is_favorited = False
+        if request.user.is_authenticated:
+            try:
+                from cart.models import WishlistItem
+                is_favorited = WishlistItem.objects.filter(
+                    user=request.user,
+                    product=product
+                ).exists()
+            except Exception:
+                is_favorited = False
+
+        context = {
+            'product': product,
+            'total_stock': total_stock,  # استفاده از total_stock
+            'available_colors': available_colors,
+            'available_sizes': available_sizes,
+            'inventory_mapping': json.dumps(inventory_mapping, ensure_ascii=False, separators=(',', ':')),
+            'is_favorited': is_favorited,
+        }
+
+        logger.info("Context prepared successfully, rendering template")
+        return render(request, 'products/quick_view_modal_content.html', context)
+
+    except Product.DoesNotExist:
+        logger.error(f"Product with id {product_id} not found")
+        return JsonResponse({
+            'error': 'محصول مورد نظر یافت نشد'
+        }, status=404)
+
+    except Exception as e:
+        logger.error(f"Error in quick_view: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'error': f'خطا در بارگذاری اطلاعات محصول: {str(e)}'
+        }, status=500)
 @require_POST
 @csrf_exempt
 def toggle_wishlist(request):
@@ -468,14 +558,6 @@ def toggle_wishlist(request):
 
 @require_POST
 def add_to_cart(request):
-    """افزودن محصول به سبد خرید"""
-    if not request.user.is_authenticated:
-        return JsonResponse({
-            'success': False,
-            'message': 'برای افزودن به سبد خرید ابتدا وارد حساب کاربری خود شوید.',
-            'redirect': '/accounts/login/'
-        })
-
     try:
         data = json.loads(request.body)
         product_id = data.get('product_id')
@@ -483,42 +565,100 @@ def add_to_cart(request):
         color_id = data.get('color_id')
         size_id = data.get('size_id')
 
-        product = get_object_or_404(Product, id=product_id)
+        product = Product.objects.get(id=product_id, is_active=True)
 
-        # بررسی موجودی
-        inventory = ProductInventory.objects.filter(
-            product=product,
-            color_id=color_id if color_id else None,
-            size_id=size_id if size_id else None,
-            quantity__gte=quantity
-        ).first()
-
-        if not inventory:
+        if not request.user.is_authenticated:
             return JsonResponse({
                 'success': False,
-                'message': 'موجودی کافی برای این ترکیب رنگ و سایز وجود ندارد.'
+                'error': 'لطفاً ابتدا وارد حساب کاربری خود شوید.',
+                'redirect': '/users/login/'
             })
 
-        # افزودن به سبد خرید (منطق سبد خرید شما)
-        cart = request.session.get('cart', {})
-        cart_key = f"{product_id}_{color_id}_{size_id}"
+        # تعیین نام رنگ و سایز
+        color_name = None
+        size_name = None
+        inventory = None
 
-        if cart_key in cart:
-            cart[cart_key]['quantity'] += quantity
-        else:
-            cart[cart_key] = {
-                'product_id': product_id,
-                'color_id': color_id,
-                'size_id': size_id,
+        # پیدا کردن inventory مناسب
+        if color_id and size_id:
+            try:
+                color = Color.objects.get(id=color_id)
+                size = Size.objects.get(id=size_id)
+                color_name = color.name
+                size_name = size.name
+
+                # پیدا کردن inventory
+                inventory = ProductInventory.objects.get(
+                    product=product,
+                    color=color,
+                    size=size
+                )
+
+                # بررسی موجودی
+                if quantity > inventory.quantity:
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'تنها {inventory.quantity} عدد از این ترکیب موجود است.'
+                    })
+
+            except Color.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'رنگ انتخاب شده یافت نشد.'})
+            except Size.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'سایز انتخاب شده یافت نشد.'})
+            except ProductInventory.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'این ترکیب رنگ و سایز موجود نیست.'})
+
+        elif color_id:
+            try:
+                color = Color.objects.get(id=color_id)
+                color_name = color.name
+            except Color.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'رنگ انتخاب شده یافت نشد.'})
+
+        elif size_id:
+            try:
+                size = Size.objects.get(id=size_id)
+                size_name = size.name
+            except Size.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'سایز انتخاب شده یافت نشد.'})
+
+        # بررسی موجودی کل محصول اگر inventory خاص نداریم
+        if not inventory:
+            total_stock = product.total_stock  # استفاده از property total_stock
+            if quantity > total_stock:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'تنها {total_stock} عدد از این محصول موجود است.'
+                })
+
+        # ایجاد یا به‌روزرسانی CartItem
+        cart_item, created = CartItem.objects.get_or_create(
+            user=request.user,
+            product=product,
+            color=color_name or '',
+            size=size_name or '',
+            defaults={
                 'quantity': quantity,
-                'price': float(product.get_display_price()),
+                'inventory': inventory
             }
+        )
 
-        request.session['cart'] = cart
-        request.session.modified = True
+        if not created:
+            # بررسی موجودی برای quantity جدید
+            new_quantity = cart_item.quantity + quantity
+            max_quantity = inventory.quantity if inventory else product.total_stock
 
-        # محاسبه تعداد کل آیتم‌های سبد خرید
-        cart_items_count = sum(item.get('quantity', 0) for item in cart.values())
+            if new_quantity > max_quantity:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'تنها {max_quantity} عدد از این محصول موجود است. شما {cart_item.quantity} عدد در سبد دارید.'
+                })
+
+            cart_item.quantity = new_quantity
+            cart_item.save()
+
+        # محاسبه تعداد کل آیتم‌های سبد
+        cart_items_count = CartItem.objects.filter(user=request.user).count()
 
         return JsonResponse({
             'success': True,
@@ -526,8 +666,7 @@ def add_to_cart(request):
             'cart_items_count': cart_items_count
         })
 
+    except Product.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'محصول یافت نشد.'})
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'خطا در افزودن به سبد خرید: {str(e)}'
-        })
+        return JsonResponse({'success': False, 'error': f'خطا در افزودن به سبد خرید: {str(e)}'})

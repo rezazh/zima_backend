@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // نمایش و مخفی کردن منوی موبایل
     const navbarToggler = document.querySelector('.navbar-toggler');
-    if (navbarToggler) {
+    if (navbarToggler) { // ✅ بررسی وجود عنصر
         navbarToggler.addEventListener('click', function() {
             document.body.classList.toggle('mobile-menu-open');
         });

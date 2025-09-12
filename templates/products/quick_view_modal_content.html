@@ -1,421 +1,104 @@
 {# templates/products/quick_view_modal_content.html #}
 {% load static %}
-{% load product_filters %}
 
-<div class="modal-images">
-    {% with main_image=product.get_main_image %}
-    <img src="{% if main_image %}{{ main_image.image.url }}{% else %}{% static 'images/zima_theme/product-placeholder.jpg' %}{% endif %}" alt="Product" class="main-image-qv" id="mainImageQv">
-    {% endwith %}
-    <div class="thumbnail-list">
-        {% for image in product.images.all %}
-        <img src="{{ image.image.url }}" alt="Thumb {{ forloop.counter }}" class="thumbnail-qv {% if image.is_main %}active{% endif %}" onclick="changeImage(this)">
-        {% endfor %}
-    </div>
-</div>
+<div class="modal-content-qv-inner">
+    <div class="modal-images-qv">
+        {% with main_image=product.get_main_image %}
+        <img src="{% if main_image %}{{ main_image.image.url }}{% else %}{% static 'images/zima_theme/product-placeholder.jpg' %}{% endif %}"
+             alt="{{ product.name }}"
+             class="main-image-qv"
+             id="mainImageQv">
+        {% endwith %}
 
-<div class="modal-details">
-    <div class="modal-brand">{{ product.brand }}</div>
-    <h2 class="modal-title-qv">{{ product.name }}</h2>
-    <div class="modal-rating">
-        <div class="stars">
-            {% with rating=product.get_average_rating %}
-            {% for i in "12345" %}
-            <i class="fa{% if forloop.counter <= rating %}s{% else %}r{% endif %} fa-star star"></i>
+        {% if product.images.count > 1 %}
+        <div class="thumbnail-list-qv">
+            {% for image in product.images.all %}
+            <img src="{{ image.image.url }}"
+                 alt="Thumb {{ forloop.counter }}"
+                 class="thumbnail-qv {% if forloop.first %}active{% endif %}"
+                 onclick="changeImageQv(this)">
             {% endfor %}
-            {% endwith %}
         </div>
-        <span>({{ product.get_rating_count }} نظر)</span>
+        {% endif %}
     </div>
-    <div class="modal-price">{{ product.get_formatted_display_price}} تومان</div>
-    <p class="modal-description">
-        {{ product.short_description|default:"توضیحات کوتاه برای این محصول موجود نیست." }}
-    </p>
 
-    <div class="modal-options">
-        <div class="option-group">
-            <div class="option-label">سایز:</div>
-            <div class="size-options" id="modalSizeOptions">
-                {# سایزها با JS در اینجا رندر می‌شوند #}
+    <div class="modal-details-qv">
+        <div class="product-header-qv">
+            <div class="modal-brand-qv">{{ product.brand|default:"برند نامشخص" }}</div>
+            <h2 class="modal-title-qv">{{ product.name }}</h2>
+        </div>
+
+        <div class="price-section-qv">
+            <span class="current-price-qv">{{ product.get_formatted_display_price }} تومان</span>
+            {% if product.has_discount %}
+                <span class="original-price-qv">{{ product.get_formatted_price }} تومان</span>
+                <span class="discount-badge-qv">{{ product.discount_percent }}% تخفیف</span>
+            {% endif %}
+        </div>
+
+        <p class="modal-description-qv">
+            {{ product.description|truncatewords:25|default:"توضیحات کوتاه برای این محصول موجود نیست." }}
+        </p>
+
+        <div class="modal-options-qv">
+            <div class="option-group-qv" id="colorOptionGroupQv" style="display: none;">
+                <label class="option-label-qv">رنگ: <span id="selectedColorNameQv">انتخاب کنید</span></label>
+                <div class="color-options-qv" id="modalColorOptionsQv"></div>
+            </div>
+
+            <div class="option-group-qv" id="sizeOptionGroupQv" style="display: none;">
+                <label class="option-label-qv">سایز: <span id="selectedSizeNameQv">انتخاب کنید</span></label>
+                <div class="size-options-qv" id="modalSizeOptionsQv"></div>
+            </div>
+
+            <div class="option-group-qv">
+                <label class="option-label-qv">تعداد:</label>
+                <div class="quantity-selector-qv">
+                    <button class="quantity-btn-qv" type="button" onclick="decreaseQuantityQv()">-</button>
+                    <input type="number" class="quantity-input-qv" value="1" min="1" max="{{ total_stock }}" id="quantityInputQv" readonly>
+                    <button class="quantity-btn-qv" type="button" onclick="increaseQuantityQv()">+</button>
+                </div>
             </div>
         </div>
 
-        <div class="option-group">
-            <div class="option-label">رنگ:</div>
-            <div class="color-options" id="modalColorOptions">
-                {# رنگ‌ها با JS در اینجا رندر می‌شوند #}
-            </div>
+        <div class="modal-actions-qv">
+            <button class="btn-add-to-cart-qv" onclick="window.addToCartFromModal('{{ product.id }}')" id="addToCartBtnQv">
+                <i class="fas fa-shopping-bag"></i> افزودن به سبد خرید
+            </button>
+            <button class="btn-wishlist-qv" onclick="toggleWishlist(this, '{{ product.id }}')">
+                <i class="far fa-heart"></i>
+            </button>
         </div>
-    </div>
-
-    <div class="quantity-selector">        <button class="quantity-btn" onclick="decreaseQuantityQv()">-</button>
-        <input type="number" class="quantity-input" value="1" min="1" max="{{ product.stock }}" id="quantityInputQv">
-        <button class="quantity-btn" onclick="increaseQuantityQv()">+</button>
-    </div>
-
-    <div class="modal-actions">
-        <button class="btn-add-to-cart" onclick="addToCartFromModal('{{ product.id }}')">
-            <i class="fas fa-shopping-bag"></i>
-            افزودن به سبد خرید
-        </button>
-        <button class="btn-wishlist {% if product.is_favorited %}active{% endif %}" onclick="toggleWishlist(this, '{{ product.id }}')">
-            <i class="fa{% if product.is_favorited %}s{% else %}r{% endif %} fa-heart"></i>
-        </button>
     </div>
 </div>
+
+<script type="application/json" id="quickViewProductJsonData">{
+    "id": {{ product.id }},
+    "stock": {{ total_stock }},
+    "hasDiscount": {% if product.has_discount %}true{% else %}false{% endif %},
+    "discountPercent": {{ product.discount_percent|default:0 }},
+    "inventoryMapping": {{ inventory_mapping|safe }},
+    "availableColors": [{% for color in available_colors %}{"id": {{ color.id }}, "name": "{{ color.name|escapejs }}", "hex_code": "{{ color.hex_code|default:'#CCCCCC' }}"}{% if not forloop.last %},{% endif %}{% endfor %}],
+    "availableSizes": [{% for size in available_sizes %}{"id": {{ size.id }}, "name": "{{ size.name|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+}</script>
 
 <script>
-    // Quick View Modal Specific JS (این اسکریپت فقط برای محتوای داخل مودال است)
-    const productDataQv = {
-        id: {{ product.id }},
-        basePrice: {{ product.get_discount_price }},
-        originalPrice: {{ product.price }},
-        stock: {{ product.stock }},
-        hasDiscount: {{ product.has_discount|yesno:"true,false" }},
-        discountPercent: {{ product.discount_percent }},
-    };
+// اجرای فوری
+document.addEventListener('DOMContentLoaded', function() {
+    const jsonScript = document.getElementById('quickViewProductJsonData');
+    if (jsonScript) {
+        try {
+            const productData = JSON.parse(jsonScript.textContent);
+            console.log('🚀 Quick View data loaded, calling init...');
 
-    const productInventoryQv = [
-        {% for inventory in product.inventories.all %}
-        {
-            id: {{ inventory.id }},
-            color: {
-                id: {{ inventory.color.id }},
-                name: "{{ inventory.color.name }}"
-            },
-            size: {
-                id: {{ inventory.size.id }},
-                name: "{{ inventory.size.name }}"
-            },            quantity: {{ inventory.quantity }},
-        },
-        {% endfor %}
-    ];
-
-    let selectedColorQv = null;
-    let selectedSizeQv = null;
-    let selectedInventoryQv = null;
-
-    // استخراج رنگ‌های منحصر به فرد از موجودی محصول
-    function getUniqueColorsQv() {
-        const colors = new Map();
-        productInventoryQv.forEach(item => {            if (!colors.has(item.color.id)) {
-                colors.set(item.color.id, item.color);
-            }
-        });
-        return Array.from(colors.values());    }
-
-    // استخراج سایزهای منحصر به فرد از موجودی محصول
-    function getUniqueSizesQv() {
-        const sizes = new Map();
-        productInventoryQv.forEach(item => {
-            if (!sizes.has(item.size.id)) {
-                sizes.set(item.size.id, item.size);
-            }
-        });
-        return Array.from(sizes.values());
-    }
-
-    // رندر رنگ‌ها در مودال
-    function renderColorsQv() {
-        const colorContainer = document.getElementById('modalColorOptions');
-        colorContainer.innerHTML = '';
-
-        const uniqueColors = getUniqueColorsQv();
-
-        if (uniqueColors.length === 0 && productInventoryQv.length > 0) {
-            colorContainer.innerHTML = '<p class="small text-muted">فاقد تنوع رنگی</p>';
-            return;
-        } else if (productInventoryQv.length === 0) {
-            colorContainer.innerHTML = '<div class="alert alert-warning small">رنگی برای این محصول ثبت نشده است.</div>';
-            return;
-        }
-
-        uniqueColors.forEach(color => {
-            const colorElement = document.createElement('div');
-            colorElement.className = 'color-option-large';
-            colorElement.setAttribute('data-color-id', color.id);
-            colorElement.setAttribute('data-color-name', color.name);
-            colorElement.style.backgroundColor = getColorCode(color.name); // استفاده از تابع getColorCode عمومی
-            colorElement.setAttribute('title', color.name);
-
-            colorElement.addEventListener('click', function() {
-                selectColorQv(this);
-            });
-            colorContainer.appendChild(colorElement);
-        });
-    }
-
-    // رندر سایزها در مودال
-    function renderSizesQv() {
-        const sizeContainer = document.getElementById('modalSizeOptions');
-        sizeContainer.innerHTML = '';
-
-        const uniqueSizes = getUniqueSizesQv();
-
-        if (uniqueSizes.length === 0 && productInventoryQv.length > 0) {
-            sizeContainer.innerHTML = '<p class="small text-muted">فاقد تنوع سایزی</p>';
-            return;
-        } else if (productInventoryQv.length === 0) {
-            sizeContainer.innerHTML = '<div class="alert alert-warning small">سایزی برای این محصول ثبت نشده است.</div>';
-            return;
-        }
-
-        uniqueSizes.forEach(size => {
-            const sizeElement = document.createElement('button');
-            sizeElement.className = 'size-option';
-            sizeElement.setAttribute('data-size-id', size.id);
-            sizeElement.setAttribute('data-size-name', size.name);
-            sizeElement.textContent = size.name;
-
-            sizeElement.addEventListener('click', function() {
-                selectSizeQv(this);
-            });
-            sizeContainer.appendChild(sizeElement);
-        });
-    }
-
-    // انتخاب رنگ در مودال
-    function selectColorQv(colorElement) {
-        document.querySelectorAll('#modalColorOptions .color-option-large').forEach(function(color) {            color.classList.remove('active');
-        });
-        colorElement.classList.add('active');
-
-        selectedColorQv = {
-            id: colorElement.getAttribute('data-color-id'),
-            name: colorElement.getAttribute('data-color-name')
-        };
-        updateAvailableSizesQv();
-        updateSelectedInventoryQv();
-    }
-
-    // انتخاب سایز در مودال
-    function selectSizeQv(sizeElement) {
-        document.querySelectorAll('#modalSizeOptions .size-option').forEach(function(size) {
-            size.classList.remove('active');
-        });
-        sizeElement.classList.add('active');
-
-        selectedSizeQv = {
-            id: sizeElement.getAttribute('data-size-id'),
-            name: sizeElement.getAttribute('data-size-name')
-        };
-        updateAvailableColorsQv();
-        updateSelectedInventoryQv();
-    }
-
-    // به‌روزرسانی سایزهای موجود در مودال بر اساس رنگ انتخاب شده
-    function updateAvailableSizesQv() {
-        if (!selectedColorQv) return;
-
-        const availableSizeIds = new Set();
-        productInventoryQv.forEach(item => {
-            if (item.color.id == selectedColorQv.id && item.quantity > 0) {
-                availableSizeIds.add(item.size.id);
-            }
-        });
-
-        document.querySelectorAll('#modalSizeOptions .size-option').forEach(sizeElement => {
-            const sizeId = sizeElement.getAttribute('data-size-id');
-            if (availableSizeIds.has(parseInt(sizeId))) {
-                sizeElement.classList.remove('disabled');
+            if (typeof window.initQuickViewModalContent === 'function') {
+                window.initQuickViewModalContent(productData);
             } else {
-                sizeElement.classList.add('disabled');
-                if (selectedSizeQv && selectedSizeQv.id == sizeId) {
-                    sizeElement.classList.remove('active');
-                    selectedSizeQv = null;
-                }
+                console.error('❌ initQuickViewModalContent not found');
             }
-        });
-    }
-
-    // به‌روزرسانی رنگ‌های موجود در مودال بر اساس سایز انتخاب شده
-    function updateAvailableColorsQv() {
-        if (!selectedSizeQv) return;
-
-        const availableColorIds = new Set();
-        productInventoryQv.forEach(item => {
-            if (item.size.id == selectedSizeQv.id && item.quantity > 0) {
-                availableColorIds.add(item.color.id);
-            }
-        });
-
-        document.querySelectorAll('#modalColorOptions .color-option-large').forEach(colorElement => {
-            const colorId = colorElement.getAttribute('data-color-id');
-            if (availableColorIds.has(parseInt(colorId))) {
-                colorElement.classList.remove('disabled');
-            } else {
-                colorElement.classList.add('disabled');
-                if (selectedColorQv && selectedColorQv.id == colorId) {
-                    colorElement.classList.remove('active');
-                    selectedColorQv = null;
-                }
-            }
-        });
-    }
-
-    // به‌روزرسانی موجودی انتخاب شده در مودال
-    function updateSelectedInventoryQv() {
-        selectedInventoryQv = null;
-        const addToCartBtn = document.querySelector('#quickViewModal .btn-add-to-cart'); // دکمه سبد خرید مودال
-        const quantityInput = document.getElementById('quantityInputQv');
-
-        if (productInventoryQv.length > 0) {
-            if (selectedColorQv && selectedSizeQv) {
-                selectedInventoryQv = productInventoryQv.find(item =>                    item.color.id == selectedColorQv.id &&
-                    item.size.id == selectedSizeQv.id
-                );
-
-                if (selectedInventoryQv && selectedInventoryQv.quantity > 0) {
-                    quantityInput.setAttribute('max', selectedInventoryQv.quantity);
-                    addToCartBtn.disabled = false;
-                    addToCartBtn.textContent = 'افزودن به سبد خرید';                } else {
-                    quantityInput.setAttribute('max', 0);
-                    addToCartBtn.disabled = true;
-                    addToCartBtn.textContent = 'ناموجود';
-                }
-            } else {
-                quantityInput.setAttribute('max', 0);
-                addToCartBtn.disabled = true;
-                addToCartBtn.textContent = 'انتخاب رنگ و سایز';
-            }
-        } else {
-            // اگر محصول تنوع رنگ و سایز ندارد
-            quantityInput.setAttribute('max', productDataQv.stock);
-            if (productDataQv.stock <= 0) {
-                addToCartBtn.disabled = true;
-                addToCartBtn.textContent = 'ناموجود';
-            } else {
-                addToCartBtn.disabled = false;
-                addToCartBtn.textContent = 'افزودن به سبد خرید';
-            }
-        }
-        // Reset quantity to 1 if max is less than current value
-        if (parseInt(quantityInput.value) > parseInt(quantityInput.max)) {
-            quantityInput.value = 1;
+        } catch (error) {
+            console.error('❌ JSON parse error:', error);
         }
     }
-
-    // افزایش تعداد در مودال
-    window.increaseQuantityQv = function() {
-        const input = document.getElementById('quantityInputQv');
-        let value = parseInt(input.value);
-        const max = parseInt(input.getAttribute('max'));
-        if (value < max) {
-            input.value = value + 1;
-        }
-    };
-
-    // کاهش تعداد در مودال
-    window.decreaseQuantityQv = function() {
-        const input = document.getElementById('quantityInputQv');
-        let value = parseInt(input.value);
-        if (value > 1) {
-            input.value = value - 1;
-        }
-    };
-
-    // افزودن به سبد خرید از مودال
-    window.addToCartFromModal = function(productId) {
-        const quantity = parseInt(document.getElementById('quantityInputQv').value);
-        if (productInventoryQv.length > 0) {
-            if (!selectedColorQv) {
-                showToast('لطفاً یک رنگ انتخاب کنید.', 'exclamation-triangle');
-                return;
-            }
-            if (!selectedSizeQv) {
-                showToast('لطفاً یک سایز انتخاب کنید.', 'exclamation-triangle');
-                return;
-            }            if (!selectedInventoryQv || selectedInventoryQv.quantity <= 0) {
-                showToast('این ترکیب رنگ و سایز موجود نیست.', 'exclamation-triangle');
-                return;
-            }
-            if (quantity > selectedInventoryQv.quantity) {
-                showToast(`موجودی این محصول با مشخصات انتخاب شده ${selectedInventoryQv.quantity} عدد است.`, 'exclamation-triangle');
-                return;
-            }
-            window.addToCart(productId, quantity, selectedColorQv.id, selectedSizeQv.id, selectedInventoryQv.id);
-        } else {
-            if (quantity > productDataQv.stock) {
-                showToast(`موجودی این محصول ${productDataQv.stock} عدد است.`, 'exclamation-triangle');
-                return;
-            }
-            window.addToCart(productId, quantity);
-        }
-        window.closeQuickView(); // بستن مودال پس از افزودن به سبد خرید
-    };
-
-    // اجرای کدها پس از بارگذاری محتوای مودال (این بخش باید در جایی که Quick View را با AJAX بارگذاری می‌کنید، فراخوانی شود)
-    // برای مثال، در تابع openQuickView در zima_theme_v2.js پس از اینکه محتوا به #quickViewModalContent اضافه شد:
-    // ...
-    // .then(html => {
-    //     hideLoading();
-    //     document.getElementById('quickViewModalContent').innerHTML = html;
-    //     const modal = document.getElementById('quickViewModal');
-    //     modal.classList.add('active');
-    //     document.body.style.overflow = 'hidden';
-    //     // ✅ اضافه شده: اجرای اسکریپت‌های مودال پس از بارگذاری محتوا
-    //     // این فراخوانی باید پس از اضافه شدن محتوا به DOM انجام شود
-    //     initQuickViewModalContent(); // تابع جدید برای مقداردهی اولیه محتوای مودال
-    // })
-    // ...
-
-    // تابع مقداردهی اولیه برای محتوای مودال Quick View
-    window.initQuickViewModalContent = function() {
-        renderColorsQv();
-        renderSizesQv();
-
-        // انتخاب اولین رنگ و سایز موجود به صورت پیش‌فرض
-        if (productInventoryQv.length > 0) {
-            let firstActiveColor = null;
-            let firstActiveSize = null;
-
-            const uniqueColors = getUniqueColorsQv();
-            for (const color of uniqueColors) {
-                const hasAvailableSize = productInventoryQv.some(item => item.color.id == color.id && item.quantity > 0);
-                if (hasAvailableSize) {
-                    firstActiveColor = document.querySelector(`#modalColorOptions .color-option-large[data-color-id="${color.id}"]`);
-                    if (firstActiveColor) {
-                        selectColorQv(firstActiveColor);
-                        break;
-                    }
-                }
-            }
-
-            if (selectedColorQv) {
-                const uniqueSizes = getUniqueSizesQv();
-                for (const size of uniqueSizes) {
-                    const hasAvailableColor = productInventoryQv.some(item => item.size.id == size.id && item.color.id == selectedColorQv.id && item.quantity > 0);
-                    if (hasAvailableColor) {
-                        firstActiveSize = document.querySelector(`#modalSizeOptions .size-option[data-size-id="${size.id}"]`);
-                        if (firstActiveSize) {
-                            selectSizeQv(firstActiveSize);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        updateSelectedInventoryQv();
-    };
-
-    // برای اطمینان از اینکه تابع getColorCode در این اسکریپت نیز قابل دسترسی است
-    // فرض می‌کنیم که این تابع قبلاً در zima_theme_v2.js به عنوان window.getColorCode تعریف شده است.
-    if (typeof window.getColorCode === 'undefined') {
-        window.getColorCode = function(colorName) {
-            const colorMap = {
-                'سفید': '#FFFFFF', 'مشکی': '#000000', 'خاکستری': '#808080', 'نقره‌ای': '#C0C0C0',
-                'قرمز': '#FF0000', 'زرشکی': '#800000', 'صورتی': '#FFC0CB', 'گلبهی': '#FFB6C1',
-                'نارنجی': '#FFA500', 'هلویی': '#FFDAB9', 'طلایی': '#FFD700', 'زرد': '#FFFF00', 'لیمویی': '#BFFF00',
-                'سبز': '#00FF00', 'سبز لجنی': '#2F4F4F', 'سبز یشمی': '#00A86B', 'سبز زیتونی': '#808000',
-                'آبی': '#0000FF', 'آبی آسمانی': '#87CEEB', 'آبی نفتی': '#000080', 'فیروزه‌ای': '#40E0D0',
-                'بنفش': '#800080', 'یاسی': '#DDA0DD', 'ارغوانی': '#9370DB',
-                'قهوه‌ای': '#A52A2A', 'کرم': '#FFFDD0', 'بژ': '#F5F5DC', 'شکلاتی': '#5C4033', 'عنابی': '#722F37',
-                'مسی': '#B87333', 'برنزی': '#CD7F32', 'سرمه‌ای': '#191970', 'کالباسی': '#E34234', 'نباتی': '#FAEBD7', 'آجری': '#B22222',
-                'آبی_روشن': '#ADD8E6', 'طوسی': '#808080', 'جگری': '#8B0000', 'آبی_کاربنی': '#003366', 'بنفش_روشن': '#E0B4D6',
-                'زیتونی': '#808000', 'آلبالویی': '#8B0000', 'کاهویی': '#ADFF2F', 'آبی_ملایم': '#6495ED', 'بژ_روشن': '#F5F5DC',
-                'خاکی': '#C2B280', 'سیلور': '#C0C0C0', 'نارنجی_سیر': '#FF8C00', 'آبی_نفتی_تیره': '#000080', 'بنفش_پررنگ': '#8A2BE2',
-                'زرد_طلایی': '#FFD700', 'ارغوانی_روشن': '#D8BFD8', 'یشمی_روشن': '#7FFFD4', 'آبی_دریایی': '#000080', 'براق': '#E0E0E0',
-            };
-            return colorMap[colorName] || '#CCCCCC';
-        };
-    }
+});
 </script>
