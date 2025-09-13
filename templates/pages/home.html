@@ -93,37 +93,89 @@
         <div class="section-header">
             <span class="section-badge">برای تمام خانواده</span>
             <h2 class="section-title">کلکسیون‌های <span class="script">منتخب</span> ما</h2>
-            <p class="section-description">محصولات ما برای هر عضو خانواده شما با دقت و عشق طراحی شده‌اند. دسته‌بندی مورد نظر خود را برای شروع کاوش انتخاب کنید.</p>
+            <p class="section-description">محصولات ما برای هر عضو خانواده شما با دقت و عشق طراحی شده‌اند.</p>
         </div>
 
-        <!-- ✅ کانتینر جدید برای چیدمان دو ستونی -->
-        <div class="family-showcase-layout">
+        <div class="family-content">
+            <!-- ✅ تصویر/ویدیو اصلی خانواده (کادر بالا) -->
+            <div class="family-media-container" id="familyMediaContainer">
+    <!-- ✅ لایه پس‌زمینه محو شده -->
+    <div class="family-background-blur" id="familyBackgroundBlur"></div>
 
-            <!-- ستون چپ: گرید کارت‌های کلکسیون -->
+    <!-- ✅ لایه overlay زیبا -->
+    <div class="family-overlay"></div>
+
+    <!-- تصویر پیش‌فرض خانواده -->
+    <img src="{% static 'images/family/family-main.jpg' %}"
+         alt="خانواده زیما"
+         class="family-main-image active"
+         id="familyMainImage">
+
+    <!-- ویدیوهای مخصوص هر عضو -->
+    <video class="family-video"
+           id="dadVideo"
+           muted
+           preload="metadata"
+           data-member="dad">
+        <source src="{% static 'videos/family/dad-animation.mp4' %}" type="video/mp4">
+    </video>
+
+    <video class="family-video"
+           id="momVideo"
+           muted
+           preload="metadata"
+           data-member="mom">
+        <source src="{% static 'videos/family/mom-animation.mp4' %}" type="video/mp4">
+    </video>
+
+    <video class="family-video"
+           id="boyVideo"
+           muted
+           preload="metadata"
+           data-member="boy">
+        <source src="{% static 'videos/family/boy-animation.mp4' %}" type="video/mp4">
+    </video>
+
+    <video class="family-video"
+           id="girlVideo"
+           muted
+           preload="metadata"
+           data-member="girl">
+        <source src="{% static 'videos/family/girl-animation.mp4' %}" type="video/mp4">
+    </video>
+</div>
+
+            <!-- ✅ آیتم‌های انتخاب (همان شکل قبلی) -->
             <div class="family-grid">
-                <a href="#" class="family-collection-card">
-                    <img src="{% static 'images/family/man.png' %}" alt="کلکسیون مردانه">
+                <a href="#" class="family-collection-card"
+                   data-member="dad"
+                   onmouseenter="playFamilyVideo('dad')"
+                   onmouseleave="stopFamilyVideo()">
+                    <img src="{% static 'images/family/men-category.jpg' %}" alt="کلکسیون مردانه">
                     <div class="card-overlay"><h3>مردانه</h3></div>
                 </a>
-                <a href="#" class="family-collection-card">
-                    <img src="{% static 'images/family/woman.png' %}" alt="کلکسیون زنانه">
+                <a href="#" class="family-collection-card"
+                   data-member="mom"
+                   onmouseenter="playFamilyVideo('mom')"
+                   onmouseleave="stopFamilyVideo()">
+                    <img src="{% static 'images/family/women-category.jpg' %}" alt="کلکسیون زنانه">
                     <div class="card-overlay"><h3>زنانه</h3></div>
                 </a>
-                <a href="#" class="family-collection-card">
-                    <img src="{% static 'images/family/boy.png' %}" alt="کلکسیون پسرانه">
+                <a href="#" class="family-collection-card"
+                   data-member="boy"
+                   onmouseenter="playFamilyVideo('boy')"
+                   onmouseleave="stopFamilyVideo()">
+                    <img src="{% static 'images/family/boys-category.jpg' %}" alt="کلکسیون پسرانه">
                     <div class="card-overlay"><h3>پسرانه</h3></div>
                 </a>
-                <a href="#" class="family-collection-card">
-                    <img src="{% static 'images/family/girl.png' %}" alt="کلکسیون دخترانه">
+                <a href="#" class="family-collection-card"
+                   data-member="girl"
+                   onmouseenter="playFamilyVideo('girl')"
+                   onmouseleave="stopFamilyVideo()">
+                    <img src="{% static 'images/family/girls-category.jpg' %}" alt="کلکسیون دخترانه">
                     <div class="card-overlay"><h3>دخترانه</h3></div>
                 </a>
             </div>
-
-            <!-- ستون راست: تصویر اصلی خانواده -->
-            <div class="main-family-photo">
-                <img src="{% static 'images/family/family-complete.png' %}" alt="خانواده زیما">
-            </div>
-
         </div>
     </div>
 </section>

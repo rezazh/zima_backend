@@ -7,7 +7,7 @@ let selectedColorQv = null;
 let selectedSizeQv = null;
 let currentStockQv = 0;
 
-// ✅ توابع سراسری که باید قبل از DOMContentLoaded باشند
+// ✅ توابع سراسری Quick View که باید قبل از DOMContentLoaded باشند
 window.increaseQuantityQv = function() {
     const input = document.getElementById('quantityInputQv');
     if (input && parseInt(input.value) < parseInt(input.max)) {
@@ -553,7 +553,126 @@ function updateCartCount(count) {
     });
 }
 
-// ✅ DOMContentLoaded شروع می‌شود
+// ==================== FAMILY VIDEO FUNCTIONALITY (Global Functions) ====================
+
+let currentFamilyVideo = null;
+let familyVideoTimeout = null;
+
+// تابع پخش ویدیو عضو خانواده
+window.playFamilyVideo = function(memberType) {
+    console.log('🎬 Playing family video for:', memberType);
+
+    // پاک کردن timeout قبلی
+    if (familyVideoTimeout) {
+        clearTimeout(familyVideoTimeout);
+    }
+
+    // متوقف کردن ویدیو قبلی
+    if (currentFamilyVideo) {
+        currentFamilyVideo.pause();
+        currentFamilyVideo.currentTime = 0;
+        currentFamilyVideo.classList.remove('playing');
+    }
+
+    // مخفی کردن تصویر اصلی
+    const mainImage = document.getElementById('familyMainImage');
+    if (mainImage) {
+        mainImage.classList.remove('active');
+    }
+
+    // ✅ تغییر پس‌زمینه محو شده بر اساس نوع عضو خانواده
+    const backgroundBlur = document.getElementById('familyBackgroundBlur');
+    if (backgroundBlur) {
+        const imageMap = {
+            'dad': '/static/images/family/men-category.jpg',
+            'mom': '/static/images/family/women-category.jpg',
+            'boy': '/static/images/family/boys-category.jpg',
+            'girl': '/static/images/family/girls-category.jpg'
+        };
+
+        const backgroundImage = imageMap[memberType] || '/static/images/family/family-main.jpg';
+        backgroundBlur.style.backgroundImage = `url('${backgroundImage}')`;
+    }
+
+    // پیدا کردن و پخش ویدیو جدید
+    const videoId = memberType + 'Video';
+    const video = document.getElementById(videoId);
+
+    if (video) {
+        currentFamilyVideo = video;
+        video.classList.add('playing');
+
+        // پخش ویدیو
+        video.currentTime = 0;
+        const playPromise = video.play();
+
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                console.log('✅ Video started playing');
+
+                // متوقف کردن خودکار بعد از 5 ثانیه
+                familyVideoTimeout = setTimeout(() => {
+                    stopFamilyVideo();
+                }, 5000);
+
+            }).catch(error => {
+                console.log('❌ Video play failed:', error);
+                stopFamilyVideo();
+            });
+        }
+
+        // اضافه کردن event listener برای پایان ویدیو
+        video.onended = function() {
+            stopFamilyVideo();
+        };
+    }
+};
+
+// تابع متوقف کردن ویدیو
+window.stopFamilyVideo = function() {
+    console.log('⏹️ Stopping family video');
+
+    // پاک کردن timeout
+    if (familyVideoTimeout) {
+        clearTimeout(familyVideoTimeout);
+        familyVideoTimeout = null;
+    }
+
+    // متوقف کردن ویدیو فعلی
+    if (currentFamilyVideo) {
+        currentFamilyVideo.pause();
+        currentFamilyVideo.currentTime = 0;
+        currentFamilyVideo.classList.remove('playing');
+        currentFamilyVideo = null;
+    }
+
+    // ✅ بازگشت پس‌زمینه به حالت اصلی
+    const backgroundBlur = document.getElementById('familyBackgroundBlur');
+    if (backgroundBlur) {
+        backgroundBlur.style.backgroundImage = "url('/static/images/family/family-main.jpg')";
+    }
+
+    // نمایش مجدد تصویر اصلی
+    const mainImage = document.getElementById('familyMainImage');
+    if (mainImage) {
+        setTimeout(() => {
+            mainImage.classList.add('active');
+        }, 200);
+    }
+};
+// کنترل volume برای تمام ویدیوها (در صورت نیاز)
+window.setFamilyVideosVolume = function(volume = 0) {
+    const familyVideos = document.querySelectorAll('.family-video');
+    familyVideos.forEach(video => {
+        video.volume = volume;
+    });
+};
+setFamilyVideosVolume(0); // تنظیم volume در شروع (بدون صدا)
+
+// ==================== END FAMILY VIDEO FUNCTIONALITY (Global Functions) ====================
+
+
+// ✅ اصلی DOMContentLoaded شروع می‌شود
 document.addEventListener('DOMContentLoaded', () => {
     // Romantic Loading Animation
     window.addEventListener('load', () => {
@@ -590,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
         animateCursor();
 
         // Hover Effects for Cursor
-        document.querySelectorAll('a, button, .product-card, .collection-card, .size-btn, .color-option, .material-tag, .page-btn, .social-link, .btn, .nav-icon, .filter-header').forEach(el => {
+        document.querySelectorAll('a, button, .product-card, .collection-card, .size-btn, .color-option, .material-tag, .page-btn, .social-link, .btn, .nav-icon, .filter-header, .family-collection-card').forEach(el => { // ✅ اضافه شدن .family-collection-card
             try {
                 el.addEventListener('mouseenter', () => {
                     cursor.classList.add('hover');
@@ -1009,8 +1128,36 @@ document.addEventListener('DOMContentLoaded', () => {
 ██║ ██║██╔████╔██║███████║
 ██║ ██║██║╚██╔╝██║██╔══██║
 ██║ ██║██║ ╚═╝ ██║██║ ██║
-╚═╝ ╚═╝╚═╝ ╚═╝╚═╝ ╚═╝
+╚═╝ ╚══╝╚═╝ ╚═╝╚═╝ ╚═╝
 
 وبسایت زیما - جایی که زیبایی زندگی می‌کند
 `);
+
+    // === START FAMILY VIDEO INITIALIZATION (MERGED) ===
+    const familyShowcaseSection = document.querySelector('.family-showcase');
+
+    if (familyShowcaseSection) {
+        familyShowcaseSection.addEventListener('mouseleave', function() {
+            // تاخیر کوتاه برای اطمینان از اینکه کاربر واقعاً خارج شده
+            setTimeout(() => {
+                const isHoveringCard = document.querySelector('.family-collection-card:hover');
+                // اگر روی هیچ کارتی هاور نیست، ویدیو را متوقف کن
+                if (!isHoveringCard) {
+                    stopFamilyVideo();
+                }
+            }, 100);
+        });
+    }
+
+    // Preload تمام ویدیوها برای پخش سریعتر
+    const familyVideos = document.querySelectorAll('.family-video');
+    familyVideos.forEach(video => {
+        video.addEventListener('loadeddata', function() {
+            console.log('📹 Video loaded:', video.id);
+        });
+        video.addEventListener('error', function(e) {
+            console.error('❌ Video loading error:', video.id, e);
+        });
+    });
+    // === END FAMILY VIDEO INITIALIZATION (MERGED) ===
 });

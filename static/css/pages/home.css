@@ -287,69 +287,143 @@
 /* == Family Collections Showcase == */
 /* ---------------------------------------------------- */
 .family-showcase {
-    padding: 120px 0;
+    padding: 60px 0; /* ✅ کاهش padding کلی بخش */
     background: transparent;
     position: relative;
     z-index: 2;
 }
 
-/* ✅ کانتینر اصلی چیدمان شبکه‌ای */
-.family-showcase-layout {
-    max-width: 1400px;
+/* ✅ تنظیمات header برای کوچکتر شدن */
+.family-showcase .section-header {
+    margin-bottom: 40px; /* ✅ کاهش margin */
+}
+
+.family-showcase .section-title {
+    font-size: 3rem; /* ✅ کاهش اندازه فونت */
+}
+
+.family-showcase .section-description {
+    font-size: 1.1rem; /* ✅ کاهش اندازه فونت */
+}
+
+.family-content { /* Main wrapper for media and grid */
+    max-width: 1100px; /* ✅ کاهش حداکثر عرض کانتینر محتوا */
     margin: 0 auto;
-    padding: 0 40px;
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* دو ستون با عرض برابر */
-    gap: 40px;
-    align-items: center; /* تراز عمودی محتوای دو ستون */
+    padding: 0 25px; /* ✅ کاهش padding */
+    display: flex;
+    flex-direction: column; /* Stack vertically */
+    align-items: center;
+    gap: 40px; /* ✅ کاهش فاصله بین عکس و گرید آیتم‌ها */
 }
 
-/* ✅ ستون راست: عکس اصلی */
-.main-family-photo {
-    border-radius: 30px;
-    overflow: hidden;
-    box-shadow: 0 30px 60px var(--shadow-soft);
-    /* ❌ دیگر نیازی به max-width و aspect-ratio نیست */
-}
-
-.main-family-photo img {
+/* ✅ کانتینر تصویر/ویدیو بالایی - کوچکتر و با پس‌زمینه محو */
+.family-media-container {
+    position: relative;
     width: 100%;
-    display: block;
-    /* ✅ حذف height و object-fit برای نمایش کامل تصویر */
+    max-width: 900px;
+    height: 450px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px var(--shadow-soft);
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
 }
 
-/* ✅ ستون چپ: گرید کارت‌ها */
+/* ✅ لایه پس‌زمینه محو شده */
+.family-background-blur {
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    width: calc(100% + 40px);
+    height: calc(100% + 40px);
+    background-image: url('/static/images/family/family-main.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: blur(15px) brightness(0.4) saturate(1.2);
+    z-index: 1;
+    opacity: 0.9;
+    transition: all 0.5s ease;
+}
+
+/* ✅ لایه overlay برای افکت زیباتر */
+.family-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 107, 107, 0.08) 0%,
+        rgba(255, 182, 193, 0.05) 30%,
+        rgba(255, 228, 225, 0.03) 60%,
+        rgba(255, 255, 255, 0.02) 100%
+    );
+    z-index: 2;
+}
+
+.family-main-image,
+.family-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: 3;
+    /* ✅ افکت سایه ملایم برای جداسازی از پس‌زمینه */
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.2));
+}
+
+.family-main-image.active {
+    opacity: 1;
+    z-index: 4;
+}
+
+.family-video.playing {
+    opacity: 1;
+    z-index: 5;
+}
+
+
+/* ✅ گرید کارت‌ها - کوچکتر و استایل قبلی */
 .family-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* گرید 2x2 */
-    gap: 30px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px; /* ✅ کاهش فاصله بین کارت‌ها از 20px به 15px */
+    width: 100%;
+    max-width: 1000px; /* ✅ کاهش حداکثر عرض برای نزدیک‌تر شدن */
 }
 
 .family-collection-card {
     position: relative;
     display: block;
     overflow: hidden;
-    border-radius: 25px;
-    box-shadow: 0 15px 40px var(--shadow-soft);
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
     text-decoration: none;
-    transition: all 0.4s ease;
-    aspect-ratio: 1 / 1; /* ✅ کارت‌های مربعی برای زیبایی و نظم بیشتر */
+    transition: all 0.3s ease;
+    aspect-ratio: 1 / 1;
+    height: 200px; /* ✅ افزایش ارتفاع از 160px به 200px */
+    cursor: pointer;
 }
 
 .family-collection-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 25px 60px var(--shadow-medium);
+    transform: translateY(-8px); /* ✅ افزایش حرکت در هاور */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2); /* ✅ سایه قوی‌تر */
 }
 
 .family-collection-card img {
     width: 100%;
-    height: 100%; /* ✅ برای پر کردن کامل کارت مربعی */
-    object-fit: cover; /* ✅ برای برش زیبا و بدون دفورمگی عکس‌های کارت */
-    transition: transform 0.6s ease;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
 }
 
 .family-collection-card:hover img {
-    transform: scale(1.05);
+    transform: scale(1.05); /* ✅ افزایش بزرگنمایی در هاور */
 }
 
 .card-overlay {
@@ -357,18 +431,110 @@
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 30px 20px 20px;
+    padding: 20px 15px 15px; /* ✅ افزایش padding */
     background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
-    transition: background 0.4s ease;
+    transition: background 0.3s ease;
 }
 
 .card-overlay h3 {
     color: white;
-    font-size: 1.6rem; /* کمی کوچک‌تر برای تناسب با کارت‌های جدید */
+    font-size: 1.4rem; /* ✅ افزایش اندازه فونت از 1.2rem به 1.4rem */
     font-weight: 600;
     margin: 0;
     text-align: right;
-    text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7); /* ✅ سایه قوی‌تر برای متن */
+}
+
+/* ✅ Responsive adjustments - تنظیم اندازه‌ها برای صفحات مختلف */
+@media (max-width: 1024px) {
+    .family-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        max-width: 600px; /* ✅ کاهش عرض برای نزدیک‌تر شدن */
+    }
+    .family-collection-card {
+        height: 180px; /* ✅ افزایش ارتفاع */
+    }
+    .card-overlay h3 {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .family-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px; /* ✅ کاهش فاصله برای نزدیک‌تر شدن */
+        max-width: 450px; /* ✅ کاهش عرض */
+    }
+    .family-collection-card {
+        height: 160px; /* ✅ افزایش ارتفاع */
+        border-radius: 12px;
+    }
+    .card-overlay {
+        padding: 15px 12px 10px;
+    }
+    .card-overlay h3 {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .family-grid {
+        grid-template-columns: repeat(2, 1fr); /* ✅ حفظ 2 ستون به جای 1 ستون */
+        gap: 10px;
+        max-width: 350px; /* ✅ کاهش عرض برای نزدیک‌تر شدن */
+    }
+    .family-collection-card {
+        height: 140px; /* ✅ افزایش ارتفاع */
+        border-radius: 10px;
+    }
+    .card-overlay h3 {
+        font-size: 1.1rem;
+    }
+}
+
+/* ✅ اضافه کردن حالت فوکوس برای accessibility */
+.family-collection-card:focus {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* ✅ افکت انیمیشن زیباتر برای کارت‌ها */
+.family-collection-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        45deg,
+        rgba(255, 107, 107, 0.1) 0%,
+        rgba(255, 182, 193, 0.05) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+.family-collection-card:hover::before {
+    opacity: 1;
+}
+
+.family-collection-card img {
+    position: relative;
+    z-index: 2;
+}
+
+.card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 15px 15px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+    transition: background 0.3s ease;
+    z-index: 3; /* ✅ اطمینان از قرار گرفتن روی سایر عناصر */
 }
 /* ---------------------------------------------------- */
 /* == Featured Products Section == */
