@@ -1,0 +1,574 @@
+/* static/css/pages/orders_list.css */
+
+.profile-section {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+    padding: 140px 0 60px;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/subtle-pattern.png" %}') repeat;
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.profile-wrapper {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 40px;
+    align-items: flex-start;
+}
+
+/* Sidebar Styles */
+.profile-sidebar {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: sticky;
+    top: 160px;
+}
+
+.sidebar-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 30px 25px;
+    text-align: center;
+    position: relative;
+}
+
+.sidebar-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+    opacity: 0.1;
+}
+
+.user-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    color: var(--primary-color);
+    font-size: 2rem;
+    font-weight: 600;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 2;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.user-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+    position: relative;
+    z-index: 2;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.user-status {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 2;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.sidebar-nav {
+    padding: 0;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 18px 25px;
+    color: var(--text-color-dark);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    border-bottom: 1px solid var(--zima-pearl);
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary-color);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background: var(--zima-blush);
+    color: var(--primary-color);
+    transform: translateX(5px);
+}
+
+.nav-link:hover::before,
+.nav-link.active::before {
+    transform: scaleY(1);
+}
+
+.nav-link.logout {
+    color: #dc3545;
+    border-bottom: none;
+}
+
+.nav-link.logout:hover {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.nav-icon {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* Main Content Styles */
+.profile-content {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.content-header {
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+    padding: 30px 40px;
+    border-bottom: 1px solid var(--zima-pearl);
+}
+
+.content-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-color-dark);
+    margin: 0;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.content-subtitle {
+    color: var(--text-color-medium);
+    margin: 5px 0 0;
+    font-size: 1rem;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.content-body {
+    padding: 40px;
+}
+
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.order-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    border: 2px solid var(--zima-pearl);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.order-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
+}
+
+.order-header {
+    background: var(--zima-blush);
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.order-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.order-number {
+    font-weight: 600;
+    color: var(--text-color-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.order-date {
+    color: var(--text-color-medium);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.order-status {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: white;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.status-pending {
+    background: #ffc107;
+}
+
+.status-processing {
+    background: #17a2b8;
+}
+
+.status-shipped {
+    background: #007bff;
+}
+
+.status-delivered {
+    background: #28a745;
+}
+
+.status-cancelled {
+    background: #dc3545;
+}
+
+.order-body {
+    padding: 25px;
+}
+
+.order-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.order-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: var(--zima-blush);
+    border-radius: 12px;
+}
+
+.item-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.item-name {
+    font-weight: 600;
+    color: var(--text-color-dark);
+    margin-bottom: 5px;
+    font-size: 0.95rem;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.item-variant {
+    color: var(--text-color-medium);
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.item-quantity {
+    color: var(--text-color-medium);
+    font-size: 0.85rem;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.item-price {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 1rem;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.order-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding-top: 20px;
+    border-top: 1px solid var(--zima-pearl);
+}
+
+.order-total {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-color-dark);
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.order-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-view {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.btn-view:hover {
+    background: var(--secondary-color);
+    transform: translateY(-1px);
+    color: white;
+}
+
+.btn-track {
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.btn-track:hover {
+    background: #138496;
+    transform: translateY(-1px);
+    color: white;
+}
+
+.btn-cancel {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.btn-cancel:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    color: var(--text-color-medium);
+}
+
+.empty-icon {
+    font-size: 5rem;
+    color: var(--zima-pearl);
+    margin-bottom: 25px;
+}
+
+.empty-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--text-color-dark);
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.empty-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 30px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.btn-shop {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.btn-shop:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+    color: white;
+}
+
+.alert {
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+    border: none;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.alert-success {
+    background: rgba(40, 167, 69, 0.1);
+    color: #155724;
+}
+
+.alert-info {
+    background: rgba(23, 162, 184, 0.1);
+    color: #0c5460;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .profile-wrapper {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .profile-sidebar {
+        position: relative;
+        top: auto;
+    }
+
+    .order-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .order-info {
+        width: 100%;
+    }
+
+    .order-summary {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-section {
+        padding: 120px 0 40px;
+    }
+
+    .profile-container {
+        padding: 0 15px;
+    }
+
+    .content-header {
+        padding: 25px 20px;
+    }
+
+    .content-title {
+        font-size: 1.5rem;
+    }
+
+    .content-body {
+        padding: 25px 20px;
+    }
+
+    .order-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .order-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .empty-state {
+        padding: 60px 20px;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+    }
+}

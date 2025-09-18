@@ -1,0 +1,404 @@
+/* static/css/pages/auth.css */
+
+.auth-section {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+    padding: 140px 0 60px; /* فضای بالا برای ناوبار ثابت */
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center; /* برای وسط چین شدن عمودی */
+    justify-content: center; /* برای وسط چین شدن افقی */
+}
+
+.auth-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/subtle-pattern.png" %}') repeat;
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.auth-container {
+    max-width: 900px;
+    margin: auto; /* برای وسط چین شدن در صورت عدم استفاده از flex در والد */
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+}
+
+.auth-wrapper {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 2px solid var(--zima-pearl);
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* برای دو ستونه کردن (فرم و تصویر/متن) */
+}
+
+/* Welcome / Image Section */
+.auth-welcome {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-welcome::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+    opacity: 0.1;
+}
+
+.welcome-icon {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.welcome-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+    position: relative;
+    z-index: 2;
+}
+
+.welcome-text {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.welcome-link {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+    position: relative;
+    z-index: 2;
+}
+
+.welcome-link:hover {
+    background: white;
+    color: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Form Section */
+.auth-form-section {
+    padding: 40px;
+    text-align: right;
+}
+
+.form-header-auth {
+    margin-bottom: 30px;
+}
+
+.form-header-auth h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color-dark);
+    margin-bottom: 10px;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.form-header-auth p {
+    color: var(--text-color-medium);
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.form-group {
+    margin-bottom: 20px;
+    position: relative; /* برای آیکون چشم رمز عبور */
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-color-dark);
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.form-input {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid var(--zima-pearl);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-input::placeholder {
+    color: #999;
+    opacity: 1; /* برای اطمینان از نمایش placeholder */
+}
+
+.form-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+}
+
+.password-toggle {
+    position: absolute;
+    left: 20px;
+    top: 50%; /* وسط عمودی نسبت به input */
+    transform: translateY(20%); /* تنظیم دقیق‌تر موقعیت */
+    cursor: pointer;
+    color: var(--text-color-medium);
+    transition: color 0.3s ease;
+}
+
+.password-toggle:hover {
+    color: var(--primary-color);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.form-check-input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary-color); /* رنگ چک‌باکس */
+    cursor: pointer;
+}
+
+.form-check-label {
+    margin: 0;
+    color: var(--text-color-medium);
+    cursor: pointer;
+}
+
+.form-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.form-link:hover {
+    text-decoration: underline;
+}
+
+.btn-auth {
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 20px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.btn-auth:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+}
+
+.btn-auth:active {
+    transform: translateY(0);
+}
+
+.social-login {
+    text-align: center;
+    margin-top: 30px;
+    border-top: 1px solid var(--zima-pearl);
+    padding-top: 30px;
+}
+
+.social-login p {
+    color: var(--text-color-medium);
+    margin-bottom: 20px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.social-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.social-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.social-btn.google { background: #db4437; }
+.social-btn.github { background: #333; }
+
+.social-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Password Reset/Change Specific Styles */
+.info-message {
+    background: var(--zima-blush);
+    border: 1px solid var(--zima-peach);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    color: var(--text-color-dark);
+    line-height: 1.7;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.info-message i {
+    color: var(--primary-color);
+    margin-left: 10px;
+}
+
+/* Password Strength Indicator (For Register/Change Password) */
+.password-strength {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #777;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.strength-bar {
+    height: 5px;
+    background: #eee;
+    border-radius: 3px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.strength-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: red; /* Default weak */
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-text {
+    margin-top: 5px;
+    font-weight: 500;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+/* Colors for strength */
+.strength-bar-fill.weak { background: #dc3545; width: 33%; }
+.strength-bar-fill.medium { background: #ffc107; width: 66%; }
+.strength-bar-fill.strong { background: #28a745; width: 100%; }
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .auth-section {
+        padding: 120px 0 40px;
+    }
+
+    .auth-wrapper {
+        grid-template-columns: 1fr; /* در موبایل تک ستونه می‌شود */
+        margin: 0 15px; /* برای فاصله از اطراف */
+    }
+
+    .auth-welcome {
+        padding: 30px;
+    }
+
+    .welcome-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+    }
+
+    .welcome-title {
+        font-size: 1.8rem;
+    }
+
+    .welcome-text {
+        font-size: 1rem;
+        margin-bottom: 20px;
+    }
+
+    .welcome-link {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+
+    .auth-form-section {
+        padding: 30px 20px;
+    }
+
+    .form-header-auth h2 {
+        font-size: 1.6rem;
+    }
+
+    .form-input {
+        padding: 12px 15px;
+        font-size: 0.95rem;
+    }
+
+    .btn-auth {
+        padding: 15px;
+        font-size: 1rem;
+    }
+
+    .social-login {
+        padding-top: 20px;
+    }
+
+    .social-login p {
+        margin-bottom: 15px;
+    }
+
+    .social-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+    }
+}

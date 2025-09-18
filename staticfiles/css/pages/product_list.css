@@ -1,0 +1,199 @@
+/* static/css/pages/product_list.css */
+
+/* ---------------------------------------------------- */
+/* == Products Hero Section (برای لیست محصولات و دسته‌بندی‌ها) == */
+/* ---------------------------------------------------- */
+.products-hero {
+    margin-top: 80px; /* فضای بالای ناوبار ثابت */
+    padding: 80px 0;
+    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    z-index: 2; /* ✅ اضافه شد: برای اینکه محتوای Hero روی پس‌زمینه باشد */
+}
+
+/* ❌ حذف شد: products-hero::before و rotate دیگر نیازی نیستند */
+/* .products-hero::before { ... } */
+/* @keyframes rotate { ... } */
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.hero-title {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    font-family: 'Zima-Bold', sans-serif;
+    background: linear-gradient(135deg, var(--zima-deep), var(--secondary-color), var(--primary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 1.3rem;
+    color: var(--text-color-medium);
+    margin-bottom: 30px;
+}
+
+.breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 15px;
+    background: white;
+    padding: 15px 30px;
+    border-radius: 50px;
+    box-shadow: 0 10px 30px var(--shadow-soft);
+}
+
+.breadcrumb a {
+    color: var(--text-color-medium);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-color);
+}
+
+.breadcrumb span {
+    color: var(--secondary-color);
+}
+
+/* ---------------------------------------------------- */
+/* == Main Products Section == */
+/* ---------------------------------------------------- */
+.products-main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 40px;
+    max-width: 1600px;
+    margin: 40px auto 80px;
+    padding: 0 40px;
+    position: relative; /* ✅ اضافه شد: برای اینکه محتوای محصولات روی پس‌زمینه باشد */
+    z-index: 2;
+}
+
+/* ---------------------------------------------------- */
+/* == Filters & Pagination == */
+/* ---------------------------------------------------- */
+/* استایل‌های مربوط به فیلترها (sidebar) در products.css قرار دارند */
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 60px;
+}
+
+.page-btn {
+    width: 45px;
+    height: 45px;
+    border: 2px solid var(--zima-pearl);
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    color: var(--text-color-medium);
+}
+
+.page-btn:hover {
+    border-color: var(--secondary-color);
+    background: var(--zima-blush);
+}
+
+.page-btn.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-color: transparent;
+}
+
+.page-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Mobile Filter Toggle */
+.mobile-filter-toggle {
+    display: none; /* در دسکتاپ مخفی است */
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 15px 30px;
+    border-radius: 50px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    cursor: pointer;
+    z-index: 100;
+    font-weight: 600;
+    border: none;
+}
+
+/* Responsive Design for List Page */
+@media (max-width: 992px) {
+    .products-main {
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -300px; /* Hidden by default */
+        width: 280px;
+        height: 100%;
+        background: white;
+        z-index: 100;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        padding-top: 80px;
+    }
+    .sidebar.active {
+        left: 0;
+    }
+    .mobile-filter-toggle {
+        display: flex;
+    }
+}
+
+@media (max-width: 768px) {
+    .products-hero {
+        padding: 60px 0;
+        margin-top: 60px;
+    }
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+    .breadcrumb {
+        padding: 10px 20px;
+        gap: 10px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .products-hero {
+        padding: 40px 0;
+        margin-top: 40px;
+    }
+    .hero-title {
+        font-size: 2rem;
+    }
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+}
