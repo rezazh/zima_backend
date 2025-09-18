@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CartItem, Coupon, WishlistItem
+from .models import CartItem, Coupon
 
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):
@@ -16,11 +16,3 @@ class CouponAdmin(admin.ModelAdmin):
     search_fields = ('code', 'description')
     date_hierarchy = 'created_at'
     filter_horizontal = ('users',)
-
-@admin.register(WishlistItem)
-class WishlistItemAdmin(admin.ModelAdmin):
-    list_display = ('user', 'product', 'created_at')
-    list_filter = ('created_at',)
-    search_fields = ('user__username', 'product__name')
-    date_hierarchy = 'created_at'
-    raw_id_fields = ('user', 'product')

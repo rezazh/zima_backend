@@ -28,7 +28,7 @@ urlpatterns = [
 
     # Password Reset URLs
     path('password-reset/', auth_views.PasswordResetView.as_view(
-        template_name='users/password_reset.html',
+        template_name='users/password_reset_form.html',
         email_template_name='users/password_reset_email.html',
         html_email_template_name='users/password_reset_email.html',  # این خط اضافه شده
         subject_template_name='users/password_reset_subject.txt',

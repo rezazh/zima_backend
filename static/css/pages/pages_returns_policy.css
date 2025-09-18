@@ -1,0 +1,730 @@
+/* static/css/pages/pages_returns_policy.css */
+
+/* از متغیرهای روت که در main.css یا base.css تعریف شده‌اند استفاده می‌شود */
+
+.returns-policy-page {
+    padding: 140px 0 60px; /* فضای بالا برای ناوبار ثابت */
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+.returns-policy-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/subtle-pattern.png" %}') repeat; /* پترن ظریف */
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.returns-policy-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+}
+
+/* --- Hero Section --- */
+.hero-section {
+    text-align: center;
+    margin-bottom: 80px;
+    position: relative;
+    padding: 40px 0;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    opacity: 0.1;
+    z-index: -1;
+}
+
+.hero-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    color: var(--text-color-dark);
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    font-family: 'ZimaFont', sans-serif;
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    color: var(--text-color-medium);
+    margin-bottom: 30px;
+    font-weight: 500;
+}
+
+.hero-description {
+    font-family: 'ZimaFont', sans-serif;
+    font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+    color: var(--text-color-medium);
+    line-height: 1.8;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* --- Section Titles & Subtitles (General) --- */
+.section-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    text-align: center;
+    color: var(--text-color-dark);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.section-title i {
+    color: var(--primary-color);
+    font-size: 1.1em;
+}
+
+.section-subtitle {
+    font-family: 'ZimaFont', sans-serif;
+    text-align: center;
+    color: var(--text-color-medium);
+    font-size: clamp(1rem, 1.5vw, 1.2rem);
+    margin-bottom: 60px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* --- Policy Main Section --- */
+.policy-main-section {
+    margin-bottom: 80px;
+}
+
+.policy-subsection {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border: 2px solid var(--zima-pearl);
+    margin-bottom: 40px;
+}
+
+.policy-subsection h3 {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    color: var(--text-color-dark);
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+}
+
+.policy-subsection h3 i {
+    color: var(--secondary-color);
+    font-size: 1.1em;
+}
+
+/* Conditions Grid */
+.conditions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.condition-card {
+    background: var(--zima-blush);
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.condition-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.condition-icon.check {
+    background: #e6ffed;
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+.condition-icon.cross {
+    background: #ffe6e6;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.condition-text {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-dark);
+    margin: 0;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.condition-text strong {
+    color: var(--primary-color);
+}
+
+.important-warning {
+    background: #fff3cd; /* warning yellow light */
+    border: 1px solid #ffc107; /* warning yellow */
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 30px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.important-warning i {
+    font-size: 1.8rem;
+    color: #ffc107;
+    flex-shrink: 0;
+}
+
+.important-warning p {
+    font-family: 'ZimaFont', sans-serif;
+    color: #856404; /* warning dark text */
+    margin: 0;
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+.important-warning p strong {
+    color: #856404;
+}
+
+/* Process Steps Timeline */
+.process-steps-timeline {
+    position: relative;
+    padding-right: 20px; /* برای خط تایم لاین */
+}
+
+.process-steps-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+}
+
+.process-steps-timeline .timeline-item {
+    position: relative;
+    margin-bottom: 40px;
+    padding-right: 40px; /* فاصله از خط تایم لاین */
+}
+
+.process-steps-timeline .timeline-marker {
+    position: absolute;
+    top: 0;
+    right: -20px; /* روی خط تایم لاین */
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    border: 4px solid white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
+    box-shadow: 0 0 0 4px var(--zima-blush); /* هاله دور مارکر */
+    z-index: 1;
+}
+
+.process-steps-timeline .timeline-content {
+    background: var(--zima-blush);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--zima-pearl);
+    text-align: right;
+}
+
+.process-steps-timeline .timeline-content h4 {
+    font-family: 'Zima-Bold', sans-serif;
+    color: var(--text-color-dark);
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.process-steps-timeline .timeline-content p {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.7;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* Shipping Cost Info */
+.shipping-cost-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.shipping-cost-info .info-card {
+    background: var(--zima-blush);
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    border: 2px solid var(--zima-pearl);
+}
+
+.shipping-cost-info .info-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 1.8rem;
+    color: white;
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.2);
+}
+
+.shipping-cost-info .info-icon.check {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.shipping-cost-info .info-icon.cross {
+    background: linear-gradient(135deg, #dc3545, #ff4c4c);
+}
+
+
+.shipping-cost-info .info-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: 1.3rem;
+    color: var(--text-color-dark);
+    margin-bottom: 15px;
+}
+
+.shipping-cost-info .info-description {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+/* --- FAQ Section (similar to other pages) --- */
+.faq-section {
+    margin-bottom: 80px;
+}
+
+.faq-section .section-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    text-align: center;
+    color: var(--text-color-dark);
+    margin-bottom: 50px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.faq-section .section-title i {
+    color: var(--secondary-color);
+    font-size: 1.1em;
+}
+
+.faq-section .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+}
+
+.faq-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq-item {
+    background: white;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    border: 2px solid var(--zima-pearl);
+    overflow: hidden;
+}
+
+.faq-question {
+    padding: 25px;
+    background: var(--zima-blush);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'ZimaFont', sans-serif;
+    font-weight: 600;
+    color: var(--text-color-dark);
+    font-size: clamp(1rem, 1.5vw, 1.1rem);
+    transition: all 0.3s ease;
+}
+
+.faq-question:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.faq-question.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.faq-icon {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.faq-question.active .faq-icon {
+    transform: rotate(180deg);
+}
+
+.faq-answer {
+    padding: 0 25px;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.faq-answer.active {
+    padding: 25px;
+    max-height: 200px; /* Adjust as needed for content */
+}
+
+.faq-answer p {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.6;
+    margin: 0;
+    font-size: clamp(0.9rem, 1.3vw, 1rem);
+}
+
+/* --- CTA Section (similar to other pages) --- */
+.cta-section {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 25px;
+    padding: 60px;
+    text-align: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 60px;
+}
+
+.cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+    opacity: 0.1;
+}
+
+.cta-content {
+    position: relative;
+    z-index: 2;
+}
+
+.cta-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.cta-subtitle {
+    font-family: 'ZimaFont', sans-serif;
+    font-size: clamp(1rem, 1.5vw, 1.2rem);
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-btn {
+    font-family: 'ZimaFont', sans-serif;
+    background: white;
+    color: var(--primary-color);
+    padding: 15px 30px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cta-btn:hover {
+    background: transparent;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.cta-btn.secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+.cta-btn.secondary:hover {
+    background: white;
+    color: var(--primary-color);
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 992px) {
+    .returns-policy-container {
+        padding: 0 15px;
+    }
+    .policy-subsection {
+        padding: 30px;
+    }
+    .conditions-grid, .shipping-cost-info {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+    }
+    .process-steps-timeline {
+        padding-right: 15px;
+    }
+    .process-steps-timeline::before {
+        right: 0;
+    }
+    .process-steps-timeline .timeline-item {
+        padding-right: 30px;
+    }
+    .process-steps-timeline .timeline-marker {
+        right: -15px;
+    }
+    .faq-container {
+        padding: 0 10px;
+    }
+    .cta-section {
+        padding: 50px;
+    }
+}
+
+@media (max-width: 768px) {
+    .returns-policy-page {
+        padding: 120px 0 40px;
+    }
+    .hero-section {
+        margin-bottom: 60px;
+    }
+    .section-title {
+        font-size: 1.8rem;
+    }
+    .section-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 40px;
+    }
+    .policy-subsection {
+        padding: 25px;
+    }
+    .policy-subsection h3 {
+        font-size: 1.4rem;
+        gap: 10px;
+    }
+    .conditions-grid, .shipping-cost-info {
+        grid-template-columns: 1fr;
+    }
+    .condition-card {
+        padding: 15px;
+        gap: 10px;
+    }
+    .important-warning {
+        padding: 20px;
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    .important-warning i {
+        margin-bottom: 10px;
+    }
+    .process-steps-timeline {
+        padding-right: 0; /* حذف پدینگ راست */
+    }
+    .process-steps-timeline::before {
+        display: none; /* حذف خط عمودی */
+    }
+    .process-steps-timeline .timeline-item {
+        padding-right: 0; /* حذف پدینگ راست */
+        text-align: center;
+    }
+    .process-steps-timeline .timeline-marker {
+        position: static; /* موقعیت استاتیک */
+        margin: 0 auto 15px; /* مرکز قرار گرفتن */
+        transform: none;
+    }
+    .process-steps-timeline .timeline-content {
+        text-align: center;
+    }
+    .shipping-cost-info .info-card {
+        padding: 25px;
+    }
+    .faq-section .section-title {
+        font-size: 1.8rem;
+    }
+    .faq-question {
+        padding: 20px;
+        font-size: 1rem;
+    }
+    .faq-answer.active {
+        padding: 20px;
+    }
+    .cta-section {
+        padding: 40px;
+    }
+    .cta-title {
+        font-size: 2rem;
+    }
+    .cta-subtitle {
+        font-size: 1rem;
+    }
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    .cta-btn {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    .hero-description {
+        font-size: 0.85rem;
+    }
+    .section-title {
+        font-size: 1.6rem;
+    }
+    .policy-subsection h3 {
+        font-size: 1.2rem;
+        gap: 8px;
+    }
+    .condition-card {
+        padding: 15px;
+        gap: 10px;
+    }
+    .condition-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+    }
+    .condition-text {
+        font-size: 0.85rem;
+    }
+    .important-warning {
+        padding: 15px;
+    }
+    .important-warning i {
+        font-size: 1.5rem;
+    }
+    .important-warning p {
+        font-size: 0.85rem;
+    }
+    .process-steps-timeline .timeline-marker {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+    }
+    .process-steps-timeline .timeline-content {
+        padding: 20px;
+    }
+    .process-steps-timeline .timeline-content h4 {
+        font-size: 1rem;
+    }
+    .process-steps-timeline .timeline-content p {
+        font-size: 0.85rem;
+    }
+    .shipping-cost-info .info-card {
+        padding: 20px;
+    }
+    .shipping-cost-info .info-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+    }
+    .shipping-cost-info .info-title {
+        font-size: 1.1rem;
+    }
+    .shipping-cost-info .info-description {
+        font-size: 0.85rem;
+    }
+    .faq-section .section-title {
+        font-size: 1.6rem;
+    }
+    .faq-question {
+        font-size: 0.9rem;
+    }
+    .faq-answer p {
+        font-size: 0.85rem;
+    }
+    .cta-section {
+        padding: 30px;
+    }
+    .cta-title {
+        font-size: 1.8rem;
+    }
+    .cta-subtitle {
+        font-size: 0.9rem;
+    }
+}

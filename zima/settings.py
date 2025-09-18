@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'channels',
+    'django.contrib.humanize',  # <--- مطمئن شوید این خط وجود دارد
+
     # My apps
     'users',
     'products',
@@ -194,6 +196,9 @@ USE_I18N = os.environ.get('USE_I18N', 'True').lower() in ('true', '1', 't')
 USE_TZ = os.environ.get('USE_TZ', 'True').lower() in ('true', '1', 't')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+USE_L10N = True
+USE_THOUSAND_SEPARATOR = True
 
 # تنظیمات REST Framework
 REST_FRAMEWORK = {

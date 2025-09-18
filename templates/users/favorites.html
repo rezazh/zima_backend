@@ -4,458 +4,7 @@
 {% block title %}علاقه‌مندی‌ها | زیما{% endblock %}
 
 {% block extra_css %}
-<style>
-    .profile-section {
-        min-height: 100vh;
-        background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
-        padding: 140px 0 60px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .profile-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('{% static "images/patterns/subtle-pattern.png" %}') repeat;
-        opacity: 0.03;
-        pointer-events: none;
-    }
-
-    .profile-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-        position: relative;
-        z-index: 2;
-    }
-
-    .profile-wrapper {
-        display: grid;
-        grid-template-columns: 300px 1fr;
-        gap: 40px;
-        align-items: flex-start;
-    }
-
-    /* Sidebar Styles */
-    .profile-sidebar {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-        position: sticky;
-        top: 160px;
-    }
-
-    .sidebar-header {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        color: white;
-        padding: 30px 25px;
-        text-align: center;
-        position: relative;
-    }
-
-    .sidebar-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
-        opacity: 0.1;
-    }
-
-    .user-avatar {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 15px;
-        color: var(--primary-color);
-        font-size: 2rem;
-        font-weight: 600;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        position: relative;
-        z-index: 2;
-    }
-
-    .user-name {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 5px;
-        position: relative;
-        z-index: 2;
-    }
-
-    .user-status {
-        font-size: 0.9rem;
-        opacity: 0.9;
-        position: relative;
-        z-index: 2;
-    }
-
-    .sidebar-nav {
-        padding: 0;
-    }
-
-    .nav-link {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        padding: 18px 25px;
-        color: var(--text-color-dark);
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        position: relative;
-        border-bottom: 1px solid var(--zima-pearl);
-    }
-
-    .nav-link::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        background: var(--primary-color);
-        transform: scaleY(0);
-        transition: transform 0.3s ease;
-    }
-
-    .nav-link:hover,
-    .nav-link.active {
-        background: var(--zima-blush);
-        color: var(--primary-color);
-        transform: translateX(5px);
-    }
-
-    .nav-link:hover::before,
-    .nav-link.active::before {
-        transform: scaleY(1);
-    }
-
-    .nav-link.logout {
-        color: #dc3545;
-        border-bottom: none;
-    }
-
-    .nav-link.logout:hover {
-        background: rgba(220, 53, 69, 0.1);
-        color: #dc3545;
-    }
-
-    .nav-icon {
-        font-size: 1.1rem;
-        width: 20px;
-        text-align: center;
-    }
-
-    /* Main Content Styles */
-    .profile-content {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-    }
-
-    .content-header {
-        background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
-        padding: 30px 40px;
-        border-bottom: 1px solid var(--zima-pearl);
-    }
-
-    .content-title {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: var(--text-color-dark);
-        margin: 0;
-        font-family: 'Playfair Display', serif;
-    }
-
-    .content-subtitle {
-        color: var(--text-color-medium);
-        margin: 5px 0 0;
-        font-size: 1rem;
-    }
-
-    .content-body {
-        padding: 40px;
-    }
-
-    .favorites-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 25px;
-        margin-top: 20px;
-    }
-
-    .favorite-item {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        border: 2px solid var(--zima-pearl);
-        transition: all 0.3s ease;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .favorite-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        border-color: var(--primary-color);
-    }
-
-    .favorite-image {
-        position: relative;
-        aspect-ratio: 1;
-        overflow: hidden;
-    }
-
-    .favorite-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s ease;
-    }
-
-    .favorite-item:hover .favorite-image img {
-        transform: scale(1.05);
-    }
-
-    .favorite-badge {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        background: var(--primary-color);
-        color: white;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
-
-    .favorite-remove {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: rgba(220, 53, 69, 0.9);
-        color: white;
-        border: none;
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .favorite-remove:hover {
-        background: #dc3545;
-        transform: scale(1.1);
-    }
-
-    .favorite-info {
-        padding: 20px;
-    }
-
-    .favorite-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--text-color-dark);
-        margin-bottom: 8px;
-        line-height: 1.4;
-    }
-
-    .favorite-brand {
-        color: var(--text-color-medium);
-        font-size: 0.9rem;
-        margin-bottom: 12px;
-    }
-
-    .favorite-price {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--primary-color);
-        margin-bottom: 15px;
-    }
-
-    .favorite-actions {
-        display: flex;
-        gap: 10px;
-    }
-
-    .btn-view {
-        flex: 1;
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 20px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        text-align: center;
-        font-size: 0.9rem;
-    }
-
-    .btn-view:hover {
-        background: var(--secondary-color);
-        transform: translateY(-1px);
-        color: white;
-    }
-
-    .btn-cart {
-        background: #28a745;
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 20px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 0.9rem;
-    }
-
-    .btn-cart:hover {
-        background: #218838;
-        transform: translateY(-1px);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 80px 40px;
-        color: var(--text-color-medium);
-    }
-
-    .empty-icon {
-        font-size: 5rem;
-        color: var(--zima-pearl);
-        margin-bottom: 25px;
-    }
-
-    .empty-title {
-        font-size: 1.8rem;
-        font-weight: 600;
-        margin-bottom: 15px;
-        color: var(--text-color-dark);
-    }
-
-    .empty-text {
-        font-size: 1.1rem;
-        line-height: 1.6;
-        margin-bottom: 30px;
-    }
-
-    .btn-browse {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        color: white;
-        border: none;
-        padding: 15px 30px;
-        border-radius: 25px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .btn-browse:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
-        color: white;
-    }
-
-    .alert {
-        padding: 15px 20px;
-        border-radius: 12px;
-        margin-bottom: 25px;
-        font-size: 0.95rem;
-        border: none;
-    }
-
-    .alert-success {
-        background: rgba(40, 167, 69, 0.1);
-        color: #155724;
-    }
-
-    .alert-info {
-        background: rgba(23, 162, 184, 0.1);
-        color: #0c5460;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 992px) {
-        .profile-wrapper {
-            grid-template-columns: 1fr;
-            gap: 30px;
-        }
-
-        .profile-sidebar {
-            position: relative;
-            top: auto;
-        }
-
-        .favorites-grid {
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        }
-    }
-
-    @media (max-width: 768px) {
-        .profile-section {
-            padding: 120px 0 40px;
-        }
-
-        .profile-container {
-            padding: 0 15px;
-        }
-
-        .content-header {
-            padding: 25px 20px;
-        }
-
-        .content-title {
-            font-size: 1.5rem;
-        }
-
-        .content-body {
-            padding: 25px 20px;
-        }
-
-        .favorites-grid {
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        .favorite-info {
-            padding: 15px;
-        }
-
-        .empty-state {
-            padding: 60px 20px;
-        }
-
-        .empty-icon {
-            font-size: 4rem;
-        }
-
-        .empty-title {
-            font-size: 1.5rem;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/pages/users_favorites.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -471,7 +20,7 @@
                     <h3 class="user-name">{{ user.get_full_name|default:user.username }}</h3>
                     <p class="user-status">عضو زیما</p>
                 </div>
-                
+
                 <nav class="sidebar-nav">
                     <a href="{% url 'users:profile' %}" class="nav-link">
                         <i class="nav-icon fas fa-user"></i>
@@ -523,7 +72,11 @@
                             {% for favorite in favorites %}
                                 <div class="favorite-item">
                                     <div class="favorite-image">
-                                        <img src="{{ favorite.product.image.url }}" alt="{{ favorite.product.name }}">
+                                        <img
+                                            src="{% with main_image=favorite.product.get_main_image %}{% if main_image %}{{ main_image.image.url }}{% else %}{% static 'images/zima_theme/product-placeholder.jpg' %}{% endif %}{% endwith %}"
+                                            alt="{{ favorite.product.name }}"
+                                            onerror="this.onerror=null;this.src='{% static 'images/zima_theme/product-placeholder.jpg' %}';" {# یک fallback ثانویه با جاوااسکریپت #}
+                                        >
                                         <div class="favorite-badge">محبوب</div>
                                         <button class="favorite-remove" onclick="removeFavorite({{ favorite.product.id }})">
                                             <i class="fas fa-times"></i>
@@ -533,18 +86,22 @@
                                         <h3 class="favorite-title">{{ favorite.product.name }}</h3>
                                         <p class="favorite-brand">{{ favorite.product.brand|default:"زیما" }}</p>
                                         <div class="favorite-price">
-                                            {% if favorite.product.discounted_price %}
-                                                {{ favorite.product.discounted_price|floatformat:0 }} تومان
+                                            {# ✅ از متدهای فرمت‌بندی که در مدل Product تعریف کردید استفاده کنید #}
+                                            {% if favorite.product.has_discount %}
+                                                <span class="original-price">{{ favorite.product.get_formatted_price }} تومان</span>
+                                                <span class="discount-price">{{ favorite.product.get_formatted_display_price }} تومان</span>
                                             {% else %}
-                                                {{ favorite.product.price|floatformat:0 }} تومان
+                                                {{ favorite.product.get_formatted_price }} تومان
                                             {% endif %}
                                         </div>
                                         <div class="favorite-actions">
-                                            <a href="{% url 'products:detail' favorite.product.id %}" class="btn-view">
-                                                مشاهده محصول
+                                            {# ✅ تغییر: افزودن آیکون به دکمه مشاهده محصول #}
+                                            <a href="{% url 'products:detail' product_id=favorite.product.id %}" class="btn-view">
+                                                <i class="fas fa-info-circle"></i> مشاهده محصول
                                             </a>
-                                            <button class="btn-cart" onclick="addToCart({{ favorite.product.id }})">
-                                                <i class="fas fa-shopping-cart"></i>
+                                            {# ✅ تغییر: افزودن متن به دکمه Quick View #}
+                                            <button class="quick-view-btn" onclick="window.openQuickView({{ favorite.product.id }})">
+                                                <i class="fas fa-eye"></i> مشاهده سریع
                                             </button>
                                         </div>
                                     </div>
@@ -577,7 +134,7 @@
         // Remove favorite function
         window.removeFavorite = function(productId) {
             if (confirm('آیا از حذف این محصول از علاقه‌مندی‌ها اطمینان دارید؟')) {
-                fetch(`/users/favorites/remove/${productId}/`, {
+                fetch(`/users/favorites/remove/${productId}/`, { // این URL را بر اساس تنظیمات urls.py خود تنظیم کنید
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
@@ -587,13 +144,16 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        location.reload();
+                        // showMessage('محصول با موفقیت از علاقه‌مندی‌ها حذف شد', 'success');
+                        location.reload(); // رفرش صفحه برای به‌روزرسانی لیست
                     } else {
-                        alert('خطا در حذف محصول از علاقه‌مندی‌ها');
+                        // showMessage(data.message || 'خطا در حذف محصول از علاقه‌مندی‌ها', 'danger');
+                        alert(data.message || 'خطا در حذف محصول از علاقه‌مندی‌ها');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    // showMessage('خطا در برقراری ارتباط با سرور', 'danger');
                     alert('خطا در برقراری ارتباط با سرور');
                 });
             }
@@ -601,43 +161,31 @@
 
         // Add to cart function
         window.addToCart = function(productId) {
-            fetch(`/cart/add/${productId}/`, {
+            fetch(`/cart/add/${productId}/`, { // این URL را بر اساس تنظیمات urls.py خود تنظیم کنید
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
                     'Content-Type': 'application/json',
                 },
+                body: JSON.stringify({ product_id: productId, quantity: 1 }) // فرض می‌کنیم یک عدد اضافه می‌شود
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Show success message
-                    showMessage('محصول با موفقیت به سبد خرید اضافه شد', 'success');
+                    // showMessage('محصول با موفقیت به سبد خرید اضافه شد', 'success');
+                    // می‌توانید آیکون سبد خرید در هدر را به‌روز کنید
+                    showToast('محصول با موفقیت به سبد خرید اضافه شد', 'shopping-cart'); // استفاده از showToast عمومی
                 } else {
-                    alert(data.message || 'خطا در افزودن محصول به سبد خرید');
+                    // showMessage(data.message || 'خطا در افزودن محصول به سبد خرید', 'danger');
+                    showToast(data.message || 'خطا در افزودن محصول به سبد خرید', 'exclamation-triangle'); // استفاده از showToast عمومی
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('خطا در برقراری ارتباط با سرور');
+                // showMessage('خطا در برقراری ارتباط با سرور', 'danger');
+                showToast('خطا در برقراری ارتباط با سرور', 'exclamation-triangle'); // استفاده از showToast عمومی
             });
         };
-
-        // Show message function
-        function showMessage(message, type) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.textContent = message;
-            
-            const contentBody = document.querySelector('.content-body');
-            contentBody.insertBefore(alertDiv, contentBody.firstChild);
-            
-            setTimeout(() => {
-                alertDiv.style.opacity = '0';
-                alertDiv.style.transform = 'translateY(-10px)';
-                setTimeout(() => alertDiv.remove(), 300);
-            }, 3000);
-        }
 
         // Auto-hide alerts
         const alerts = document.querySelectorAll('.alert');

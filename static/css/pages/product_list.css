@@ -1,0 +1,328 @@
+/* static/css/pages/product_list.css */
+
+/* ---------------------------------------------------- */
+/* == Products Hero Section (برای لیست محصولات و دسته‌بندی‌ها) == */
+/* ---------------------------------------------------- */
+.products-hero {
+    margin-top: 80px; /* فضای بالای ناوبار ثابت */
+    padding: 80px 0;
+    background: transparent; /* ✅ تغییر یافت: پس‌زمینه این بخش باید شفاف باشد */
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    z-index: 2; /* ✅ اضافه شد: برای اینکه محتوای Hero روی پس‌زمینه باشد */
+}
+
+/* ❌ حذف شد: products-hero::before و rotate دیگر نیازی نیستند */
+/* .products-hero::before { ... } */
+/* @keyframes rotate { ... } */
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.hero-title {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    font-family: 'Zima-Bold', sans-serif;
+    background: linear-gradient(135deg, var(--zima-deep), var(--secondary-color), var(--primary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 1.3rem;
+    color: var(--text-color-medium);
+    margin-bottom: 30px;
+}
+
+.breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 15px;
+    background: white;
+    padding: 15px 30px;
+    border-radius: 50px;
+    box-shadow: 0 10px 30px var(--shadow-soft);
+}
+
+.breadcrumb a {
+    color: var(--text-color-medium);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-color);
+}
+
+.breadcrumb span {
+    color: var(--secondary-color);
+}
+
+/* ---------------------------------------------------- */
+/* == Main Products Section == */
+/* ---------------------------------------------------- */
+.products-main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 40px;
+    max-width: 1600px;
+    margin: 40px auto 80px;
+    padding: 0 40px;
+    position: relative; /* ✅ اضافه شد: برای اینکه محتوای محصولات روی پس‌زمینه باشد */
+    z-index: 2;
+}
+
+/* ---------------------------------------------------- */
+/* == Filters & Pagination == */
+/* ---------------------------------------------------- */
+/* استایل‌های مربوط به فیلترها (sidebar) در products.css قرار دارند */
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 60px;
+}
+
+.page-btn {
+    width: 45px;
+    height: 45px;
+    border: 2px solid var(--zima-pearl);
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    color: var(--text-color-medium);
+}
+
+.page-btn:hover {
+    border-color: var(--secondary-color);
+    background: var(--zima-blush);
+}
+
+.page-btn.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-color: transparent;
+}
+
+.page-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Mobile Filter Toggle */
+.mobile-filter-toggle {
+    display: none; /* در دسکتاپ مخفی است */
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 15px 30px;
+    border-radius: 50px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    cursor: pointer;
+    z-index: 100;
+    font-weight: 600;
+    border: none;
+}
+
+/* Responsive Design for List Page */
+@media (max-width: 992px) {
+    .products-main {
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -300px; /* Hidden by default */
+        width: 280px;
+        height: 100%;
+        background: white;
+        z-index: 100;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        padding-top: 80px;
+    }
+    .sidebar.active {
+        left: 0;
+    }
+    .mobile-filter-toggle {
+        display: flex;
+    }
+}
+
+@media (max-width: 768px) {
+    .products-hero {
+        padding: 60px 0;
+        margin-top: 60px;
+    }
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+    .breadcrumb {
+        padding: 10px 20px;
+        gap: 10px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .products-hero {
+        padding: 40px 0;
+        margin-top: 40px;
+    }
+    .hero-title {
+        font-size: 2rem;
+    }
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+}
+
+.product-view-detail-btn {
+    width: 100%;
+    padding: 12px 15px; /* کمی پدینگ کمتر برای دکمه جزئیات */
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    border-radius: 25px; /* کمی گردتر */
+    font-weight: 600;
+    font-size: 0.95rem; /* کمی کوچکتر از افزودن به سبد */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none; /* برای لینک */
+    display: flex; /* برای قرار دادن آیکون و متن در کنار هم */
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* فاصله بین آیکون و متن */
+    margin-top: 15px; /* فاصله از قیمت */
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.2);
+}
+
+.product-view-detail-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+    color: white; /* اطمینان از سفید ماندن متن */
+}
+
+/* Style for "Out of Stock" label */
+.product-out-of-stock-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ccc;
+    color: white;
+    padding: 12px 15px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-top: 15px;
+    gap: 8px;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.products-grid.list-view .product-card .product-info .product-view-detail-btn {
+    width: auto; /* عرض خودکار در حالت لیست */
+    min-width: 150px; /* حداقل عرض برای دکمه */
+    padding: 8px 15px; /* پدینگ کمتر */
+    font-size: 0.85rem;
+    margin-top: 0; /* حذف margin-top اضافی */
+}
+.products-grid.list-view .product-card .product-out-of-stock-label {
+    width: auto;
+    min-width: 150px;
+    padding: 8px 15px;
+    font-size: 0.85rem;
+    margin-top: 0;
+}
+
+/* Ensure product-info aligns correctly in list view */
+.products-grid.list-view .product-card .product-info {
+    flex-grow: 1; /* اطمینان از اشغال فضای باقی‌مانده */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start; /* آیتم‌ها از راست شروع شوند */
+    padding-left: 20px; /* برای جلوگیری از چسبیدن به تصویر */
+}
+
+.filter-guide {
+    background: var(--zima-blush);
+    border: 1px solid var(--zima-pearl);
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 30px;
+    text-align: right;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.filter-guide .guide-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: 1.1rem;
+    color: var(--text-color-dark);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-guide .guide-title i {
+    color: var(--primary-color);
+}
+
+.filter-guide .guide-text {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.7;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+}
+
+.filter-guide ul {
+    list-style: disc;
+    padding-right: 25px;
+    margin: 0;
+}
+
+.filter-guide ul li {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.6;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+/* Responsive adjustments for Filter Guide */
+@media (max-width: 768px) {
+    .filter-guide {
+        margin-top: 20px;
+        padding: 15px;
+    }
+    .filter-guide .guide-title {
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+    .filter-guide .guide-text, .filter-guide ul li {
+        font-size: 0.85rem;
+    }
+}

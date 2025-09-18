@@ -1,0 +1,361 @@
+/* static/css/pages/orders_detail.css */
+
+.order-detail-section {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+    padding: 140px 0 60px;
+    position: relative;
+    overflow: hidden;
+}
+
+.order-detail-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/subtle-pattern.png" %}') repeat;
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.order-detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.order-detail-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 2px solid var(--zima-pearl);
+}
+
+.order-detail-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 35px 40px;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.order-detail-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+    opacity: 0.1;
+}
+
+.header-left h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 0 0 10px;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+    position: relative;
+    z-index: 2;
+}
+
+.header-left p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+    position: relative;
+    z-index: 2;
+}
+
+.header-right .order-status-badge {
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+    position: relative;
+    z-index: 2;
+}
+
+/* Status Specific Colors */
+.status-pending { background: #ffc107; }
+.status-processing { background: #17a2b8; }
+.status-shipped { background: #007bff; }
+.status-delivered { background: #28a745; }
+.status-cancelled { background: #dc3545; }
+
+.order-detail-body {
+    padding: 40px;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 50px;
+    align-items: flex-start;
+}
+
+.order-items-section {
+    border-right: 1px solid var(--zima-pearl);
+    padding-right: 40px;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color-dark);
+    margin-bottom: 25px;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.order-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.order-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 15px;
+    background: var(--zima-blush);
+    border-radius: 12px;
+    border: 1px solid var(--zima-peach);
+}
+
+.item-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.item-name {
+    font-weight: 600;
+    color: var(--text-color-dark);
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.item-variant {
+    color: var(--text-color-medium);
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.item-price-qty {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.item-price {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.item-quantity {
+    color: var(--text-color-medium);
+    font-size: 0.9rem;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.order-summary-section {
+    background: var(--zima-cream);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.05);
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.summary-item span:first-child {
+    color: var(--text-color-medium);
+}
+
+.summary-item span:last-child {
+    font-weight: 600;
+    color: var(--text-color-dark);
+}
+
+.summary-total {
+    border-top: 1px dashed var(--zima-pearl);
+    padding-top: 20px;
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.shipping-address-section,
+.payment-method-section {
+    margin-top: 40px;
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--zima-peach);
+}
+
+.address-card,
+.payment-card {
+    padding: 20px;
+    background: var(--zima-blush);
+    border-radius: 10px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.address-card p,
+.payment-card p {
+    margin-bottom: 8px;
+    color: var(--text-color-dark);
+}
+
+.address-card p strong,
+.payment-card p strong {
+    color: var(--primary-color);
+    font-family: 'Zima-Bold', sans-serif; /* تغییر فونت */
+}
+
+.order-actions-bottom {
+    text-align: center;
+    margin-top: 50px;
+}
+
+.btn-back {
+    background: var(--text-color-medium);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'ZimaFont', sans-serif; /* تغییر فونت */
+}
+
+.btn-back:hover {
+    background: var(--zima-deep);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .order-detail-section {
+        padding: 120px 0 40px;
+    }
+
+    .order-detail-container {
+        padding: 0 15px;
+    }
+
+    .order-detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 25px 30px;
+        gap: 15px;
+    }
+
+    .header-left h1 {
+        font-size: 1.8rem;
+    }
+
+    .header-left p {
+        font-size: 1rem;
+    }
+
+    .header-right .order-status-badge {
+        font-size: 0.9rem;
+        padding: 8px 15px;
+    }
+
+    .order-detail-body {
+        grid-template-columns: 1fr;
+        padding: 30px;
+        gap: 30px;
+    }
+
+    .order-items-section {
+        border-right: none;
+        padding-right: 0;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+    }
+
+    .order-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .item-image {
+        width: 70px;
+        height: 70px;
+    }
+
+    .item-name {
+        font-size: 1rem;
+    }
+
+    .item-price-qty {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .order-summary-section,
+    .shipping-address-section,
+    .payment-method-section {
+        padding: 25px;
+    }
+
+    .summary-total {
+        font-size: 1.1rem;
+    }
+
+    .btn-back {
+        padding: 12px 25px;
+        font-size: 0.9rem;
+    }
+}

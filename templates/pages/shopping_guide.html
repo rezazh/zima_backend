@@ -1,0 +1,174 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}راهنمای خرید | زیما - هر آنچه برای یک خرید آسان نیاز دارید{% endblock %}
+
+{% block meta_description %}راهنمای جامع خرید از فروشگاه آنلاین زیما. مراحل انتخاب محصول، افزودن به سبد خرید، تکمیل سفارش و پرداخت امن.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/pages_shopping_guide.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="shopping-guide-page">
+    <div class="shopping-guide-container">
+        <!-- Hero Section -->
+        <div class="hero-section fade-in">
+            <h1 class="hero-title">راهنمای جامع خرید از زیما</h1>
+            <p class="hero-subtitle">خریدی آسان و دلنشین در چند قدم ساده</p>
+            <p class="hero-description">
+                ما در زیما تلاش کرده‌ایم تا تجربه خریدی بی‌نقص و لذت‌بخش را برای شما فراهم کنیم.
+                با مطالعه این راهنما، تمامی مراحل خرید از انتخاب محصول تا تحویل آن را به سادگی فرا بگیرید.
+            </p>
+        </div>
+
+        <!-- How It Works Section -->
+        <div class="process-section">
+            <h2 class="section-title fade-in">
+                <i class="fas fa-shopping-bag"></i>
+                نحوه کار با فروشگاه
+            </h2>
+            <p class="section-subtitle fade-in">از جستجو تا دریافت محصول، قدم به قدم با شما هستیم.</p>
+
+            <div class="process-grid">
+                <div class="process-card fade-in">
+                    <div class="process-icon"><i class="fas fa-search"></i></div>
+                    <h3 class="process-title">1. جستجو و انتخاب محصول</h3>
+                    <p class="process-description">
+                        محصولات مورد نظر خود را از طریق دسته‌بندی‌ها، فیلترها یا نوار جستجو پیدا کنید.
+                        می‌توانید جزئیات محصول، تصاویر و نظرات کاربران را مشاهده کنید.
+                    </p>
+                </div>
+                <div class="process-card fade-in">
+                    <div class="process-icon"><i class="fas fa-palette"></i></div>
+                    <h3 class="process-title">2. انتخاب رنگ و سایز</h3>
+                    <p class="process-description">
+                        پس از انتخاب محصول، رنگ و سایز دلخواه خود را (در صورت وجود گزینه‌ها) انتخاب کنید.
+                        به راهنمای سایز دقت کنید تا بهترین انتخاب را داشته باشید.
+                    </p>
+                </div>
+                <div class="process-card fade-in">
+                    <div class="process-icon"><i class="fas fa-cart-plus"></i></div>
+                    <h3 class="process-title">3. افزودن به سبد خرید</h3>
+                    <p class="process-description">
+                        محصولات انتخابی خود را به سبد خرید اضافه کنید.
+                        می‌توانید تعداد هر محصول را تغییر دهید یا آن را حذف کنید.
+                    </p>
+                </div>
+                <div class="process-card fade-in">
+                    <div class="process-icon"><i class="fas fa-credit-card"></i></div>
+                    <h3 class="process-title">4. تکمیل سفارش (پرداخت)</h3>
+                    <p class="process-description">
+                        در صفحه سبد خرید، روی دکمه "تکمیل سفارش" کلیک کنید.
+                        آدرس، روش ارسال و روش پرداخت را انتخاب و کد تخفیف خود را (در صورت وجود) اعمال کنید.
+                    </p>
+                </div>
+                <div class="process-card fade-in">
+                    <div class="process-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3 class="process-title">5. پرداخت امن</h3>
+                    <p class="process-description">
+                        پس از بررسی نهایی سفارش، به درگاه پرداخت امن منتقل می‌شوید.
+                        با اطمینان خاطر پرداخت خود را انجام دهید.
+                    </p>
+                </div>
+                <div class="process-card fade-in">
+                    <div class="process-icon"><i class="fas fa-truck"></i></div>
+                    <h3 class="process-title">6. پیگیری و دریافت سفارش</h3>
+                    <p class="process-description">
+                        پس از ثبت سفارش، کد پیگیری برای شما ارسال می‌شود.
+                        می‌توانید وضعیت سفارش خود را از طریق پنل کاربری پیگیری کنید.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="faq-section fade-in">
+            <h2 class="section-title">
+                <i class="fas fa-question-circle"></i>
+                سوالات متداول خرید
+            </h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>آیا برای خرید نیاز به ثبت نام دارم؟</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>بله، برای تکمیل سفارش و پیگیری‌های بعدی، داشتن یک حساب کاربری الزامی است. ثبت نام کمتر از یک دقیقه طول می‌کشد.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>چگونه می‌توانم از کد تخفیف استفاده کنم؟</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>در مرحله تکمیل سفارش (چک‌اوت)، بخشی برای وارد کردن کد تخفیف وجود دارد. کد خود را وارد کرده و دکمه اعمال را بزنید.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>آیا می‌توانم سفارشم را لغو کنم؟</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>بله، در صورتی که سفارش هنوز در وضعیت "در انتظار پرداخت" یا "در حال پردازش" باشد، می‌توانید از طریق پنل کاربری خود آن را لغو کنید.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section fade-in">
+            <div class="cta-content">
+                <h2 class="cta-title">آماده شروع خرید هستید؟</h2>
+                <p class="cta-subtitle">اکنون کالکشن‌های بی‌نظیر زیما را کشف کنید</p>
+                <div class="cta-buttons">
+                    <a href="{% url 'products:list' %}" class="cta-btn primary">
+                        <i class="fas fa-shopping-bag"></i>
+                        مشاهده محصولات
+                    </a>
+                    <a href="{% url 'pages:contact' %}" class="cta-btn secondary">
+                        <i class="fas fa-headset"></i>
+                        تماس با پشتیبانی
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // FAQ Toggle functionality (similar to contact.html)
+        const faqQuestions = document.querySelectorAll('.faq-question');
+        faqQuestions.forEach(question => {
+            question.addEventListener('click', function() {
+                const faqItem = this.parentNode;
+                const answer = faqItem.querySelector('.faq-answer');
+                const isActive = this.classList.contains('active');
+
+                // Close all other FAQ items
+                faqQuestions.forEach(q => {
+                    if (q !== this) {
+                        q.classList.remove('active');
+                        q.parentNode.querySelector('.faq-answer').classList.remove('active');
+                    }
+                });
+
+                // Toggle current item
+                if (!isActive) {
+                    this.classList.add('active');
+                    answer.classList.add('active');
+                } else {
+                    this.classList.remove('active');
+                    answer.classList.remove('active');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

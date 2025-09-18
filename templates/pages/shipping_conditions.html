@@ -1,0 +1,183 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}شرایط ارسال | زیما - ارسال سریع و مطمئن{% endblock %}
+
+{% block meta_description %}اطلاعات کامل در مورد روش‌های ارسال، هزینه‌ها، زمان تحویل و پیگیری سفارشات در فروشگاه آنلاین زیما.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/pages_shipping_conditions.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="shipping-page">
+    <div class="shipping-container">
+        <!-- Hero Section -->
+        <div class="hero-section fade-in">
+            <h1 class="hero-title">شرایط ارسال سفارشات</h1>
+            <p class="hero-subtitle">تحویل سریع و مطمئن درب منزل شما</p>
+            <p class="hero-description">
+                در زیما، ما اهمیت تحویل به موقع و سالم محصولات را درک می‌کنیم.
+                این صفحه شامل تمامی اطلاعاتی است که برای یک تجربه ارسال بی‌دردسر نیاز دارید.
+            </p>
+        </div>
+
+        <!-- Shipping Methods Section -->
+        <div class="methods-section">
+            <h2 class="section-title fade-in">
+                <i class="fas fa-shipping-fast"></i>
+                روش‌های ارسال
+            </h2>
+            <p class="section-subtitle fade-in">ما با بهترین شرکت‌های پستی همکاری می‌کنیم تا سفارشات شما سریع به دستتان برسد.</p>
+
+            <div class="method-grid">
+                <div class="method-card fade-in">
+                    <div class="method-icon"><i class="fas fa-box-open"></i></div>
+                    <h3 class="method-title">ارسال عادی (پست پیشتاز)</h3>
+                    <p class="method-description">
+                        ارسال به تمامی شهرهای ایران از طریق پست پیشتاز.
+                        بسته‌بندی ایمن و قابل پیگیری.
+                    </p>
+                    <ul class="method-details-list">
+                        <li><i class="fas fa-clock"></i> زمان تحویل: 2 تا 5 روز کاری</li>
+                        <li><i class="fas fa-dollar-sign"></i> هزینه: 30,000 تومان</li>
+                    </ul>
+                </div>
+                <div class="method-card fade-in">
+                    <div class="method-icon"><i class="fas fa-motorcycle"></i></div>
+                    <h3 class="method-title">ارسال فوری (فقط مشهد)</h3>
+                    <p class="method-description">
+                        برای عزیزان ساکن مشهد، امکان ارسال فوری با پیک.
+                        بسته‌بندی محرمانه و تحویل در همان روز.
+                    </p>
+                    <ul class="method-details-list">
+                        <li><i class="fas fa-clock"></i> زمان تحویل: 1 تا 2 روز کاری</li>
+                        <li><i class="fas fa-dollar-sign"></i> هزینه: 20,000 تومان</li>
+                    </ul>
+                </div>
+                <div class="method-card fade-in">
+                    <div class="method-icon"><i class="fas fa-gift"></i></div>
+                    <h3 class="method-title">ارسال رایگان</h3>
+                    <p class="method-description">
+                        برای قدردانی از اعتماد شما، ارسال برای خریدهای بالای یک مبلغ مشخص رایگان است!
+                    </p>
+                    <ul class="method-details-list">
+                        <li><i class="fas fa-dollar-sign"></i> **رایگان** برای خرید بالای 300,000 تومان</li>
+                        <li><i class="fas fa-check"></i> شامل تمامی روش‌های ارسال</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Times & Zones Section -->
+        <div class="zones-times-section">
+            <h2 class="section-title fade-in">
+                <i class="fas fa-calendar-alt"></i>
+                زمان‌بندی و مناطق ارسال
+            </h2>
+            <p class="section-subtitle fade-in">جدول زیر تخمینی از زمان تحویل سفارشات شما را نشان می‌دهد.</p>
+
+            <div class="delivery-table-container fade-in">
+                <table class="delivery-table">
+                    <thead>
+                        <tr>
+                            <th>منطقه/شهر</th>
+                            <th>روش ارسال</th>
+                            <th>زمان پردازش</th>
+                            <th>زمان تحویل (تخمینی)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>مشهد مقدس</td>
+                            <td>پیک فوری</td>
+                            <td>کمتر از 12 ساعت</td>
+                            <td>1 تا 2 روز کاری</td>
+                        </tr>
+                        <tr>
+                            <td>مشهد مقدس</td>
+                            <td>پست پیشتاز</td>
+                            <td>24 ساعت</td>
+                            <td>1 تا 2 روز کاری</td>
+                        </tr>
+                        <tr>
+                            <td>استان‌های نزدیک (تهران، البرز، سمنان و...)</td>
+                            <td>پست پیشتاز</td>
+                            <td>24 ساعت</td>
+                            <td>2 تا 3 روز کاری</td>
+                        </tr>
+                        <tr>
+                            <td>سایر استان‌ها</td>
+                            <td>پست پیشتاز</td>
+                            <td>24 ساعت</td>
+                            <td>3 تا 5 روز کاری</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="important-notes fade-in">
+                <h3><i class="fas fa-info-circle"></i> نکات مهم:</h3>
+                <ul>
+                    <li>زمان‌های تحویل تخمینی هستند و ممکن است در ایام شلوغ (مانند جشنواره‌ها یا تعطیلات رسمی) کمی بیشتر شوند.</li>
+                    <li>سفارشات ثبت شده تا ساعت 16 هر روز کاری، در همان روز پردازش و آماده ارسال می‌شوند.</li>
+                    <li>در صورت بروز هرگونه تاخیر غیرعادی، تیم پشتیبانی زیما با شما تماس خواهد گرفت.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Order Tracking Section -->
+        <div class="tracking-section fade-in">
+            <h2 class="section-title">
+                <i class="fas fa-search-location"></i>
+                پیگیری سفارش
+            </h2>
+            <p class="section-description">
+                پس از ارسال سفارش، کد رهگیری پستی به شماره موبایل شما ارسال می‌گردد.
+                شما می‌توانید با استفاده از این کد، وضعیت لحظه‌ای مرسوله خود را از طریق سایت شرکت پست پیگیری کنید.
+            </p>
+            <a href="https://tracking.post.ir/" target="_blank" class="btn-track-order">
+                <i class="fas fa-external-link-alt"></i>
+                پیگیری سفارش در سایت پست
+            </a>
+            <p class="tracking-tip">
+                همچنین می‌توانید وضعیت سفارش خود را از <a href="{% url 'orders:list' %}" class="text-primary">پنل کاربری</a> بخش "سفارش‌های من" مشاهده کنید.
+            </p>
+        </div>
+
+        <!-- Returns Policy Brief Section -->
+        <div class="returns-brief-section fade-in">
+            <h2 class="section-title">
+                <i class="fas fa-undo-alt"></i>
+                سیاست بازگشت کالا
+            </h2>
+            <p class="section-description">
+                ما تا 7 روز پس از تحویل کالا، ضمانت بازگشت و تعویض محصول را ارائه می‌دهیم.
+                برای اطلاع از جزئیات کامل این سیاست، لطفاً به صفحه مربوطه مراجعه کنید.
+            </p>
+            <a href="{% url 'pages:returns_policy' %}" class="btn-view-policy">
+                <i class="fas fa-file-alt"></i>
+                مشاهده سیاست بازگشت کالا
+            </a>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section fade-in">
+            <div class="cta-content">
+                <h2 class="cta-title">سوالی در مورد ارسال دارید؟</h2>
+                <p class="cta-subtitle">تیم پشتیبانی زیما آماده پاسخگویی به شماست</p>
+                <div class="cta-buttons">
+                    <a href="{% url 'pages:contact' %}" class="cta-btn primary">
+                        <i class="fas fa-headset"></i>
+                        تماس با پشتیبانی
+                    </a>
+                    <a href="{% url 'products:list' %}" class="cta-btn secondary">
+                        <i class="fas fa-shopping-bag"></i>
+                        ادامه خرید
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

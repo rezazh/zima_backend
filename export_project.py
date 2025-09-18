@@ -48,16 +48,32 @@ import os
 
 # مسیرهایی که می‌خواهی در فایل نهایی باشند
 INCLUDED_PATHS = [
-    # 'myapp/models.py', #فایل
-    # 'docker-compose.yml', #فایل
-    # 'Dockerfile', #فایل
-    # 'chat/consumers.py',
-    'templates/chat',
-    'templates/base/base.html',
-    'static/chat',
-    # 'zima',
-    # 'config',
-    'chat',  # پوشه
+    'pages',
+    'cart',
+    'users',
+    # 'chat',
+    # 'middleware',
+    'orders',
+    'products',
+    # 'static/css',
+    # 'static/js',
+    # 'templates',
+
+    # 'products/models.py',
+    # 'products/views.py',
+    # 'products/urls.py',
+    # 'products/templatetags/my_custom_filters.py',
+    # 'static/css/pages/home.css',
+    # 'static/css/pages/product_detail.css',
+    # 'static/css/pages/quick-view.css',
+    # 'static/css/main.css',
+    # 'static/css/products.css',
+    # 'static/js/main.js',
+    # 'static/js/zima_theme_v2.js',
+    # 'templates/base/base.html',
+    # 'templates/pages/home.html',
+    # 'templates/products/product_detail.html',
+    # 'templates/products/quick_view_modal_content.html',
 ]
 
 # مسیر خروجی

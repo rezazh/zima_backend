@@ -1,0 +1,195 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}کیفیت محصولات | زیما - تعهد به برتری{% endblock %}
+
+{% block meta_description %}کشف تعهد زیما به کیفیت برتر محصولات. اطلاعاتی درباره مواد اولیه، فرآیند تولید و کنترل کیفیت دقیق در لباس زیر زنانه زیما.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/pages_product_quality.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="product-quality-page">
+    <div class="quality-container">
+        <!-- Hero Section -->
+        <div class="hero-section fade-in">
+            <h1 class="hero-title">کیفیت محصولات زیما</h1>
+            <p class="hero-subtitle">تعهد ما به برتری در هر تار و پود</p>
+            <p class="hero-description">
+                در زیما، کیفیت صرفاً یک کلمه نیست، بلکه فلسفه وجودی ماست.
+                ما به هر جزئیات اهمیت می‌دهیم تا محصولاتی فراتر از انتظار شما خلق کنیم.
+            </p>
+        </div>
+
+        <!-- Our Philosophy Section -->
+        <div class="philosophy-section">
+            <h2 class="section-title fade-in">
+                <i class="fas fa-lightbulb"></i>
+                فلسفه کیفیت ما
+            </h2>
+            <p class="section-subtitle fade-in">باور داریم که زیبایی واقعی از کیفیت بی‌نظیر نشأت می‌گیرد.</p>
+
+            <div class="philosophy-grid">
+                <div class="philosophy-card fade-in">
+                    <div class="philosophy-icon"><i class="fas fa-heart"></i></div>
+                    <h3 class="philosophy-title">عشق به جزئیات</h3>
+                    <p class="philosophy-description">
+                        هر محصول زیما با دقت فراوان و عشق به جزئیات طراحی و تولید می‌شود.
+                        از انتخاب پارچه تا دوخت نهایی، همه چیز با وسواس خاصی انجام می‌گیرد.
+                    </p>
+                </div>
+                <div class="philosophy-card fade-in">
+                    <div class="philosophy-icon"><i class="fas fa-gem"></i></div>
+                    <h3 class="philosophy-title">ماندگاری و دوام</h3>
+                    <p class="philosophy-description">
+                        ما محصولاتی را عرضه می‌کنیم که نه تنها زیبا هستند، بلکه دوام بالایی دارند
+                        و در طول زمان کیفیت خود را حفظ می‌کنند.
+                    </p>
+                </div>
+                <div class="philosophy-card fade-in">
+                    <div class="philosophy-icon"><i class="fas fa-smile"></i></div>
+                    <h3 class="philosophy-title">راحتی بی‌نظیر</h3>
+                    <p class="philosophy-description">
+                        راحتی شما برای ما اهمیت ویژه‌ای دارد.
+                        محصولات ما با طراحی ارگونومیک و پارچه‌های لطیف، حس آرامش را به شما هدیه می‌دهند.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Materials Section -->
+        <div class="materials-section">
+            <h2 class="section-title fade-in">
+                <i class="fas fa-leaf"></i>
+                مواد اولیه برگزیده
+            </h2>
+            <p class="section-subtitle fade-in">انتخاب بهترین پارچه‌ها برای لمس لطیف پوست شما.</p>
+
+            <div class="materials-grid">
+                <div class="material-card fade-in">
+                    <img src="{% static 'images/quality/cotton.jpg' %}" alt="پنبه ارگانیک" class="material-image">
+                    <div class="material-content">
+                        <h3 class="material-title">پنبه ارگانیک</h3>
+                        <p class="material-description">
+                            لطیف، تنفس‌پذیر و ضدحساسیت. ایده‌آل برای استفاده روزمره و پوست‌های حساس.
+                        </p>
+                    </div>
+                </div>
+                <div class="material-card fade-in">
+                    <img src="{% static 'images/quality/lace.jpg' %}" alt="دانتل ظریف" class="material-image">
+                    <div class="material-content">
+                        <h3 class="material-title">دانتل ظریف</h3>
+                        <p class="material-description">
+                            زیبایی و جذابیت بی‌بدیل. با طرح‌های منحصربه‌فرد برای لحظات خاص.
+                        </p>
+                    </div>
+                </div>
+                <div class="material-card fade-in">
+                    <img src="{% static 'images/quality/modal.jpg' %}" alt="مودال نرم" class="material-image">
+                    <div class="material-content">
+                        <h3 class="material-title">مودال نرم</h3>
+                        <p class="material-description">
+                            فوق‌العاده نرم، جاذب رطوبت و مقاوم در برابر چروکیدگی.
+                        </p>
+                    </div>
+                </div>
+                <div class="material-card fade-in">
+                    <img src="{% static 'images/quality/silk.jpg' %}" alt="ابریشم طبیعی" class="material-image">
+                    <div class="material-content">
+                        <h3 class="material-title">ابریشم طبیعی</h3>
+                        <p class="material-description">
+                            لوکس، خنک و ضدحساسیت. تجربه‌ای از لطافت و ظرافت بی‌نظیر.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quality Control Section -->
+        <div class="control-section">
+            <h2 class="section-title fade-in">
+                <i class="fas fa-shield-alt"></i>
+                فرآیند کنترل کیفیت
+            </h2>
+            <p class="section-subtitle fade-in">هر محصول قبل از رسیدن به دست شما، چندین مرحله بازرسی را پشت سر می‌گذارد.</p>
+
+            <div class="control-steps-timeline">
+                <div class="timeline-item fade-in">
+                    <div class="timeline-marker">1</div>
+                    <div class="timeline-content">
+                        <h4>بازرسی مواد اولیه</h4>
+                        <p>تمامی پارچه‌ها و لوازم جانبی ورودی، از نظر کیفیت و استانداردها به دقت بررسی می‌شوند.</p>
+                    </div>
+                </div>
+                <div class="timeline-item fade-in">
+                    <div class="timeline-marker">2</div>
+                    <div class="timeline-content">
+                        <h4>کنترل حین تولید</h4>
+                        <p>در هر مرحله از دوخت و تولید، نظارت مستمر برای اطمینان از رعایت استانداردهای طراحی و دوخت انجام می‌گیرد.</p>
+                    </div>
+                </div>
+                <div class="timeline-item fade-in">
+                    <div class="timeline-marker">3</div>
+                    <div class="timeline-content">
+                        <h4>بازرسی نهایی محصول</h4>
+                        <p>محصولات نهایی از نظر ظاهری، دوخت، تمیزی و بسته‌بندی به طور کامل چک می‌شوند.</p>
+                    </div>
+                </div>
+                <div class="timeline-item fade-in">
+                    <div class="timeline-marker">4</div>
+                    <div class="timeline-content">
+                        <h4>تست‌های تصادفی</h4>
+                        <p>نمونه‌هایی از هر سری تولید به صورت تصادفی برای تست‌های دوام و شستشو انتخاب می‌شوند.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Certifications Section -->
+        <div class="certifications-section fade-in">
+            <h2 class="section-title">
+                <i class="fas fa-certificate"></i>
+                استانداردها و گواهینامه‌ها
+            </h2>
+            <p class="section-subtitle">ما به رعایت بالاترین استانداردهای جهانی متعهد هستیم.</p>
+
+            <div class="certs-grid">
+                <div class="cert-card">
+                    <img src="{% static 'images/quality/iso-logo.png' %}" alt="ISO Certified" class="cert-logo">
+                    <h3 class="cert-title">ISO 9001</h3>
+                    <p class="cert-description">سیستم مدیریت کیفیت</p>
+                </div>
+                <div class="cert-card">
+                    <img src="{% static 'images/quality/oeko-tex-logo.png' %}" alt="Oeko-Tex Standard" class="cert-logo">
+                    <h3 class="cert-title">Oeko-Tex Standard 100</h3>
+                    <p class="cert-description">عاری از مواد مضر</p>
+                </div>
+                <div class="cert-card">
+                    <img src="{% static 'images/quality/organic-logo.png' %}" alt="Organic Certified" class="cert-logo">
+                    <h3 class="cert-title">Organic Cotton</h3>
+                    <p class="cert-description">پنبه ارگانیک معتبر</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section fade-in">
+            <div class="cta-content">
+                <h2 class="cta-title">کیفیت را تجربه کنید</h2>
+                <p class="cta-subtitle">محصولات زیما، انتخابی برای آرامش و زیبایی شما.</p>
+                <div class="cta-buttons">
+                    <a href="{% url 'products:list' %}" class="cta-btn primary">
+                        <i class="fas fa-shopping-bag"></i>
+                        مشاهده محصولات
+                    </a>
+                    <a href="{% url 'pages:returns_policy' %}" class="cta-btn secondary"> {# لینک به صفحه سیاست بازگشت #}
+                        <i class="fas fa-undo-alt"></i>
+                        سیاست بازگشت کالا
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

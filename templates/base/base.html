@@ -1,58 +1,62 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <style>
-    /* تنظیم padding برای تمام صفحات */
-    body {
-        padding-top: 40px !important;
-        box-sizing: border-box;
-    }
-
-    .main-content,
-    .container,
-    .content,
-    main {
-        padding-top: 20px;
-    }
-
-    .page-content,
-    .home-content,
-    .product-detail,
-    .product-list,
-    .chat-room,
-    .category-page {
-        margin-top: 0 !important;
-        padding-top: 20px;
-    }
-
-    @media (max-width: 768px) {
-        body {
-            padding-top: 70px !important;
-        }
-    }
-
-    @media (max-width: 480px) {
-        body {
-            padding-top: 60px !important;
-        }
-    }
-    </style>
     {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}زیما | زیبایی خصوصی شما{% endblock %}</title>
 
-    {# فونت‌ها #}
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;600;700;900&family=Vazir:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {# فونت‌های اصلی سایت (ZimaFont) #}
+    <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    {# استایل‌های جدید تم #}
-    <link rel="stylesheet" href="{% static 'css/zima_theme_v2.css' %}">
+    {# استایل‌های سراسری تم #}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {# استایل‌های مربوط به محصولات #}
+    <link rel="stylesheet" href="{% static 'css/products.css' %}">
     {# برای استایل‌های خاص هر صفحه (بعدا اضافه می‌شود) #}
+    <link rel="stylesheet" href="{% static 'css/pages/quick-view.css' %}">
+
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
+
+    <!-- ✅ START: لایه‌های پس‌زمینه متحرک (fixed) -->
+    <div class="animated-gradient-background"></div>
+    <div class="floating-particles-container">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+    <div class="floating-stars-container">
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+        <i class="fas fa-star star-icon"></i>
+    </div>
+    <!-- ✅ END: لایه‌های پس‌زمینه متحرک -->
+     <!-- ✅ START: Quick View Modal Container (جدید) -->
+    <div class="quick-view-modal" id="quickViewModal">
+        <div class="modal-content-qv">
+            <button class="modal-close" onclick="closeQuickView()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="quickViewModalContent">
+                <!-- محتوای Quick View از طریق AJAX در اینجا بارگذاری می‌شود -->
+            </div>
+        </div>
+    </div>
+    <!-- ✅ END: Quick View Modal Container -->
     <!-- Loading Screen -->
     <div class="loader" id="loader">
         <div class="loader-content">
@@ -81,14 +85,14 @@
             <ul class="nav-menu">
                 <li><a href="{% url 'pages:home' %}" class="nav-link">صفحه اصلی</a></li>
                 <li><a href="{% url 'products:list' %}" class="nav-link">محصولات</a></li>
-                <li><a href="#" class="nav-link">راهنمای سایز</a></li>
+                <li><a href="{% url 'pages:size-guide' %}" class="nav-link">راهنمای سایز</a></li>
                 <li><a href="{% url 'pages:about' %}" class="nav-link">درباره ما</a></li>
                 <li><a href="{% url 'pages:contact' %}" class="nav-link">تماس</a></li>
             </ul>
 
             <div class="nav-icons">
                 <a href="{% url 'products:search' %}" class="nav-icon"><i class="fas fa-search"></i></a>
-                <a href="#" class="nav-icon"><i class="fas fa-heart"></i></a>
+                <a href="{% url 'users:favorites' %}" class="nav-icon"><i class="fas fa-heart"></i></a>
                 {% if user.is_authenticated %}
                 <a href="{% url 'users:profile' %}" class="nav-icon"><i class="fas fa-user"></i></a>
                 {% else %}
@@ -151,10 +155,10 @@
             <div class="footer-column">
                 <h4>خدمات مشتریان</h4>
                 <ul class="footer-links">
-                    <li><a href="#">راهنمای خرید</a></li>
-                    <li><a href="#">راهنمای سایز</a></li>
-                    <li><a href="{% url 'pages:shipping' %}">شرایط ارسال</a></li>
-                    <li><a href="#">ضمانت بازگشت</a></li>
+                    <li><a href="{% url 'pages:shopping_guide' %}">راهنمای خرید</a></li>
+                    <li><a href="{% url 'pages:size-guide' %}">راهنمای سایز</a></li>
+                    <li><a href="{% url 'pages:shipping_conditions' %}">شرایط ارسال</a></li>
+                    <li><a href="{% url 'pages:returns_policy' %}">ضمانت بازگشت</a></li>
                     <li><a href="{% url 'pages:contact' %}" target="_blank">پشتیبانی آنلاین</a></li>
                 </ul>
             </div>
@@ -163,8 +167,8 @@
                 <h4>درباره زیما</h4>
                 <ul class="footer-links">
                     <li><a href="{% url 'pages:about' %}">داستان ما</a></li>
-                    <li><a href="#">کیفیت محصولات</a></li>
-                    <li><a href="{% url 'pages:privacy' %}">حریم خصوصی</a></li>
+                    <li><a href="{% url 'pages:product_quality' %}">کیفیت محصولات</a></li>
+                    <li><a href="{% url 'pages:privacy_policy' %}">حریم خصوصی</a></li>
                     <li><a href="#">مجله زیما</a></li>
                     <li><a href="#">فرصت‌های شغلی</a></li>
                 </ul>

@@ -1,8 +1,42 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load currency_filters %} {# تغییر: اضافه کردن لود فیلترهای ارز #}
+{% load my_custom_filters %} {# این خط را اضافه کنید #}
 
 {% block title %}زیما | زیبایی خصوصی شما{% endblock %}
+{% block body_class %}animated-bg-page{% endblock %} {# ✅ این خط اضافه شد #}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/home.css' %}">
+    <style>
+        /* Sparkle Effect */
+        .sparkle {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            animation: sparkleAnim 1s ease-out forwards;
+        }
+
+        @keyframes sparkleAnim {
+            0% {
+                opacity: 1;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+        }
+    </style>
+{% endblock %}
 {% block content %}
 <!-- Hero Section -->
 <section class="hero">
@@ -51,10 +85,104 @@
         </div>
     </div>
 </section>
+<!-- ==================================================== -->
+<!-- == Family Collections Showcase Section == -->
+<!-- ==================================================== -->
+<section class="family-showcase fade-in">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-badge">برای تمام خانواده</span>
+            <h2 class="section-title">کلکسیون‌های <span class="script">منتخب</span> ما</h2>
+            <p class="section-description">محصولات ما برای هر عضو خانواده شما با دقت و عشق طراحی شده‌اند.</p>
+        </div>
 
+        <div class="family-content">
+            <!-- ✅ تصویر/ویدیو اصلی خانواده (کادر بالا) -->
+            <div class="family-media-container" id="familyMediaContainer">
+    <!-- ✅ لایه پس‌زمینه محو شده -->
+    <div class="family-background-blur" id="familyBackgroundBlur"></div>
+
+    <!-- ✅ لایه overlay زیبا -->
+    <div class="family-overlay"></div>
+
+    <!-- تصویر پیش‌فرض خانواده -->
+    <img src="{% static 'images/family/family-main.jpg' %}"
+         alt="خانواده زیما"
+         class="family-main-image active"
+         id="familyMainImage">
+
+    <!-- ویدیوهای مخصوص هر عضو -->
+    <video class="family-video"
+           id="dadVideo"
+           muted
+           preload="metadata"
+           data-member="dad">
+        <source src="{% static 'videos/family/dad-animation.mp4' %}" type="video/mp4">
+    </video>
+
+    <video class="family-video"
+           id="momVideo"
+           muted
+           preload="metadata"
+           data-member="mom">
+        <source src="{% static 'videos/family/mom-animation.mp4' %}" type="video/mp4">
+    </video>
+
+    <video class="family-video"
+           id="boyVideo"
+           muted
+           preload="metadata"
+           data-member="boy">
+        <source src="{% static 'videos/family/boy-animation.mp4' %}" type="video/mp4">
+    </video>
+
+    <video class="family-video"
+           id="girlVideo"
+           muted
+           preload="metadata"
+           data-member="girl">
+        <source src="{% static 'videos/family/girl-animation.mp4' %}" type="video/mp4">
+    </video>
+</div>
+
+            <!-- ✅ آیتم‌های انتخاب (همان شکل قبلی) -->
+            <div class="family-grid">
+                <a href="{% url 'products:category_list' 'men' %}" class="family-collection-card"
+                   data-member="dad"
+                   onmouseenter="playFamilyVideo('dad')"
+                   onmouseleave="stopFamilyVideo()">
+                    <img src="{% static 'images/family/men-category.jpg' %}" alt="کلکسیون مردانه">
+                    <div class="card-overlay"><h3>مردانه</h3></div>
+                </a>
+                <a href="{% url 'products:category_list' 'women' %}" class="family-collection-card"
+                   data-member="mom"
+                   onmouseenter="playFamilyVideo('mom')"
+                   onmouseleave="stopFamilyVideo()">
+                    <img src="{% static 'images/family/women-category.jpg' %}" alt="کلکسیون زنانه">
+                    <div class="card-overlay"><h3>زنانه</h3></div>
+                </a>
+                <a href="{% url 'products:category_list' 'boys' %}" class="family-collection-card"
+                   data-member="boy"
+                   onmouseenter="playFamilyVideo('boy')"
+                   onmouseleave="stopFamilyVideo()">
+                    <img src="{% static 'images/family/boys-category.jpg' %}" alt="کلکسیون پسرانه">
+                    <div class="card-overlay"><h3>پسرانه</h3></div>
+                </a>
+                <a href="{% url 'products:category_list' 'girls' %}" class="family-collection-card"
+                   data-member="girl"
+                   onmouseenter="playFamilyVideo('girl')"
+                   onmouseleave="stopFamilyVideo()">
+                    <img src="{% static 'images/family/girls-category.jpg' %}" alt="کلکسیون دخترانه">
+                    <div class="card-overlay"><h3>دخترانه</h3></div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
 <!-- Collections Section -->
 <section class="collections fade-in">
-    <div class="section-header">        <div class="section-badge">کالکشن‌های ویژه</div>
+    <div class="section-header">
+        <div class="section-badge">کالکشن‌های ویژه</div>
         <h2 class="section-title">
             سه دنیای <span class="script">زیبایی</span>
         </h2>
@@ -107,73 +235,113 @@
 </section>
 
 <!-- Featured Products -->
-<section class="featured fade-in">
-    <div class="products-container">
+<section class="featured-slider fade-in"> {# کلاس جدید برای این بخش #}
+    <div class="container">
         <div class="section-header">
             <div class="section-badge">محبوب‌ترین‌ها</div>
             <h2 class="section-title">
                 پرفروش‌ترین <span class="script">محصولات</span>
             </h2>
             <p class="section-description">
-                محصولاتی که بیشترین رضایت را از مشتریان عزیز دریافت کرده‌اند
+                مجموعه‌ای از پرفروش‌ترین محصولات زیما با طراحی خاص و کیفیت بی‌نظیر.
             </p>
         </div>
-        <div class="products-grid">
-            {% for product in featured_products|slice:":8" %} {# نمایش تا 8 محصول ویژه #}
-            <div class="product-card fade-in">
-                <div class="product-image-container">
-                    <div class="product-badge">
-                        {% if product.is_new %}
-                        <span class="product-badge new">جدید</span>
-                        {% endif %}
-                        {% if product.has_discount %}
-                        <span class="product-badge sale">{{ product.discount_percent }}% تخفیف</span>
-                        {% endif %}
-                        {% if product.is_featured %}
-                        <span class="product-badge">ویژه</span>
-                        {% endif %}                    </div>
-                    <div class="product-favorite" onclick="toggleWishlist(this, '{{ product.id }}')">
-                        <i class="far fa-heart"></i>
-                    </div>
-                    {% with image=product.get_main_image %}
-                    <img src="{% if image %}{{ image.image.url }}{% else %}{% static 'images/zima_theme/product-placeholder.jpg' %}{% endif %}" alt="{{ product.name }}" class="product-image">
-                    {% endwith %}
-                </div>
-                <div class="product-info">
-                    <div class="product-brand">{{ product.brand }}</div>
-                    <h3 class="product-name">{{ product.name }}</h3>
-                    <div class="product-rating">
-                        <div class="stars">
-                            {% with rating=product.get_average_rating %}
-                            {% for i in "12345" %}
-                            <i class="fa{% if forloop.counter <= rating %}s{% else %}r{% endif %} fa-star star"></i>
-                            {% endfor %}
-                            {% endwith %}
-                        </div>
-                        <span class="rating-text">({{ product.get_rating_count }} نظر)</span>
-                    </div>
-                    <div class="product-price">
-                        {% if product.has_discount %}
-                        <span style="text-decoration: line-through; color: var(--warm-gray); font-size: 1rem; margin-left: 10px;">{{ product.price|floatformat:0 }}</span>                        {{ product.get_discount_price|floatformat:0 }} تومان
-                        {% else %}
-                        {{ product.price|floatformat:0 }} تومان
-                        {% endif %}
-                    </div>
-                    <div class="product-actions">
-                        <button class="btn-add-cart" onclick="addToCartHome('{{ product.id }}')">افزودن به سبد</button>
-                        <a href="{{ product.get_absolute_url }}" class="btn-quick-view">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                    </div>
-                </div>
+        <div class="text-center mt-5">
+                <a href="{% url 'products:list' %}" class="btn btn-primary btn-view-all-featured-slider"> {# فعلاً به صفحه لیست محصولات می‌رود #}
+                    <span>مشاهده همه محصولات ویژه</span>
+                    <i class="fas fa-arrow-left"></i>
+                </a>
             </div>
-            {% empty %}
-            <div class="empty-state">
+        {% if featured_products %}
+            <div class="slider-container">
+                <button class="slider-nav-arrow prev-slide" aria-label="اسلاید قبلی">
+                    <i class="fas fa-chevron-right"></i> {# آیکون راست برای قبلی (جهت RTL) #}
+                </button>
+
+                <div class="products-slider-track">
+                    {% for product_chunk in featured_products|batch:5 %} {# محصولات را به گروه‌های 5 تایی تقسیم می‌کند #}
+                        <div class="product-slide {% if forloop.first %}active{% endif %}">
+                            <div class="products-grid-slider"> {# گرید برای 5 محصول #}
+                                {% for product in product_chunk %}
+                                    <div class="product-card-slider fade-in">
+                                        <a href="{{ product.get_absolute_url }}" class="product-link-slider">
+                                            <div class="product-image-wrapper-slider">
+                                                {% with main_image=product.get_main_image %}
+                                                    <img src="{% if main_image %}{{ main_image.image.url }}{% else %}{% static 'images/zima_theme/product-placeholder.jpg' %}{% endif %}"
+                                                         alt="{{ product.name }}"
+                                                         class="product-image-slider">
+                                                {% endwith %}
+                                                <div class="product-badges-slider">
+                                                    {% if product.is_new %}
+                                                        <span class="badge-slider new">جدید</span>
+                                                    {% endif %}
+                                                    {% if product.has_discount %}
+                                                        <span class="badge-slider sale">{{ product.discount_percent }}% تخفیف</span>
+                                                    {% endif %}
+                                                    {% if product.is_featured %}
+                                                        <span class="badge-slider featured">ویژه</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="product-actions-hover-slider">
+                                                    <button class="action-btn-slider quick-view-btn" onclick="event.preventDefault(); openQuickView('{{ product.id }}')">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="action-btn-slider wishlist-btn {% if product.is_favorited %}active{% endif %}" onclick="event.preventDefault(); toggleWishlist(this, '{{ product.id }}')">
+                                                        <i class="fa{% if product.is_favorited %}s{% else %}r{% endif %} fa-heart"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        <div class="product-info-slider">
+                                            <a href="{{ product.get_absolute_url }}" class="product-name-link-slider">
+                                                <h3 class="product-name-slider">{{ product.name }}</h3>
+                                            </a>
+                                            <div class="product-meta-slider">
+                                                <span class="product-brand-slider">{{ product.brand }}</span>
+                                                <div class="product-rating-slider">
+                                                    <div class="stars-slider">
+                                                        {% with rating=product.get_average_rating|default:0 %}
+                                                            {% for i in "12345" %}
+                                                                <i class="fa{% if forloop.counter <= rating %}s{% else %}r{% endif %} fa-star star-slider"></i>
+                                                            {% endfor %}
+                                                        {% endwith %}
+                                                    </div>
+                                                    <span class="rating-count-slider">({{ product.get_rating_count|default:0 }})</span>
+                                                </div>
+                                            </div>
+                                            <div class="product-price-slider">
+                                                {% if product.has_discount %}
+                                                    <span class="price-original-slider">{{ product.get_formatted_price }}</span>
+                                                    <span class="price-current-slider">{{ product.get_formatted_display_price }}</span>
+                                                {% else %}
+                                                    <span class="price-current-only-slider">{{ product.get_formatted_display_price }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <a href="{{ product.get_absolute_url }}" class="btn-detail-slider">
+                                                <i class="fas fa-arrow-left"></i>
+                                                مشاهده جزئیات
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <button class="slider-nav-arrow next-slide" aria-label="اسلاید بعدی">
+                    <i class="fas fa-chevron-left"></i> {# آیکون چپ برای بعدی (جهت RTL) #}
+                </button>
+            </div>
+
+
+        {% else %}
+            <div class="empty-state-slider">
                 <i class="fas fa-box-open"></i>
                 <h3>محصول ویژه‌ای برای نمایش وجود ندارد.</h3>
-                <p>به زودی محصولات جدیدی اضافه خواهد شد.</p>            </div>
-            {% endfor %}
-        </div>
+                <p>به زودی محصولات جدیدی اضافه خواهد شد.</p>
+            </div>
+        {% endif %}
     </div>
 </section>
 
@@ -215,13 +383,42 @@
                         <h4>نیلوفر رضایی</h4>
                         <p>مشتری راضی</p>
                     </div>
-                </div>            </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.family-nav-link');
+    const focusImages = document.querySelectorAll('.family-member-focus');
+    const familyVisuals = document.querySelector('.family-visuals');
+
+    navLinks.forEach(link => {
+        link.addEventListener('mouseenter', () => {
+            const memberName = link.dataset.member;
+
+            focusImages.forEach(img => {
+                if (img.dataset.member === memberName) {
+                    img.classList.add('active');
+                } else {
+                    img.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    familyVisuals.addEventListener('mouseleave', () => {
+        // وقتی موس از کل کادر تصویر خارج شد، همه هاله‌ها محو شوند
+        focusImages.forEach(img => {
+            img.classList.remove('active');
+        });
+    });
+});
+</script>
 <script>
     // تابع افزودن به سبد خرید برای صفحه اصلی (فقط نمایش Toast)
     function addToCartHome(productId) {

@@ -4,7 +4,10 @@
 {% block title %}{{ product.name }} | زیما{% endblock %}
 
 {% block meta_description %}{{ product.description|truncatewords:20 }}{% endblock %}
-
+{% block body_class %}animated-bg-page{% endblock %} {# ✅ این خط اضافه شد #}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/product_detail.css' %}">
+{% endblock %}
 {% block content %}
 <!-- Product Breadcrumb -->
 <section class="product-breadcrumb">
@@ -97,9 +100,9 @@
 
                 <!-- Price Section -->
                 <div class="price-section">
-                    <span class="current-price">{{ product.get_display_price|floatformat:0 }} تومان</span>
+                    <span class="current-price">{{ product.get_formatted_display_price }} تومان </span> {# ✅ اصلاح شد #}
                     {% if product.has_discount %}
-                        <span class="original-price">{{ product.price|floatformat:0 }} تومان</span>
+                        <span class="original-price">{{ product.get_formatted_price }} تومان </span> {# ✅ اصلاح شد #}
                         <span class="discount-badge">{{ product.discount_percent }}% تخفیف</span>
                     {% endif %}
                 </div>
@@ -494,9 +497,9 @@
                             <span class="rating-text">({{ related_product.get_rating_count|default:0 }})</span>
                         </div>
                         <div class="product-price">
-                            <span class="price-current">{{ related_product.get_display_price|floatformat:0 }} تومان</span>
+                            <span class="price-current">{{ related_product.get_formatted_display_price }} تومان </span> {# ✅ اصلاح شد #}
                             {% if related_product.has_discount %}
-                                <span class="price-original">{{ related_product.price|floatformat:0 }} تومان</span>
+                                <span class="price-original">{{ related_product.get_formatted_price }} تومان </span> {# ✅ اصلاح شد #}
                             {% endif %}
                         </div>
                         <button class="product-add-cart" onclick="addToCart('{{ related_product.id }}')">

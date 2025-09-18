@@ -3,7 +3,11 @@
 {% load product_filters %}
 
 {% block title %}{{ page_title }} | زیما{% endblock %}
+{% block body_class %}animated-bg-page{% endblock %} {# ✅ این خط اضافه شد #}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/product_list.css' %}">
+{% endblock %}
 {% block content %}
 <!-- Products Hero -->
 <section class="products-hero">
@@ -161,6 +165,19 @@
                 <button type="submit" class="btn-apply">اعمال فیلتر</button>
                 <a href="{{ request.path }}" class="btn-reset">پاک کردن</a>
             </div>
+        <div class="filter-guide">
+                <h4 class="guide-title">
+                    <i class="fas fa-info-circle"></i>
+                    نحوه کارکرد فیلترها
+                </h4>
+                <p class="guide-text">
+                    فیلترها به صورت **ترکیبی** عمل می‌کنند. به عنوان مثال:
+                </p>
+                <ul>
+                    <li>اگر ابتدا "لباس زیر زنانه" را انتخاب کنید، سپس سایر فیلترها (مانند رنگ و سایز) **فقط در میان لباس زیر زنانه** اعمال می‌شوند.</li>
+                    <li>برای حذف همه فیلترها و دیدن کل محصولات، روی دکمه "پاک کردن" کلیک کنید.</li>
+                </ul>
+            </div>
         </form>
     </aside>
 
@@ -262,25 +279,23 @@
                     </div>
                     <div class="product-price-container">
                         <div class="product-price">
-                            <span class="price-current">{{ product.get_display_price|floatformat:0 }} تومان</span>
+                            <span class="price-current">{{ product.get_formatted_display_price }} تومان</span>
                             {% if product.has_discount %}
-                            <span class="price-original">{{ product.price|floatformat:0 }} تومان</span>
+                            <span class="price-original">{{ product.get_formatted_price }} تومان</span>
                             {% endif %}
                         </div>
                         {% if product.has_discount %}
                         <span class="discount-percentage">{{ product.discount_percent }}%</span>
                         {% endif %}
                     </div>
-                    {% if product.is_in_stock %}
-                        <button class="product-add-cart" onclick="addToCart('{{ product.id }}')">
-                            <i class="fas fa-shopping-cart"></i>
-                            افزودن به سبد خرید
-                        </button>
-                    {% else %}
-                        <button class="product-add-cart" disabled style="background: #ccc; cursor: not-allowed;">
-                            <i class="fas fa-times"></i>
-                            ناموجود
-                        </button>
+                     <a href="{{ product.get_absolute_url }}" class="product-view-detail-btn"> {# ✅ تغییر به لینک #}
+                        <i class="fas fa-arrow-left"></i> {# ✅ آیکون جدید #}
+                        مشاهده جزئیات
+                    </a>
+                    {% if not product.is_in_stock %} {# ✅ نمایش وضعیت ناموجود بودن اگر کالا ناموجود باشد #}
+                        <div class="product-out-of-stock-label">
+                            <i class="fas fa-times"></i> ناموجود
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -459,35 +474,96 @@
     function setView(viewType) {
         if (viewType === 'list') {
             productsGrid.style.gridTemplateColumns = '1fr';
+            productsGrid.classList.add('list-view'); // ✅ اضافه کردن کلاس برای استایل‌های بیشتر
+
             productsGrid.querySelectorAll('.product-card').forEach(card => {
                 card.style.display = 'flex';
                 card.style.flexDirection = 'row';
-                card.style.height = '200px';
-                card.querySelector('.product-image-container').style.minWidth = '200px';
-                card.querySelector('.product-image-container').style.height = '100%';
-                card.querySelector('.product-image-container').style.flexShrink = '0';
+                card.style.height = '200px'; // ارتفاع ثابت برای حالت لیست
+                card.style.boxShadow = '0 5px 15px rgba(0,0,0,0.08)'; // سایه ملایم‌تر
+                card.style.borderRadius = '15px'; // گردی کمتر
+
+                card.querySelector('.product-image-container').style.minWidth = '200px'; // عرض ثابت تصویر
+                card.querySelector('.product-image-container').style.height = '100%'; // ارتفاع تصویر به اندازه کارت
+                card.querySelector('.product-image-container').style.borderRadius = '15px 0 0 15px'; // گردی گوشه‌ها
+
                 card.querySelector('.product-info').style.flex = '1';
+                card.querySelector('.product-info').style.padding = '15px 20px'; // پدینگ برای اطلاعات محصول
+                card.querySelector('.product-info').style.textAlign = 'right'; // راست‌چین کردن
+
+                // Hide unnecessary details in list view
                 const productDetails = card.querySelector('.product-details');
                 const productColors = card.querySelector('.product-colors');
                 if (productDetails) productDetails.style.display = 'none';
                 if (productColors) productColors.style.display = 'none';
+
+                // ✅ تنظیمات برای دکمه/برچسب جدید
+                const viewDetailBtn = card.querySelector('.product-view-detail-btn');
+                const outOfStockLabel = card.querySelector('.product-out-of-stock-label');
+
+                if (viewDetailBtn) {
+                    viewDetailBtn.style.width = 'auto';
+                    viewDetailBtn.style.minWidth = '150px';
+                    viewDetailBtn.style.padding = '8px 15px';
+                    viewDetailBtn.style.fontSize = '0.85rem';
+                    viewDetailBtn.style.marginTop = '0';
+                    viewDetailBtn.style.borderRadius = '20px';
+                }
+                if (outOfStockLabel) {
+                    outOfStockLabel.style.width = 'auto';
+                    outOfStockLabel.style.minWidth = '150px';
+                    outOfStockLabel.style.padding = '8px 15px';
+                    outOfStockLabel.style.fontSize = '0.85rem';
+                    outOfStockLabel.style.marginTop = '0';
+                    outOfStockLabel.style.borderRadius = '20px';
+                }
             });
             listViewBtn.classList.add('active');
             gridViewBtn.classList.remove('active');
-        } else {
+        } else { // 'grid'
             productsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(300px, 1fr))';
+            productsGrid.classList.remove('list-view'); // ✅ حذف کلاس
+
             productsGrid.querySelectorAll('.product-card').forEach(card => {
                 card.style.display = 'block';
                 card.style.flexDirection = 'column';
                 card.style.height = 'auto';
+                card.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.08)'; // بازگشت به سایه گرید
+                card.style.borderRadius = '20px'; // بازگشت به گردی گرید
+
                 card.querySelector('.product-image-container').style.minWidth = 'auto';
                 card.querySelector('.product-image-container').style.height = '380px';
-                card.querySelector('.product-image-container').style.flexShrink = 'initial';
+                card.querySelector('.product-image-container').style.borderRadius = '20px 20px 0 0';
+
                 card.querySelector('.product-info').style.flex = 'initial';
+                card.querySelector('.product-info').style.padding = '20px 25px 25px';
+                card.querySelector('.product-info').style.textAlign = 'right';
+
+                // Show details in grid view
                 const productDetails = card.querySelector('.product-details');
                 const productColors = card.querySelector('.product-colors');
                 if (productDetails) productDetails.style.display = 'flex';
                 if (productColors) productColors.style.display = 'flex';
+
+                // ✅ تنظیمات برای دکمه/برچسب جدید در حالت گرید (بازگشت به حالت اولیه)
+                const viewDetailBtn = card.querySelector('.product-view-detail-btn');
+                const outOfStockLabel = card.querySelector('.product-out-of-stock-label');
+                if (viewDetailBtn) {
+                    viewDetailBtn.style.width = '100%';
+                    viewDetailBtn.style.minWidth = 'auto';
+                    viewDetailBtn.style.padding = '12px 15px';
+                    viewDetailBtn.style.fontSize = '0.95rem';
+                    viewDetailBtn.style.marginTop = '15px';
+                    viewDetailBtn.style.borderRadius = '25px';
+                }
+                if (outOfStockLabel) {
+                    outOfStockLabel.style.width = '100%';
+                    outOfStockLabel.style.minWidth = 'auto';
+                    outOfStockLabel.style.padding = '12px 15px';
+                    outOfStockLabel.style.fontSize = '0.95rem';
+                    outOfStockLabel.style.marginTop = '15px';
+                    outOfStockLabel.style.borderRadius = '25px';
+                }
             });
             gridViewBtn.classList.add('active');
             listViewBtn.classList.remove('active');

@@ -1,0 +1,594 @@
+/* static/css/pages/pages_shipping_conditions.css */
+
+/* از متغیرهای روت که در main.css یا base.css تعریف شده‌اند استفاده می‌شود */
+
+.shipping-page {
+    padding: 140px 0 60px; /* فضای بالا برای ناوبار ثابت */
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+.shipping-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/subtle-pattern.png" %}') repeat; /* پترن ظریف */
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.shipping-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+}
+
+/* --- Hero Section --- */
+.hero-section {
+    text-align: center;
+    margin-bottom: 80px;
+    position: relative;
+    padding: 40px 0;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    opacity: 0.1;
+    z-index: -1;
+}
+
+.hero-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    color: var(--text-color-dark);
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    font-family: 'ZimaFont', sans-serif;
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    color: var(--text-color-medium);
+    margin-bottom: 30px;
+    font-weight: 500;
+}
+
+.hero-description {
+    font-family: 'ZimaFont', sans-serif;
+    font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+    color: var(--text-color-medium);
+    line-height: 1.8;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* --- Section Titles & Subtitles (General) --- */
+.section-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    text-align: center;
+    color: var(--text-color-dark);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.section-title i {
+    color: var(--primary-color);
+    font-size: 1.1em;
+}
+
+.section-subtitle {
+    font-family: 'ZimaFont', sans-serif;
+    text-align: center;
+    color: var(--text-color-medium);
+    font-size: clamp(1rem, 1.5vw, 1.2rem);
+    margin-bottom: 60px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* --- Shipping Methods Section --- */
+.methods-section {
+    margin-bottom: 80px;
+}
+
+.method-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.method-card {
+    background: white;
+    border-radius: 20px;
+    padding: 35px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    border: 2px solid var(--zima-pearl);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.method-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.method-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
+}
+
+.method-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+}
+
+.method-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+    color: var(--text-color-dark);
+    margin-bottom: 15px;
+}
+
+.method-description {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.6;
+    font-size: clamp(0.9rem, 1.3vw, 1rem);
+    margin-bottom: 20px;
+}
+
+.method-details-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: right;
+}
+
+.method-details-list li {
+    font-family: 'ZimaFont', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-color-dark);
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.method-details-list li i {
+    color: var(--secondary-color);
+}
+
+/* --- Delivery Times & Zones Section --- */
+.zones-times-section {
+    margin-bottom: 80px;
+}
+
+.delivery-table-container {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px var(--shadow-soft);
+    border: 2px solid var(--zima-pearl);
+    margin-bottom: 40px;
+}
+
+.delivery-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Vazirmatn', sans-serif; /* برای خوانایی بهتر در جداول */
+}
+
+.delivery-table thead {
+    background: linear-gradient(135deg, var(--secondary-color), #CD853F);
+}
+
+.delivery-table th {
+    color: white;
+    padding: 20px 16px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border: none;
+}
+
+.delivery-table td {
+    padding: 20px 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--zima-pearl);
+    font-size: 1rem;
+    transition: background 0.3s ease;
+    color: var(--text-color-medium);
+}
+
+.delivery-table tbody tr:nth-child(even) {
+    background: var(--zima-warm);
+}
+
+.delivery-table tbody tr:hover {
+    background: var(--zima-blush);
+}
+
+.delivery-table td:first-child {
+    font-weight: 600;
+    color: var(--text-color-dark);
+}
+
+.important-notes {
+    background: var(--zima-blush);
+    border: 2px solid var(--zima-pearl);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: right;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.important-notes h3 {
+    font-family: 'Zima-Bold', sans-serif;
+    color: var(--text-color-dark);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3rem;
+}
+
+.important-notes h3 i {
+    color: var(--primary-color);
+}
+
+.important-notes ul {
+    list-style: disc;
+    padding-right: 25px;
+    margin: 0;
+}
+
+.important-notes li {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.7;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+
+/* --- Order Tracking Section --- */
+.tracking-section {
+    margin-bottom: 80px;
+    text-align: center;
+}
+
+.tracking-section .section-title {
+    margin-bottom: 25px;
+}
+
+.tracking-section .section-description {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.8;
+    max-width: 700px;
+    margin: 0 auto 30px;
+    font-size: clamp(0.95rem, 1.3vw, 1.1rem);
+}
+
+.btn-track-order {
+    font-family: 'ZimaFont', sans-serif;
+    background: linear-gradient(135deg, var(--secondary-color), var(--zima-gold));
+    color: white;
+    padding: 15px 30px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 25px rgba(218, 165, 32, 0.3);
+}
+
+.btn-track-order:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(218, 165, 32, 0.4);
+    color: white;
+}
+
+.tracking-tip {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
+
+.tracking-tip a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.tracking-tip a:hover {
+    text-decoration: underline;
+}
+
+/* --- Returns Policy Brief Section --- */
+.returns-brief-section {
+    margin-bottom: 80px;
+    text-align: center;
+}
+
+.returns-brief-section .section-title {
+    margin-bottom: 25px;
+}
+
+.returns-brief-section .section-description {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.8;
+    max-width: 700px;
+    margin: 0 auto 30px;
+    font-size: clamp(0.95rem, 1.3vw, 1.1rem);
+}
+
+.btn-view-policy {
+    font-family: 'ZimaFont', sans-serif;
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 15px 30px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-view-policy:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+}
+
+/* --- CTA Section (similar to shopping_guide.html) --- */
+.cta-section {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 25px;
+    padding: 60px;
+    text-align: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 60px;
+}
+
+.cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+    opacity: 0.1;
+}
+
+.cta-content {
+    position: relative;
+    z-index: 2;
+}
+
+.cta-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.cta-subtitle {
+    font-family: 'ZimaFont', sans-serif;
+    font-size: clamp(1rem, 1.5vw, 1.2rem);
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-btn {
+    font-family: 'ZimaFont', sans-serif;
+    background: white;
+    color: var(--primary-color);
+    padding: 15px 30px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cta-btn:hover {
+    background: transparent;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.cta-btn.secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+.cta-btn.secondary:hover {
+    background: white;
+    color: var(--primary-color);
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 992px) {
+    .shipping-container {
+        padding: 0 15px;
+    }
+    .method-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+    }
+    .method-card {
+        padding: 30px;
+    }
+    .delivery-table-container {
+        overflow-x: auto; /* برای جداول در موبایل اسکرول افقی اضافه شود */
+    }
+    .delivery-table {
+        min-width: 600px; /* حداقل عرض جدول برای جلوگیری از بهم ریختگی */
+    }
+    .important-notes {
+        padding: 25px;
+    }
+    .cta-section {
+        padding: 50px;
+    }
+}
+
+@media (max-width: 768px) {
+    .shipping-page {
+        padding: 120px 0 40px;
+    }
+    .hero-section {
+        margin-bottom: 60px;
+    }
+    .section-title {
+        font-size: 1.8rem;
+    }
+    .section-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 40px;
+    }
+    .method-grid {
+        grid-template-columns: 1fr;
+    }
+    .method-card {
+        padding: 25px;
+    }
+    .important-notes {
+        padding: 20px;
+    }
+    .tracking-section .section-description,
+    .returns-brief-section .section-description {
+        font-size: 0.95rem;
+    }
+    .btn-track-order, .btn-view-policy {
+        padding: 12px 25px;
+        font-size: 0.9rem;
+    }
+    .cta-section {
+        padding: 40px;
+    }
+    .cta-title {
+        font-size: 2rem;
+    }
+    .cta-subtitle {
+        font-size: 1rem;
+    }
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    .cta-btn {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    .hero-description {
+        font-size: 0.85rem;
+    }
+    .section-title {
+        font-size: 1.6rem;
+    }
+    .method-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+    .method-title {
+        font-size: 1.2rem;
+    }
+    .method-description {
+        font-size: 0.85rem;
+    }
+    .method-details-list li {
+        font-size: 0.85rem;
+    }
+    .delivery-table th, .delivery-table td {
+        padding: 15px 10px;
+        font-size: 0.9rem;
+    }
+    .important-notes li {
+        font-size: 0.85rem;
+    }
+    .cta-section {
+        padding: 30px;
+    }
+    .cta-title {
+        font-size: 1.8rem;
+    }
+    .cta-subtitle {
+        font-size: 0.9rem;
+    }
+}
