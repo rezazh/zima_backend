@@ -147,28 +147,28 @@
 
             <!-- ✅ آیتم‌های انتخاب (همان شکل قبلی) -->
             <div class="family-grid">
-                <a href="#" class="family-collection-card"
+                <a href="{% url 'products:category_list' 'men' %}" class="family-collection-card"
                    data-member="dad"
                    onmouseenter="playFamilyVideo('dad')"
                    onmouseleave="stopFamilyVideo()">
                     <img src="{% static 'images/family/men-category.jpg' %}" alt="کلکسیون مردانه">
                     <div class="card-overlay"><h3>مردانه</h3></div>
                 </a>
-                <a href="#" class="family-collection-card"
+                <a href="{% url 'products:category_list' 'women' %}" class="family-collection-card"
                    data-member="mom"
                    onmouseenter="playFamilyVideo('mom')"
                    onmouseleave="stopFamilyVideo()">
                     <img src="{% static 'images/family/women-category.jpg' %}" alt="کلکسیون زنانه">
                     <div class="card-overlay"><h3>زنانه</h3></div>
                 </a>
-                <a href="#" class="family-collection-card"
+                <a href="{% url 'products:category_list' 'boys' %}" class="family-collection-card"
                    data-member="boy"
                    onmouseenter="playFamilyVideo('boy')"
                    onmouseleave="stopFamilyVideo()">
                     <img src="{% static 'images/family/boys-category.jpg' %}" alt="کلکسیون پسرانه">
                     <div class="card-overlay"><h3>پسرانه</h3></div>
                 </a>
-                <a href="#" class="family-collection-card"
+                <a href="{% url 'products:category_list' 'girls' %}" class="family-collection-card"
                    data-member="girl"
                    onmouseenter="playFamilyVideo('girl')"
                    onmouseleave="stopFamilyVideo()">

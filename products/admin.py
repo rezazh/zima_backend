@@ -32,18 +32,19 @@ class ProductFeatureInline(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
-        'display_image', 'name', 'category', 'price', 'get_discount_price',
+        'display_image', 'name', 'price', 'get_discount_price',
         'total_stock', 'is_active', 'is_featured', 'created_at'
     )
-    list_filter = ('is_active', 'is_featured', 'category', 'brand', 'gender', 'created_at')
+    list_filter = ('is_active', 'is_featured', 'categories', 'brand', 'gender', 'created_at')
     search_fields = ('name', 'description', 'brand')
     prepopulated_fields = {'slug': ('name',)}
+    filter_horizontal = ('categories',) # نمایش دسته‌بندی‌ها به صورت رابط کاربری بهتر (Multiple Select)
     list_editable = ('is_active', 'is_featured')
     inlines = [ProductImageInline, ProductFeatureInline, ProductInventoryInline]
 
     fieldsets = (
         ('اطلاعات اصلی', {
-            'fields': ('name', 'slug', 'category', 'brand', 'gender', 'is_active', 'is_featured')
+            'fields': ('name', 'slug', 'categories', 'brand', 'gender', 'is_active', 'is_featured')
         }),
         ('توضیحات', {
             'fields': ('description', 'short_description')
@@ -74,6 +75,12 @@ class ProductAdmin(admin.ModelAdmin):
 
     total_stock.short_description = "موجودی کل"
 
+    def display_categories(self, obj):
+        # ✅ متد کمکی برای نمایش دسته‌بندی‌ها در لیست ادمین
+        return ", ".join([category.name for category in obj.categories.all()])
+
+    display_categories.short_description = "دسته‌بندی‌ها"
+
     def display_image(self, obj):
         main_image = obj.get_main_image()
         if main_image and main_image.image:
@@ -90,6 +97,7 @@ class CategoryAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'parent')
     search_fields = ('name', 'description')
     prepopulated_fields = {'slug': ('name',)}
+    readonly_fields = ('created_at', 'updated_at')
 
     def get_products_count(self, obj):
         return obj.get_products_count

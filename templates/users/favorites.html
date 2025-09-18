@@ -72,7 +72,11 @@
                             {% for favorite in favorites %}
                                 <div class="favorite-item">
                                     <div class="favorite-image">
-                                        <img src="{{ favorite.product.image.url }}" alt="{{ favorite.product.name }}">
+                                        <img
+                                            src="{% with main_image=favorite.product.get_main_image %}{% if main_image %}{{ main_image.image.url }}{% else %}{% static 'images/zima_theme/product-placeholder.jpg' %}{% endif %}{% endwith %}"
+                                            alt="{{ favorite.product.name }}"
+                                            onerror="this.onerror=null;this.src='{% static 'images/zima_theme/product-placeholder.jpg' %}';" {# یک fallback ثانویه با جاوااسکریپت #}
+                                        >
                                         <div class="favorite-badge">محبوب</div>
                                         <button class="favorite-remove" onclick="removeFavorite({{ favorite.product.id }})">
                                             <i class="fas fa-times"></i>
@@ -82,18 +86,22 @@
                                         <h3 class="favorite-title">{{ favorite.product.name }}</h3>
                                         <p class="favorite-brand">{{ favorite.product.brand|default:"زیما" }}</p>
                                         <div class="favorite-price">
-                                            {% if favorite.product.discounted_price %}
-                                                {{ favorite.product.discounted_price|floatformat:0 }} تومان
+                                            {# ✅ از متدهای فرمت‌بندی که در مدل Product تعریف کردید استفاده کنید #}
+                                            {% if favorite.product.has_discount %}
+                                                <span class="original-price">{{ favorite.product.get_formatted_price }} تومان</span>
+                                                <span class="discount-price">{{ favorite.product.get_formatted_display_price }} تومان</span>
                                             {% else %}
-                                                {{ favorite.product.price|floatformat:0 }} تومان
+                                                {{ favorite.product.get_formatted_price }} تومان
                                             {% endif %}
                                         </div>
                                         <div class="favorite-actions">
-                                            <a href="{% url 'products:product_detail' favorite.product.id %}" class="btn-view"> {# URL to product detail #}
-                                                مشاهده محصول
+                                            {# ✅ تغییر: افزودن آیکون به دکمه مشاهده محصول #}
+                                            <a href="{% url 'products:detail' product_id=favorite.product.id %}" class="btn-view">
+                                                <i class="fas fa-info-circle"></i> مشاهده محصول
                                             </a>
-                                            <button class="btn-cart" onclick="addToCart({{ favorite.product.id }})">
-                                                <i class="fas fa-shopping-cart"></i>
+                                            {# ✅ تغییر: افزودن متن به دکمه Quick View #}
+                                            <button class="quick-view-btn" onclick="window.openQuickView({{ favorite.product.id }})">
+                                                <i class="fas fa-eye"></i> مشاهده سریع
                                             </button>
                                         </div>
                                     </div>

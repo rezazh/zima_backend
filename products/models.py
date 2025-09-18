@@ -91,7 +91,7 @@ class Product(models.Model):
 
     name = models.CharField(max_length=200, verbose_name='نام محصول')
     slug = models.SlugField(max_length=220, unique=True, verbose_name='اسلاگ')
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', verbose_name='دسته‌بندی')
+    categories = models.ManyToManyField(Category, related_name='products', verbose_name='دسته‌بندی')
     brand = models.CharField(max_length=100, verbose_name='برند')
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, verbose_name='جنسیت')
 

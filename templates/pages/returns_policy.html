@@ -1,0 +1,210 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}سیاست بازگشت کالا | زیما - خریدی مطمئن{% endblock %}
+
+{% block meta_description %}اطلاعات کامل در مورد سیاست بازگشت و تعویض کالا در فروشگاه آنلاین زیما. شرایط، مراحل و هزینه‌های مربوطه.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/pages_returns_policy.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="returns-policy-page">
+    <div class="returns-policy-container">
+        <!-- Hero Section -->
+        <div class="hero-section fade-in">
+            <h1 class="hero-title">سیاست بازگشت و تعویض کالا</h1>
+            <p class="hero-subtitle">رضایت شما، اولویت اصلی ماست</p>
+            <p class="hero-description">
+                ما در زیما می‌خواهیم شما از خرید خود کاملاً راضی باشید.
+                در صورت بروز هرگونه مشکل یا عدم رضایت، می‌توانید طبق شرایط زیر اقدام به بازگشت یا تعویض کالا نمایید.
+            </p>
+        </div>
+
+        <!-- Returns Policy Section -->
+        <div class="policy-main-section">
+            <h2 class="section-title fade-in">
+                <i class="fas fa-undo-alt"></i>
+                شرایط و مراحل بازگشت کالا
+            </h2>
+            <p class="section-subtitle fade-in">شما تا 7 روز کاری پس از دریافت کالا فرصت دارید تا در صورت عدم رضایت، آن را بازگردانید.</p>
+
+            <!-- Conditions for Return -->
+            <div class="policy-subsection fade-in">
+                <h3><i class="fas fa-clipboard-list"></i> شرایط عمومی بازگشت کالا</h3>
+                <div class="conditions-grid">
+                    <div class="condition-card">
+                        <div class="condition-icon check"><i class="fas fa-check"></i></div>
+                        <p class="condition-text">کالا در **بسته‌بندی اصلی و کاملاً سالم** باشد.</p>
+                    </div>
+                    <div class="condition-card">
+                        <div class="condition-icon check"><i class="fas fa-check"></i></div>
+                        <p class="condition-text">هیچ‌گونه علائم استفاده، شستشو، پارگی یا بوی عطر نداشته باشد.</p>
+                    </div>
+                    <div class="condition-card">
+                        <div class="condition-icon check"><i class="fas fa-check"></i></div>
+                        <p class="condition-text">برچسب‌ها و اتیکت‌های محصول کنده نشده باشند.</p>
+                    </div>
+                    <div class="condition-card">
+                        <div class="condition-icon check"><i class="fas fa-check"></i></div>
+                        <p class="condition-text">فاکتور خرید (الکترونیکی یا چاپی) همراه کالا باشد.</p>
+                    </div>
+                </div>
+                <div class="important-warning fade-in">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>
+                        **توجه بسیار مهم:** محصولات بهداشتی (مانند شورت، لباس زیر زنانه که مستقیماً با بدن در تماس است) و اقلامی که به صورت مستقیم با پوست در تماس بوده‌اند، به دلیل رعایت مسائل بهداشتی و سلامت عمومی، **تحت هیچ شرایطی قابل بازگشت یا تعویض نیستند.** لطفاً در انتخاب این اقلام دقت فرمایید.
+                    </p>
+                </div>
+                <div class="important-warning fade-in">
+                    <i class="fas fa-info-circle"></i>
+                    <p>
+                        محصولات سفارشی‌سازی شده یا با تخفیف‌های ویژه (غیر از تخفیف‌های عمومی سایت)، نیز **قابل بازگشت نیستند.**
+                    </p>
+                </div>
+            </div>
+
+            <!-- Return Process -->
+            <div class="policy-subsection fade-in">
+                <h3><i class="fas fa-exchange-alt"></i> مراحل بازگشت یا تعویض</h3>
+                <div class="process-steps-timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker">1</div>
+                        <div class="timeline-content">
+                            <h4>تماس با پشتیبانی</h4>
+                            <p>ظرف 7 روز کاری از زمان تحویل کالا، با تیم پشتیبانی زیما تماس بگیرید (ترجیحاً از طریق چت آنلاین یا تلفن) و درخواست بازگشت/تعویض خود را ثبت کنید. کد سفارش و دلیل بازگشت را ذکر نمایید.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker">2</div>
+                        <div class="timeline-content">
+                            <h4>ارسال کالا</h4>
+                            <p>پس از تأیید پشتیبانی، کالا را به همراه فاکتور خرید و با بسته‌بندی اصلی و محافظت شده، از طریق پست (ترجیحاً پست پیشتاز) به آدرسی که پشتیبانی اعلام می‌کند، ارسال کنید.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker">3</div>
+                        <div class="timeline-content">
+                            <h4>بررسی و تأیید کالا</h4>
+                            <p>پس از دریافت کالا در انبار زیما، تیم کنترل کیفیت ما آن را بررسی می‌کند تا از رعایت تمامی شرایط بازگشت (مانند عدم استفاده، سلامت بسته‌بندی و...) اطمینان حاصل شود.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker">4</div>
+                        <div class="timeline-content">
+                            <h4>بازپرداخت یا تعویض</h4>
+                            <p>در صورت تأیید نهایی، مبلغ کالا (با کسر هزینه‌های احتمالی) ظرف 3 تا 5 روز کاری به حساب بانکی شما بازگردانده می‌شود یا محصول جدید (در صورت درخواست تعویض و موجودی) برایتان ارسال می‌گردد.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Cost for Returns -->
+            <div class="policy-subsection fade-in">
+                <h3><i class="fas fa-shipping-fast"></i> هزینه ارسال برای بازگشت کالا</h3>
+                <div class="shipping-cost-info">
+                    <div class="info-card">
+                        <div class="info-icon check"><i class="fas fa-check-circle"></i></div>
+                        <h4 class="info-title">به عهده زیما</h4>
+                        <p class="info-description">اگر کالا دارای نقص فنی باشد، با محصول اعلام شده تفاوت داشته باشد، یا اشتباهی در ارسال از جانب زیما صورت گرفته باشد، **هزینه ارسال برای بازگشت به عهده زیما خواهد بود.**</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-icon cross"><i class="fas fa-user-circle"></i></div>
+                        <h4 class="info-title">به عهده مشتری</h4>
+                        <p class="info-description">اگر مشتری به دلیل تغییر سلیقه، انتخاب اشتباه سایز (در صورتی که راهنمای سایز را نادیده گرفته باشد)، یا هر دلیل شخصی دیگری قصد بازگشت کالا را داشته باشد، **هزینه ارسال به عهده مشتری است.**</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="faq-section fade-in">
+            <h2 class="section-title">
+                <i class="fas fa-question-circle"></i>
+                سوالات متداول
+            </h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>چقدر طول می‌کشد تا پول به حسابم برگردد؟</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>پس از تأیید نهایی کالا توسط تیم کنترل کیفیت و رعایت تمامی شرایط، مبلغ ظرف 3 تا 5 روز کاری به حساب بانکی شما واریز خواهد شد. این زمان ممکن است بسته به سیکل بانکی شما کمی متغیر باشد.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>آیا می‌توانم محصولی را که استفاده کرده‌ام، بازگردانم؟</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>خیر، طبق سیاست‌های بهداشتی و شرایط بازگشت کالا، محصولات استفاده شده (حتی برای یکبار امتحان) قابل بازگشت یا تعویض نیستند. لطفاً قبل از خرید، به راهنمای سایز دقت کنید.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>اگر محصولی که دریافت کردم، آسیب دیده بود چه کنم؟</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>در صورت مشاهده هرگونه آسیب یا نقص در محصول، لطفاً بلافاصله پس از دریافت (حداکثر تا 24 ساعت) با پشتیبانی زیما تماس بگیرید و مشکل را گزارش دهید. در این موارد، تمامی هزینه‌های بازگشت و ارسال مجدد به عهده زیما خواهد بود.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section fade-in">
+            <div class="cta-content">
+                <h2 class="cta-title">نیاز به راهنمایی بیشتر دارید؟</h2>
+                <p class="cta-subtitle">تیم پشتیبانی زیما آماده پاسخگویی به سوالات شماست</p>
+                <div class="cta-buttons">
+                    <a href="{% url 'pages:contact' %}" class="cta-btn primary">
+                        <i class="fas fa-headset"></i>
+                        تماس با پشتیبانی
+                    </a>
+                    <a href="{% url 'products:list' %}" class="cta-btn secondary">
+                        <i class="fas fa-shopping-bag"></i>
+                        ادامه خرید
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // FAQ Toggle functionality (similar to other pages)
+        const faqQuestions = document.querySelectorAll('.faq-question');
+        faqQuestions.forEach(question => {
+            question.addEventListener('click', function() {
+                const faqItem = this.parentNode;
+                const answer = faqItem.querySelector('.faq-answer');
+                const isActive = this.classList.contains('active');
+
+                // Close all other FAQ items
+                faqQuestions.forEach(q => {
+                    if (q !== this) {
+                        q.classList.remove('active');
+                        q.parentNode.querySelector('.faq-answer').classList.remove('active');
+                    }
+                });
+
+                // Toggle current item
+                if (!isActive) {
+                    this.classList.add('active');
+                    answer.classList.add('active');
+                } else {
+                    this.classList.remove('active');
+                    answer.classList.remove('active');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

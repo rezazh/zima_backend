@@ -85,3 +85,23 @@ def size_guide_view(request):
     Renders the Zima size guide page.
     """
     return render(request, 'pages/size_guide.html')
+
+
+def shopping_guide_view(request):
+    return render(request, 'pages/shopping_guide.html')
+
+def shipping_conditions_view(request):
+    # می‌توانید اطلاعات پویا را از دیتابیس اینجا لود کنید
+    # مثلاً: shipping_methods = ShippingMethod.objects.all()
+    # و سپس به context اضافه کنید
+    context = {}
+    return render(request, 'pages/shipping_conditions.html', context)
+
+def product_quality_view(request):
+    return render(request, 'pages/product_quality.html')
+
+def returns_policy_view(request):
+    return render(request, 'pages/returns_policy.html')
+
+def privacy_policy_view(request):
+    return render(request, 'pages/privacy_policy.html')

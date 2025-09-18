@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
 import json
 from products.models import Product, ProductInventory, Color, Size
+from users.models import Favorite
 from .models import CartItem, Coupon
 from django.utils import timezone
 
@@ -69,71 +70,7 @@ def cart_summary(request):
     return render(request, 'cart/cart.html', context)
 
 
-@require_POST
-@csrf_protect
-def add_to_cart(request):
-    try:
-        data = json.loads(request.body)
-        product_id = data.get('product_id')
-        quantity = int(data.get('quantity', 1))
-        color_id = data.get('color_id')
-        size_id = data.get('size_id')
-        inventory_id = data.get('inventory_id')
 
-        product = Product.objects.get(id=product_id, is_active=True)
-
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {'success': False, 'error': 'لطفاً ابتدا وارد حساب کاربری خود شوید.', 'redirect': '/users/login/'})
-
-        color_name = None
-        size_name = None
-
-        if inventory_id:
-            inventory = ProductInventory.objects.get(id=inventory_id)
-            color_name = inventory.color.name
-            size_name = inventory.size.name
-
-            if quantity > inventory.quantity:
-                return JsonResponse({'success': False, 'error': 'موجودی کافی نیست.'})
-        else:
-            if color_id:
-                color = Color.objects.get(id=color_id)
-                color_name = color.name
-
-            if size_id:
-                size = Size.objects.get(id=size_id)
-                size_name = size.name
-
-            if quantity > product.stock:
-                return JsonResponse({'success': False, 'error': 'موجودی کافی نیست.'})
-
-        cart_item, created = CartItem.objects.get_or_create(
-            user=request.user,
-            product=product,
-            color=color_name,
-            size=size_name,
-            defaults={'quantity': quantity, 'inventory_id': inventory_id}
-        )
-
-        if not created:
-            cart_item.quantity += quantity
-            cart_item.save()
-
-        cart_items_count = CartItem.objects.filter(user=request.user).count()
-
-        return JsonResponse({
-            'success': True,
-            'message': 'محصول با موفقیت به سبد خرید اضافه شد.',
-            'cart_items_count': cart_items_count
-        })
-
-    except Product.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'محصول یافت نشد.'})
-    except ProductInventory.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'موجودی با مشخصات انتخاب شده یافت نشد.'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
 
 
 @login_required
@@ -282,10 +219,8 @@ def save_for_later(request, item_id):
         cart_item = get_object_or_404(CartItem, id=item_id, user=request.user)
 
         try:
-            from .models import WishlistItem
 
-            # بررسی اینکه محصول قبلاً در wishlist نباشد
-            wishlist_item, created = WishlistItem.objects.get_or_create(
+            favorite_item, created = Favorite.objects.get_or_create(  # ✅ تغییر از WishlistItem به Favorite
                 user=request.user,
                 product=cart_item.product
             )

@@ -92,7 +92,7 @@
 
             <div class="nav-icons">
                 <a href="{% url 'products:search' %}" class="nav-icon"><i class="fas fa-search"></i></a>
-                <a href="#" class="nav-icon"><i class="fas fa-heart"></i></a>
+                <a href="{% url 'users:favorites' %}" class="nav-icon"><i class="fas fa-heart"></i></a>
                 {% if user.is_authenticated %}
                 <a href="{% url 'users:profile' %}" class="nav-icon"><i class="fas fa-user"></i></a>
                 {% else %}
@@ -155,10 +155,10 @@
             <div class="footer-column">
                 <h4>خدمات مشتریان</h4>
                 <ul class="footer-links">
-                    <li><a href="#">راهنمای خرید</a></li>
-                    <li><a href="#">راهنمای سایز</a></li>
-                    <li><a href="{% url 'pages:shipping' %}">شرایط ارسال</a></li>
-                    <li><a href="#">ضمانت بازگشت</a></li>
+                    <li><a href="{% url 'pages:shopping_guide' %}">راهنمای خرید</a></li>
+                    <li><a href="{% url 'pages:size-guide' %}">راهنمای سایز</a></li>
+                    <li><a href="{% url 'pages:shipping_conditions' %}">شرایط ارسال</a></li>
+                    <li><a href="{% url 'pages:returns_policy' %}">ضمانت بازگشت</a></li>
                     <li><a href="{% url 'pages:contact' %}" target="_blank">پشتیبانی آنلاین</a></li>
                 </ul>
             </div>
@@ -167,8 +167,8 @@
                 <h4>درباره زیما</h4>
                 <ul class="footer-links">
                     <li><a href="{% url 'pages:about' %}">داستان ما</a></li>
-                    <li><a href="#">کیفیت محصولات</a></li>
-                    <li><a href="{% url 'pages:privacy' %}">حریم خصوصی</a></li>
+                    <li><a href="{% url 'pages:product_quality' %}">کیفیت محصولات</a></li>
+                    <li><a href="{% url 'pages:privacy_policy' %}">حریم خصوصی</a></li>
                     <li><a href="#">مجله زیما</a></li>
                     <li><a href="#">فرصت‌های شغلی</a></li>
                 </ul>

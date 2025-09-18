@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
+from django.conf import settings # ✅ این خط را اضافه کنید
 
 from .forms import SignUpForm, LoginForm, UserProfileForm
 from .models import Address, Favorite
@@ -53,6 +54,10 @@ def login_view(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
+                if request.POST.get('remember_me'):
+                    request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+                else:
+                    request.session.set_expiry(0)  # 0 به معنای "expire at browser close" است
                 next_url = request.POST.get('next', 'home')
                 return redirect(next_url)
             else:

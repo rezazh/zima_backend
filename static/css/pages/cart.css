@@ -381,11 +381,13 @@
 /* Cart Summary Styles */
 .cart-summary {
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    border: 2px solid var(--zima-pearl);
-    position: sticky;
-    top: 160px;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+    padding: 30px;
+    display: flex;
+    flex-direction: column; /* ✅ برای اطمینان از چیدمان عمودی */
+    height: 100%; /* ✅ برای پر کردن ارتفاع والد */
+    position: relative; /* اگر آیتم‌های داخلی absolute هستند */
 }
 
 .summary-header {
@@ -419,7 +421,9 @@
 }
 
 .summary-body {
-    padding: 30px;
+    flex-grow: 1; /* ✅ اجازه می‌دهد فضای موجود را پر کند */
+    display: flex;
+    flex-direction: column;
 }
 
 .summary-row {
@@ -546,10 +550,12 @@
 
 /* Action Buttons */
 .action-buttons {
+    margin-top: auto; /* ✅ این خط دکمه‌ها را به پایین کادر هل می‌دهد */
+    padding-top: 25px;
+    border-top: 1px solid var(--zima-pearl, #eee);
     display: flex;
     flex-direction: column;
     gap: 15px;
-    margin-top: 25px;
 }
 
 .btn-checkout {
@@ -656,11 +662,12 @@
 
 /* Shipping Info */
 .shipping-info {
-    background: var(--zima-blush);
-    border-radius: 12px;
+    margin-top: 25px; /* فاصله از Security Features */
     padding: 15px;
-    margin-bottom: 20px;
-    border-left: 4px solid var(--primary-color);
+    background-color: var(--zima-blush-light, #fef2f2); /* رنگ پس‌زمینه روشن */
+    border-radius: 10px;
+    border: 1px dashed var(--zima-blush, #f8d7da);
+    text-align: center;
 }
 
 .shipping-info h6 {
@@ -680,10 +687,13 @@
 
 /* Security Features */
 .security-features {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    margin-bottom: 25px;
+    margin-top: 25px; /* ✅ فاصله از مبلغ نهایی */
+    padding-top: 20px;
+    border-top: 1px solid var(--zima-pearl, #eee); /* خط جداکننده */
+    display: grid; /* استفاده از گرید برای چیدمان دو ستونی */
+    grid-template-columns: repeat(2, 1fr); /* دو ستون مساوی */
+    gap: 15px; /* فاصله بین آیتم‌ها */
+    font-family: 'ZimaFont', sans-serif;
 }
 
 .security-item {

@@ -465,3 +465,83 @@
         font-size: 1.5rem;
     }
 }
+
+.favorite-actions {
+    display: flex;
+    gap: 10px; /* فاصله بین دو دکمه */
+    margin-top: 15px; /* فاصله از قیمت */
+}
+
+/* ✅ استایل‌های مشترک برای دکمه "مشاهده محصول" و "مشاهده سریع" */
+.btn-view,
+.quick-view-btn {
+    flex: 1; /* هر دو دکمه فضای مساوی را اشغال کنند */
+    display: inline-flex; /* برای قرار گرفتن آیکون و متن کنار هم */
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* فاصله بین آیکون و متن */
+
+    border: none;
+    padding: 10px 16px;
+    border-radius: 20px; /* گوشه‌های گرد */
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none; /* برای تگ <a> */
+    text-align: center;
+    font-size: 0.9rem;
+    font-family: 'ZimaFont', sans-serif;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* سایه ملایم */
+}
+
+/* ✅ استایل خاص برای دکمه "مشاهده محصول" */
+.btn-view {
+    background: var(--primary-color); /* رنگ اصلی تم شما */
+    color: white;
+}
+
+.btn-view:hover {
+    background: var(--secondary-color); /* رنگ ثانویه در هاور */
+    transform: translateY(-1px);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* ✅ استایل خاص برای دکمه "مشاهده سریع" (آیکون چشم) */
+.quick-view-btn {
+    background: var(--zima-champagne); /* یک رنگ روشن‌تر و متفاوت برای تمایز */
+    color: var(--text-color-dark); /* متن تیره برای کنتراست با پس‌زمینه روشن */
+}
+
+.quick-view-btn:hover {
+    background: var(--zima-blush); /* رنگ روشن‌تر در هاور */
+    transform: translateY(-1px);
+    color: white; /* متن سفید در هاور برای کنتراست بهتر */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* ✅ استایل برای نمایش قیمت اصلی و قیمت با تخفیف */
+.favorite-price {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-family: 'Zima-Bold', sans-serif;
+    display: flex;
+    align-items: baseline;
+    justify-content: center; /* اگر می‌خواهید قیمت‌ها در مرکز باشند */
+    gap: 10px; /* فاصله بین قیمت‌ها */
+}
+
+.favorite-price .original-price {
+    font-size: 0.9rem;
+    color: var(--text-color-medium);
+    text-decoration: line-through; /* خط خوردگی برای قیمت اصلی */
+    font-weight: 400;
+}
+
+.favorite-price .discount-price {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    font-weight: 700;
+}

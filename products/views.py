@@ -9,7 +9,8 @@ from django.views.decorators.http import require_POST
 import json
 import logging
 
-from cart.models import WishlistItem, CartItem
+from cart.models import CartItem
+from users.models import Favorite
 from .models import Product, Category, Color, Size, ProductInventory, ProductImage, Review
 
 logger = logging.getLogger(__name__)
@@ -28,12 +29,12 @@ def _apply_filters_and_sort(request, products_queryset):
     if query:
         products_queryset = products_queryset.filter(
             Q(name__icontains=query) | Q(description__icontains=query) |
-            Q(category__name__icontains=query) |
+            Q(categories__name__icontains=query) |
             Q(brand__icontains=brands)
         ).distinct()
 
     if categories_ids:
-        products_queryset = products_queryset.filter(category__id__in=categories_ids).distinct()
+        products_queryset = products_queryset.filter(categories__id__in=categories_ids).distinct()
 
     if sizes_ids:
         products_queryset = products_queryset.filter(inventories__size__id__in=sizes_ids).distinct()
@@ -90,7 +91,7 @@ def product_list(request):
 
     if request.user.is_authenticated:
         products_queryset = products_queryset.annotate(
-            is_favorited=Count('wishlistitem', filter=Q(wishlistitem__user=request.user))
+            is_favorited=Count('favorite', filter=Q(favorite__user=request.user))
         )
     else:
         products_queryset = products_queryset.annotate(is_favorited=Value(0, output_field=BooleanField()))
@@ -151,12 +152,12 @@ def category_list(request, category_slug):
     """لیست محصولات یک دسته‌بندی خاص"""
     category = get_object_or_404(Category, slug=category_slug)
     products_queryset = Product.objects.filter(is_active=True).filter(
-        Q(category=category) | Q(category__parent=category)
+        Q(categories=category) | Q(categories__parent=category)
     ).prefetch_related('images')
 
     if request.user.is_authenticated:
         products_queryset = products_queryset.annotate(
-            is_favorited=Count('wishlistitem', filter=Q(wishlistitem__user=request.user))
+            is_favorited=Count('favorite', filter=Q(favorite__user=request.user))
         )
     else:
         products_queryset = products_queryset.annotate(is_favorited=Value(0, output_field=BooleanField()))
@@ -190,7 +191,7 @@ def category_list(request, category_slug):
     all_brands = products_queryset.values_list('brand', flat=True).distinct().order_by('brand')
 
     # محدوده قیمت برای این دسته‌بندی
-    price_range_qs = Product.objects.filter(is_active=True, category=category)
+    price_range_qs = Product.objects.filter(is_active=True, categories=category)
     min_overall_price = price_range_qs.aggregate(min_price=Min('price'))['min_price']
     max_overall_price = price_range_qs.aggregate(max_price=Max('price'))['max_price']
     price_range = {
@@ -201,7 +202,7 @@ def category_list(request, category_slug):
     context = {
         'page_title': category.name,
         'products': products,
-        'category': category,
+        'categories': category,
         'subcategories': subcategories,
         'results_count': products_queryset.count(),
         'all_sizes': all_sizes,
@@ -219,7 +220,7 @@ def search_results(request):
 
     if request.user.is_authenticated:
         products_queryset = products_queryset.annotate(
-            is_favorited=Count('wishlistitem', filter=Q(wishlistitem__user=request.user))
+            is_favorited=Count('favorite', filter=Q(favorite__user=request.user))
         )
     else:
         products_queryset = products_queryset.annotate(is_favorited=Value(0, output_field=BooleanField()))
@@ -316,16 +317,17 @@ def product_detail(request, product_id):
 
     # محصولات مشابه
     related_products = Product.objects.filter(
-        category=product.category,
+        categories__in=product.categories.all(),  # ✅ تغییر اصلی اینجا است
         is_active=True
-    ).exclude(id=product.id)[:8]
+    ).exclude(id=product.id).distinct()[:8]
 
     # اگر محصولات مشابه کم بود، از دسته‌های مرتبط هم بگیر
     if related_products.count() < 4:
         related_products = Product.objects.filter(
-            Q(category=product.category) | Q(brand=product.brand),
+            Q(categories__in=product.categories.all()) |  # ✅ اینجا هم باید تغییر کند
+            Q(brand=product.brand),  # فرض بر این است که brand یک CharField یا ForeignKey است
             is_active=True
-        ).exclude(id=product.id)[:8]
+        ).exclude(id=product.id).distinct()[:8]
 
     # بررسی اینکه کاربر این محصول را خریداری کرده یا نه
     has_purchased = False
@@ -487,12 +489,12 @@ def quick_view(request, product_id):
         is_favorited = False
         if request.user.is_authenticated:
             try:
-                from cart.models import WishlistItem
-                is_favorited = WishlistItem.objects.filter(
+                is_favorited = Favorite.objects.filter(  # ✅ تغییر از WishlistItem به Favorite
                     user=request.user,
                     product=product
                 ).exists()
-            except Exception:
+            except Exception as e:  # ✅ لاگ کردن خطا
+                logger.error(f"Error checking favorite status in quick_view: {e}", exc_info=True)
                 is_favorited = False
 
         context = {
@@ -519,7 +521,6 @@ def quick_view(request, product_id):
             'error': f'خطا در بارگذاری اطلاعات محصول: {str(e)}'
         }, status=500)
 @require_POST
-@csrf_exempt
 def toggle_wishlist(request):
     """اضافه/حذف محصول از علاقه‌مندی‌ها"""
     if not request.user.is_authenticated:
@@ -533,23 +534,27 @@ def toggle_wishlist(request):
         product_id = data.get('product_id')
         product = get_object_or_404(Product, id=product_id)
 
-        wishlist_item, created = WishlistItem.objects.get_or_create(
+        favorite_item, created = Favorite.objects.get_or_create(  # ✅ تغییر از WishlistItem به Favorite
             user=request.user,
             product=product
         )
 
         if not created:
-            wishlist_item.delete()
+            favorite_item.delete()  # ✅ تغییر از wishlist_item به favorite_item
             is_favorited = False
+            message = 'محصول از علاقه‌مندی‌ها حذف شد'  # ✅ اضافه کردن پیام مناسب
         else:
             is_favorited = True
+            message = 'محصول به علاقه‌مندی‌ها اضافه شد'  # ✅ اضافه کردن پیام مناسب
 
         return JsonResponse({
             'success': True,
-            'is_favorited': is_favorited
+            'is_favorited': is_favorited,
+            'message': message  # ✅ ارسال پیام به فرانت‌اند
         })
 
     except Exception as e:
+        logger.error(f"Error in toggle_wishlist: {e}", exc_info=True)  # ✅ لاگ کردن خطا
         return JsonResponse({
             'success': False,
             'message': 'خطا در عملیات'

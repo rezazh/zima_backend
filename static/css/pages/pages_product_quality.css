@@ -1,0 +1,573 @@
+/* static/css/pages/pages_product_quality.css */
+
+/* از متغیرهای روت که در main.css یا base.css تعریف شده‌اند استفاده می‌شود */
+
+.product-quality-page {
+    padding: 140px 0 60px; /* فضای بالا برای ناوبار ثابت */
+    background: linear-gradient(135deg, var(--zima-blush), var(--zima-champagne));
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+.product-quality-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/subtle-pattern.png" %}') repeat; /* پترن ظریف */
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.quality-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+}
+
+/* --- Hero Section --- */
+.hero-section {
+    text-align: center;
+    margin-bottom: 80px;
+    position: relative;
+    padding: 40px 0;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    opacity: 0.1;
+    z-index: -1;
+}
+
+.hero-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    color: var(--text-color-dark);
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    font-family: 'ZimaFont', sans-serif;
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    color: var(--text-color-medium);
+    margin-bottom: 30px;
+    font-weight: 500;
+}
+
+.hero-description {
+    font-family: 'ZimaFont', sans-serif;
+    font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+    color: var(--text-color-medium);
+    line-height: 1.8;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* --- Section Titles & Subtitles (General) --- */
+.section-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    text-align: center;
+    color: var(--text-color-dark);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.section-title i {
+    color: var(--primary-color);
+    font-size: 1.1em;
+}
+
+.section-subtitle {
+    font-family: 'ZimaFont', sans-serif;
+    text-align: center;
+    color: var(--text-color-medium);
+    font-size: clamp(1rem, 1.5vw, 1.2rem);
+    margin-bottom: 60px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* --- Our Philosophy Section --- */
+.philosophy-section {
+    margin-bottom: 80px;
+}
+
+.philosophy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.philosophy-card {
+    background: white;
+    border-radius: 20px;
+    padding: 35px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    border: 2px solid var(--zima-pearl);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.philosophy-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.philosophy-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
+}
+
+.philosophy-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+}
+
+.philosophy-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+    color: var(--text-color-dark);
+    margin-bottom: 15px;
+}
+
+.philosophy-description {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.6;
+    font-size: clamp(0.9rem, 1.3vw, 1rem);
+}
+
+/* --- Materials Section --- */
+.materials-section {
+    margin-bottom: 80px;
+}
+
+.materials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.material-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    border: 2px solid var(--zima-pearl);
+    transition: all 0.3s ease;
+}
+
+.material-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
+}
+
+.material-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.material-card:hover .material-image {
+    transform: scale(1.05);
+}
+
+.material-content {
+    padding: 25px;
+    text-align: center;
+}
+
+.material-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+    color: var(--text-color-dark);
+    margin-bottom: 10px;
+}
+
+.material-description {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.6;
+    font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+}
+
+/* --- Quality Control Section --- */
+.control-section {
+    margin-bottom: 80px;
+}
+
+.control-steps-timeline {
+    position: relative;
+    padding-right: 20px; /* برای خط تایم لاین */
+}
+
+.control-steps-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+}
+
+.control-steps-timeline .timeline-item {
+    position: relative;
+    margin-bottom: 40px;
+    padding-right: 40px; /* فاصله از خط تایم لاین */
+}
+
+.control-steps-timeline .timeline-marker {
+    position: absolute;
+    top: 0;
+    right: -20px; /* روی خط تایم لاین */
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    border: 4px solid white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
+    box-shadow: 0 0 0 4px var(--zima-blush); /* هاله دور مارکر */
+    z-index: 1;
+}
+
+.control-steps-timeline .timeline-content {
+    background: var(--zima-blush);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--zima-pearl);
+    text-align: right;
+}
+
+.control-steps-timeline .timeline-content h4 {
+    font-family: 'Zima-Bold', sans-serif;
+    color: var(--text-color-dark);
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.control-steps-timeline .timeline-content p {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.7;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* --- Certifications Section --- */
+.certifications-section {
+    margin-bottom: 80px;
+}
+
+.certs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.cert-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    border: 2px solid var(--zima-pearl);
+    transition: all 0.3s ease;
+}
+
+.cert-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border-color: var(--secondary-color);
+}
+
+.cert-logo {
+    max-width: 120px;
+    height: auto;
+    margin: 0 auto 20px;
+    filter: grayscale(80%);
+    transition: filter 0.3s ease;
+}
+
+.cert-card:hover .cert-logo {
+    filter: grayscale(0%);
+}
+
+.cert-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+    color: var(--text-color-dark);
+    margin-bottom: 10px;
+}
+
+.cert-description {
+    font-family: 'ZimaFont', sans-serif;
+    color: var(--text-color-medium);
+    line-height: 1.6;
+    font-size: clamp(0.9rem, 1.3vw, 1rem);
+}
+
+/* --- CTA Section (similar to other pages) --- */
+.cta-section {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 25px;
+    padding: 60px;
+    text-align: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 60px;
+}
+
+.cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "images/patterns/elegant-pattern.png" %}') repeat;
+    opacity: 0.1;
+}
+
+.cta-content {
+    position: relative;
+    z-index: 2;
+}
+
+.cta-title {
+    font-family: 'Zima-Bold', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.cta-subtitle {
+    font-family: 'ZimaFont', sans-serif;
+    font-size: clamp(1rem, 1.5vw, 1.2rem);
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-btn {
+    font-family: 'ZimaFont', sans-serif;
+    background: white;
+    color: var(--primary-color);
+    padding: 15px 30px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cta-btn:hover {
+    background: transparent;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.cta-btn.secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+.cta-btn.secondary:hover {
+    background: white;
+    color: var(--primary-color);
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 992px) {
+    .quality-container {
+        padding: 0 15px;
+    }
+    .philosophy-grid, .materials-grid, .certs-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+    }
+    .philosophy-card, .material-card, .cert-card {
+        padding: 30px;
+    }
+    .control-steps-timeline {
+        padding-right: 15px;
+    }
+    .control-steps-timeline::before {
+        right: 0;
+    }
+    .control-steps-timeline .timeline-item {
+        padding-right: 30px;
+    }
+    .control-steps-timeline .timeline-marker {
+        right: -15px;
+    }
+    .cta-section {
+        padding: 50px;
+    }
+}
+
+@media (max-width: 768px) {
+    .product-quality-page {
+        padding: 120px 0 40px;
+    }
+    .hero-section {
+        margin-bottom: 60px;
+    }
+    .section-title {
+        font-size: 1.8rem;
+    }
+    .section-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 40px;
+    }
+    .philosophy-grid, .materials-grid, .certs-grid {
+        grid-template-columns: 1fr;
+    }
+    .philosophy-card, .material-card, .cert-card {
+        padding: 25px;
+    }
+    .control-steps-timeline {
+        padding-right: 0; /* حذف پدینگ راست */
+    }
+    .control-steps-timeline::before {
+        display: none; /* حذف خط عمودی */
+    }
+    .control-steps-timeline .timeline-item {
+        padding-right: 0; /* حذف پدینگ راست */
+        text-align: center;
+    }
+    .control-steps-timeline .timeline-marker {
+        position: static; /* موقعیت استاتیک */
+        margin: 0 auto 15px; /* مرکز قرار گرفتن */
+        transform: none;
+    }
+    .control-steps-timeline .timeline-content {
+        text-align: center;
+    }
+    .cta-section {
+        padding: 40px;
+    }
+    .cta-title {
+        font-size: 2rem;
+    }
+    .cta-subtitle {
+        font-size: 1rem;
+    }
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    .cta-btn {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    .hero-description {
+        font-size: 0.85rem;
+    }
+    .section-title {
+        font-size: 1.6rem;
+    }
+    .philosophy-icon, .material-image, .cert-logo {
+        width: 60px;
+        height: auto;
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+    .philosophy-title, .material-title, .cert-title {
+        font-size: 1.2rem;
+    }
+    .philosophy-description, .material-description, .cert-description {
+        font-size: 0.85rem;
+    }
+    .control-steps-timeline .timeline-marker {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+    }
+    .control-steps-timeline .timeline-content {
+        padding: 20px;
+    }
+    .control-steps-timeline .timeline-content h4 {
+        font-size: 1rem;
+    }
+    .control-steps-timeline .timeline-content p {
+        font-size: 0.85rem;
+    }
+    .cta-section {
+        padding: 30px;
+    }
+    .cta-title {
+        font-size: 1.8rem;
+    }
+    .cta-subtitle {
+        font-size: 0.9rem;
+    }
+}

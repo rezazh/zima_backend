@@ -129,18 +129,3 @@ class Coupon(models.Model):
 
         return discount_amount
 
-
-class WishlistItem(models.Model):
-    """مدل آیتم لیست علاقه‌مندی‌ها"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wishlist_items')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']
-        verbose_name = 'آیتم لیست علاقه‌مندی‌ها'
-        verbose_name_plural = 'آیتم‌های لیست علاقه‌مندی‌ها'
-        unique_together = ['user', 'product']  # هر محصول فقط یکبار در لیست علاقه‌مندی‌های کاربر باشد
-
-    def __str__(self):
-        return f"{self.product.name} - کاربر: {self.user.username}"

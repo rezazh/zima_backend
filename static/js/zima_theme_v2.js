@@ -769,45 +769,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Heart Animation on Product Favorite
     window.toggleWishlist = function(button, productId) {
-        const icon = button.querySelector('i');
-        const isActive = icon.classList.contains('fas');
+    const icon = button.querySelector('i');
+    const isActive = icon.classList.contains('fas');
 
-        showLoading();
-        fetch('/products/toggle-wishlist/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ product_id: productId, action: isActive ? 'remove' : 'add' })
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideLoading();
-            if (data.success) {
-                if (isActive) {
-                    icon.classList.remove('fas');
-                    icon.classList.add('far');
-                    button.classList.remove('active');
-                    showToast('محصول از علاقه‌مندی‌ها حذف شد', 'heart-broken');
-                } else {
-                    icon.classList.remove('far');
-                    icon.classList.add('fas');
-                    button.classList.add('active');
-                    showToast('محصول به علاقه‌مندی‌ها اضافه شد', 'heart');
-                }
-            } else {
-                showToast(data.message || 'خطا در تغییر علاقه‌مندی‌ها', 'exclamation-triangle');
+    showLoading();
+    fetch('/products/toggle-wishlist/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ product_id: productId, action: isActive ? 'remove' : 'add' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            // ✅ تغییر اینجا: از data.is_favorited برای تعیین وضعیت استفاده کنید
+            // و از data.message برای نمایش پیام استفاده کنید.
+            if (data.is_favorited) { // اگر حالا مورد علاقه است (یعنی اضافه شده)
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                button.classList.add('active');
+                showToast(data.message || 'محصول به علاقه‌مندی‌ها اضافه شد', 'heart'); // استفاده از data.message
+            } else { // اگر حالا مورد علاقه نیست (یعنی حذف شده)
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                button.classList.remove('active');
+                showToast(data.message || 'محصول از علاقه‌مندی‌ها حذف شد', 'heart-broken'); // استفاده از data.message
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            hideLoading();
-            showToast('خطا در ارتباط با سرور', 'times-circle');
-        });
+        } else {
+            // ✅ اگر success=false بود، پیام خطا را نمایش دهید.
+            showToast(data.message || 'خطا در تغییر علاقه‌مندی‌ها', 'exclamation-triangle');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        hideLoading();
+        showToast('خطا در ارتباط با سرور', 'times-circle');
+    });
 
-        createFloatingHeart(button.getBoundingClientRect().left + button.offsetWidth / 2, button.getBoundingClientRect().top + button.offsetHeight / 2);
-    };
+    createFloatingHeart(button.getBoundingClientRect().left + button.offsetWidth / 2, button.getBoundingClientRect().top + button.offsetHeight / 2);
+};
 
     function createFloatingHeart(x, y) {
         const heart = document.createElement('div');
